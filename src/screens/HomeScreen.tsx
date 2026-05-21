@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -9,31 +10,34 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>选择学科</Text>
-      {courses.map((c) => (
-        <TouchableOpacity
-          key={c.id}
-          style={styles.courseCard}
-          onPress={() => navigation.navigate('Course', { courseId: c.id })}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.courseIcon, { backgroundColor: c.color }]}>
-            {c.icon ? (
-              <MaterialCommunityIcons name={c.icon as any} size={24} color="#fff" />
-            ) : (
-              <Text style={styles.courseIconText}>{c.title[0]}</Text>
-            )}
-          </View>
-          <View style={styles.courseInfo}>
-            <Text style={styles.courseTitle}>{c.title}</Text>
-            <Text style={styles.courseMeta}>{c.nodes.filter((n) => n.cards.length > 0).length} 个模块</Text>
-          </View>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
-      ))}
+      <Text style={[styles.heading, { marginTop: insets.top + 42 }]}>选择学科</Text>
+      <View style={{ marginTop: 21 }}>
+        {courses.map((c) => (
+          <TouchableOpacity
+            key={c.id}
+            style={styles.courseCard}
+            onPress={() => navigation.navigate('Course', { courseId: c.id })}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.courseIcon, { backgroundColor: c.color }]}>
+              {c.icon ? (
+                <MaterialCommunityIcons name={c.icon as any} size={24} color="#fff" />
+              ) : (
+                <Text style={styles.courseIconText}>{c.title[0]}</Text>
+              )}
+            </View>
+            <View style={styles.courseInfo}>
+              <Text style={styles.courseTitle}>{c.title}</Text>
+              <Text style={styles.courseMeta}>{c.nodes.filter((n) => n.cards.length > 0).length} 个模块</Text>
+            </View>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 }

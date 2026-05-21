@@ -1,4 +1,4 @@
 import type { PathNode } from '../../../../types';
 
-// 现代C++篇 31-43
+// 现代 C++ 模块
 export const modernNodes: PathNode[] = [];

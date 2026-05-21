@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import { useProgressStore } from '../store/useProgressStore';
 import { courses } from '../data/courses';
@@ -64,6 +65,7 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
 
 // ---- 页面 ----
 export default function ProgressScreen() {
+  const insets = useSafeAreaInsets();
   const global = useProgressStore((s) => s.global);
   const coursesProgress = useProgressStore((s) => s.courses);
 
@@ -73,7 +75,7 @@ export default function ProgressScreen() {
   const xpPercent = Math.min((xpIntoLevel / nextLevelXP) * 100, 100);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
       {/* 等级卡片 — 环形进度 */}
       <View style={styles.levelCard}>
         <LevelRing
@@ -128,7 +130,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingTop: 64,
     paddingBottom: 40,
   },
   // ---- 等级卡片 ----

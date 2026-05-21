@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProgressStore } from '../store/useProgressStore';
 import { courses } from '../data/courses';
 
@@ -8,6 +9,7 @@ import { courses } from '../data/courses';
 // ============================================================
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const coursesState = useProgressStore((s) => s.courses);
   const resetCourse = useProgressStore((s) => s.resetCourse);
   const flush = useProgressStore((s) => s.flush);
@@ -58,7 +60,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
       {/* ============================================================
            扩展口 #3：登录后在此区块上方插入 Profile Section
            <View style={styles.section}>
@@ -152,7 +154,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingTop: 64,
     paddingBottom: 40,
   },
   section: {

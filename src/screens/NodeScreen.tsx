@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
-import type { AnimationContent } from '../types';
 import { courses } from '../data/courses';
 import { getAnimScenario } from '../data/animations';
 import renderCard from '../components/cards/renderCard';
@@ -12,6 +12,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Node'>;
 
 export default function NodeScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
+  const insets = useSafeAreaInsets();
   const addXP = useProgressStore((s) => s.addXP);
   const completeCard = useProgressStore((s) => s.completeCard);
   const setNodePosition = useProgressStore((s) => s.setNodePosition);
@@ -59,8 +60,7 @@ export default function NodeScreen({ route, navigation }: Props) {
 
   const getAnimTotalSteps = (): number => {
     if (!card || card.cardType !== 'animation') return 1;
-    const animContent = card.content as AnimationContent;
-    const scenario = getAnimScenario(animContent.animationId);
+    const scenario = getAnimScenario(card.content.animationId);
     return scenario?.steps.length ?? 1;
   };
 
@@ -146,11 +146,11 @@ export default function NodeScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Text style={styles.backBtn}>← 返回</Text>
         </TouchableOpacity>
-        <Text style={styles.chapter}>{node?.chapter}</Text>
+        <Text style={styles.module}>{node?.module}</Text>
         <Text style={styles.progress}>
           {index + 1} / {cards.length}
         </Text>
@@ -210,7 +210,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 64,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#4a9eff',
   },
-  chapter: {
+  module: {
     fontSize: 14,
     fontWeight: '600',
     color: '#666',

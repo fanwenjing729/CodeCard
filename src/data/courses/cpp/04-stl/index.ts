@@ -1,4 +1,4 @@
 import type { PathNode } from '../../../../types';
 
-// STL篇 21-26
+// STL 模块
 export const stlNodes: PathNode[] = [];

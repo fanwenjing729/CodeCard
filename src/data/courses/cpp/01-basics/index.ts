@@ -1,12 +1,13 @@
 import type { PathNode } from '../../../../types';
 
-// 基础篇 01-06
+// 基础模块
 export const basicsNodes: PathNode[] = [
   {
     id: 'cpp-01-start',
     courseId: 'cpp',
     type: 'knowledge',
-    chapter: '01 起步',
+    moduleId: 'basics',
+    module: '基础',
     title: '第一个程序',
     cards: [
       {
@@ -44,7 +45,8 @@ export const basicsNodes: PathNode[] = [
     id: 'cpp-01-basics-var',
     courseId: 'cpp',
     type: 'knowledge',
-    chapter: '02 变量与类型',
+    moduleId: 'basics',
+    module: '基础',
     title: '变量声明',
     cards: [
       {
@@ -63,6 +65,25 @@ export const basicsNodes: PathNode[] = [
           code: 'int age = 25;\ndouble price = 9.99;\nchar grade = \'A\';\nbool isPassed = true;\n\n// const 常量不可修改\nconst double PI = 3.14159;',
           language: 'cpp',
           highlights: [0, 1, 2, 3, 6],
+        },
+      },
+      {
+        id: 'cpp-01-basics-var-c3',
+        cardType: 'concept',
+        content: {
+          title: '类型全家福',
+          body: 'C++ 基本类型占用的字节数（典型值）：\n\nint — 4 字节（整数）\nfloat — 4 字节（单精度浮点）\ndouble — 8 字节（双精度浮点）\nchar — 1 字节（字符）\nbool — 1 字节（布尔值）\n\n扩展类型：\nshort — 2 字节（短整数）\nlong — 4 或 8 字节（长整数，平台相关）\nunsigned — 无符号版，值域翻倍但不存负数\n\n用 sizeof(type) 可以获取当前平台的实际字节数。',
+        },
+      },
+      {
+        id: 'cpp-01-basics-var-c4',
+        cardType: 'practice',
+        content: {
+          question: '在大多数平台上，sizeof(int) 的典型返回值是？',
+          questionType: 'choice',
+          options: ['2', '4', '8', '取决于编译器，无法确定'],
+          answer: '4',
+          explanation: '在 32 位和 64 位平台上，int 通常占用 4 字节（32 位），值域约 ±21 亿。2 字节是 short，8 字节是 long 或 long long。',
         },
       },
     ],

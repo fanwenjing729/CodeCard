@@ -13,17 +13,38 @@ export interface PathNode {
   id: string;
   courseId: string;
   type: 'knowledge' | 'quiz';
-  chapter: string;
+  moduleId: string;
+  module: string;
   title: string;
   cards: Card[];
 }
 
-// ===== 卡片 =====
-export interface Card {
+// ===== 卡片（判別联合） =====
+export interface CardBase {
   id: string;
-  cardType: 'concept' | 'code' | 'animation' | 'practice';
-  content: TextContent | CodeContent | AnimationContent | PracticeContent;
 }
+
+export interface ConceptCardData extends CardBase {
+  cardType: 'concept';
+  content: TextContent;
+}
+
+export interface CodeCardData extends CardBase {
+  cardType: 'code';
+  content: CodeContent;
+}
+
+export interface AnimationCardData extends CardBase {
+  cardType: 'animation';
+  content: AnimationContent;
+}
+
+export interface PracticeCardData extends CardBase {
+  cardType: 'practice';
+  content: PracticeContent;
+}
+
+export type Card = ConceptCardData | CodeCardData | AnimationCardData | PracticeCardData;
 
 export interface AnimationContent {
   animationId: string;

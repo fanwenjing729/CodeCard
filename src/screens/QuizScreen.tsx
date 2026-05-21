@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useReducer } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import type { PracticeContent } from '../types';
@@ -9,8 +10,46 @@ import QuestionRenderer, { isCorrectAnswer } from '../components/cards/QuestionR
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
 
+interface QuizState {
+  index: number;
+  score: number;
+  done: boolean;
+  submitted: boolean;
+  selected: string | null;
+  fillAnswer: string;
+}
+
+type QuizAction =
+  | { type: 'SELECT'; value: string }
+  | { type: 'FILL'; value: string }
+  | { type: 'SUBMIT' }
+  | { type: 'SCORE' }
+  | { type: 'NEXT'; nextIndex: number }
+  | { type: 'DONE' }
+  | { type: 'RESET' };
+
+function quizReducer(state: QuizState, action: QuizAction): QuizState {
+  switch (action.type) {
+    case 'SELECT':
+      return { ...state, selected: action.value };
+    case 'FILL':
+      return { ...state, fillAnswer: action.value };
+    case 'SUBMIT':
+      return { ...state, submitted: true };
+    case 'SCORE':
+      return { ...state, score: state.score + 1 };
+    case 'NEXT':
+      return { ...state, index: action.nextIndex, submitted: false, selected: null, fillAnswer: '' };
+    case 'DONE':
+      return { ...state, done: true };
+    case 'RESET':
+      return { index: 0, score: 0, done: false, submitted: false, selected: null, fillAnswer: '' };
+  }
+}
+
 export default function QuizScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
+  const insets = useSafeAreaInsets();
   const addXP = useProgressStore((s) => s.addXP);
   const completeCard = useProgressStore((s) => s.completeCard);
 
@@ -18,31 +57,27 @@ export default function QuizScreen({ route, navigation }: Props) {
   const node = course?.nodes.find((n) => n.id === nodeId);
   const cards = (node?.cards ?? []).filter((c) => c.cardType === 'practice');
 
-  const [index, setIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [fillAnswer, setFillAnswer] = useState('');
+  const [state, dispatch] = useReducer(quizReducer, {
+    index: 0,
+    score: 0,
+    done: false,
+    submitted: false,
+    selected: null,
+    fillAnswer: '',
+  });
 
+  const { index, score, done, submitted, selected, fillAnswer } = state;
   const card = cards[index];
   const content = card?.content as PracticeContent | undefined;
-
-  const resetQuestion = (nextIndex: number) => {
-    setSelected(null);
-    setFillAnswer('');
-    setSubmitted(false);
-    setIndex(nextIndex);
-  };
 
   const handleSubmit = () => {
     if (!content || submitted) return;
     const rawAnswer = content.questionType === 'choice' ? selected : fillAnswer.trim();
     if (!rawAnswer) return;
 
-    setSubmitted(true);
+    dispatch({ type: 'SUBMIT' });
     if (isCorrectAnswer(rawAnswer, content.answer)) {
-      setScore((s) => s + 1);
+      dispatch({ type: 'SCORE' });
       const isNew = completeCard(courseId, card.id);
       if (isNew) {
         addXP(courseId, 10);
@@ -52,9 +87,9 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   const handleNext = () => {
     if (index < cards.length - 1) {
-      resetQuestion(index + 1);
+      dispatch({ type: 'NEXT', nextIndex: index + 1 });
     } else {
-      setDone(true);
+      dispatch({ type: 'DONE' });
     }
   };
 
@@ -95,7 +130,7 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Text style={styles.headerBack}>← 返回</Text>
         </TouchableOpacity>
@@ -110,8 +145,8 @@ export default function QuizScreen({ route, navigation }: Props) {
           selected={selected}
           fillAnswer={fillAnswer}
           submitted={submitted}
-          onSelect={setSelected}
-          onFillChange={setFillAnswer}
+          onSelect={(val) => dispatch({ type: 'SELECT', value: val })}
+          onFillChange={(val) => dispatch({ type: 'FILL', value: val })}
           onSubmit={handleSubmit}
           onNext={handleNext}
           nextLabel={index < cards.length - 1 ? '下一题' : '完成测验'}
@@ -131,7 +166,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 64,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',

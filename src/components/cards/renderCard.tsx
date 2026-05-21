@@ -3,7 +3,7 @@ import ConceptCard from './ConceptCard';
 import CodeCard from './CodeCard';
 import PracticeCard from './PracticeCard';
 import { getAnimScenario, getAnimComponent } from '../../data/animations';
-import type { Card, AnimationContent, TextContent, CodeContent, PracticeContent } from '../../types';
+import type { Card } from '../../types';
 
 interface RenderCardProps {
   card: Card;
@@ -22,14 +22,13 @@ export default function renderCard({
 }: RenderCardProps): React.ReactElement | null {
   switch (card.cardType) {
     case 'concept':
-      return <ConceptCard key={card.id} content={card.content as TextContent} />;
+      return <ConceptCard key={card.id} content={card.content} />;
     case 'code':
-      return <CodeCard key={card.id} content={card.content as CodeContent} />;
+      return <CodeCard key={card.id} content={card.content} />;
     case 'animation': {
-      const animContent = card.content as AnimationContent;
-      const scenario = getAnimScenario(animContent.animationId);
+      const scenario = getAnimScenario(card.content.animationId);
       if (!scenario) return null;
-      const AnimComponent = getAnimComponent(animContent.animationId);
+      const AnimComponent = getAnimComponent(card.content.animationId);
       if (!AnimComponent) return null;
       return React.createElement(AnimComponent, { key: card.id, scenario, step: animStep });
     }
@@ -37,15 +36,14 @@ export default function renderCard({
       return (
         <PracticeCard
           key={card.id}
-          content={card.content as PracticeContent}
+          content={card.content}
           onComplete={onPracticeComplete}
           onNext={onPracticeNext}
           isLast={isLast}
         />
       );
     default: {
-      // 穷举检查：加新 cardType 时 TypeScript 在这里报错
-      const _exhaustive: never = card.cardType;
+      const _exhaustive: never = card;
       return null;
     }
   }
