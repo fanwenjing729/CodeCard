@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx expo *)",
+      "Bash(rm -rf node_modules)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const z = require\\('zustand/middleware'\\); console.log\\(Object.keys\\(z\\).filter\\(k => k.includes\\('ersist'\\) || k.includes\\('JSON'\\) || k.includes\\('torage'\\)\\).join\\(', '\\)\\)\")",
+      "Bash(node -e \"const pkg = require\\('zustand/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(git add *)"
+    ]
+  }
+}
