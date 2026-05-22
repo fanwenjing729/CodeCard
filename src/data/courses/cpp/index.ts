@@ -1,4 +1,4 @@
-import type { Course } from '../../../types';
+import type { Course } from '@/types';
 import { basicsNodes } from './01-basics';
 import { advancedNodes } from './02-advanced';
 import { oopNodes } from './03-oop';

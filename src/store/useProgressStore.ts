@@ -38,9 +38,14 @@ interface PersistedData {
   courses: Record<string, CourseProgress>;
 }
 
+export const XP_PER_CARD = 5;
+export const XP_PER_PRACTICE = 10;
+
 interface ProgressStore extends PersistedData {
   addXP: (courseId: string, amount: number) => void;
   completeCard: (courseId: string, cardId: string) => boolean;
+  rewardCard: (courseId: string, cardId: string, xpAmount: number) => boolean;
+  saveQuizScore: (courseId: string, nodeId: string, score: number) => void;
   setNodePosition: (courseId: string, nodeId: string, cardIndex: number) => void;
   hydrate: () => Promise<void>;
   flush: () => Promise<void>;
@@ -106,6 +111,47 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
       };
     });
     return true;
+  },
+
+  rewardCard: (courseId, cardId, xpAmount) => {
+    const { courses } = get();
+    const course = getOrCreateCourse(courses, courseId);
+    if (course.completedCards.includes(cardId)) return false;
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      const newTotalXP = s.global.totalXP + xpAmount;
+      return {
+        global: {
+          ...s.global,
+          totalXP: newTotalXP,
+          level: calcLevel(newTotalXP),
+        },
+        courses: {
+          ...s.courses,
+          [courseId]: {
+            ...c,
+            completedCards: [...c.completedCards, cardId],
+            xp: c.xp + xpAmount,
+          },
+        },
+      };
+    });
+    return true;
+  },
+
+  saveQuizScore: (courseId, nodeId, score) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: {
+            ...c,
+            quizScores: { ...c.quizScores, [nodeId]: score },
+          },
+        },
+      };
+    });
   },
 
   setNodePosition: (courseId, nodeId, cardIndex) => {

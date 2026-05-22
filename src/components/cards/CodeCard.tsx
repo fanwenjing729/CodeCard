@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import type { CodeContent } from '../../types';
+import type { CodeContent } from '@/types';
 
 interface Props {
   content: CodeContent;

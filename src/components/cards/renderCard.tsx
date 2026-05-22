@@ -2,8 +2,8 @@ import React from 'react';
 import ConceptCard from './ConceptCard';
 import CodeCard from './CodeCard';
 import PracticeCard from './PracticeCard';
-import { getAnimScenario, getAnimComponent } from '../../data/animations';
-import type { Card } from '../../types';
+import { getAnimScenario, getAnimComponent } from '@/data/animations';
+import type { Card } from '@/types';
 
 interface RenderCardProps {
   card: Card;

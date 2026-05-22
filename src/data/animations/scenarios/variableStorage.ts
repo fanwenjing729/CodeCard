@@ -1,4 +1,4 @@
-import type { MemoryBoxScenario } from '../../../types';
+import type { MemoryBoxScenario } from '@/types';
 
 export const variableStorageScenario: MemoryBoxScenario = {
   id: 'variable-storage',

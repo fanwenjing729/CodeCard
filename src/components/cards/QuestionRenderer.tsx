@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import type { PracticeContent } from '../../types';
+import type { PracticeContent } from '@/types';
 
 export function normalize(s: string): string {
   return s.trim().toLowerCase();

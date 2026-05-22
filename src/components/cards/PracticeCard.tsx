@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PracticeContent } from '../../types';
+import type { PracticeContent } from '@/types';
 import QuestionRenderer, { isCorrectAnswer } from './QuestionRenderer';
 
 interface Props {

@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
-import type { MemoryBoxScenario } from '../../types';
+import type { MemoryBoxScenario } from '@/types';
 import { variableStorageScenario } from './scenarios/variableStorage';
-import MemoryBox from '../../components/animations/MemoryBox';
+import MemoryBox from '@/components/animations/MemoryBox';
 
 interface AnimationEntry {
   scenario: MemoryBoxScenario;

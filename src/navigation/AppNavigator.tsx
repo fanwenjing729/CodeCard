@@ -4,13 +4,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import HomeScreen from '../screens/HomeScreen';
-import CourseScreen from '../screens/CourseScreen';
-import ModuleScreen from '../screens/ModuleScreen';
-import NodeScreen from '../screens/NodeScreen';
-import QuizScreen from '../screens/QuizScreen';
-import ProgressScreen from '../screens/ProgressScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import HomeScreen from '@/screens/HomeScreen';
+import CourseScreen from '@/screens/CourseScreen';
+import ModuleScreen from '@/screens/ModuleScreen';
+import NodeScreen from '@/screens/NodeScreen';
+import QuizScreen from '@/screens/QuizScreen';
+import ProgressScreen from '@/screens/ProgressScreen';
+import SettingsScreen from '@/screens/SettingsScreen';
+import LoginScreen from '../screens/LoginScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   Module: { courseId: string; moduleId: string };
   Node: { courseId: string; nodeId: string };
   Quiz: { courseId: string; nodeId: string };
+  Login: undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -82,6 +84,7 @@ export default function AppNavigator() {
         <RootStack.Screen name="Module" component={ModuleScreen} />
         <RootStack.Screen name="Node" component={NodeScreen} />
         <RootStack.Screen name="Quiz" component={QuizScreen} />
+        <RootStack.Screen name="Login" component={LoginScreen} />
       </RootStack.Navigator>
     </NavigationContainer>
   );

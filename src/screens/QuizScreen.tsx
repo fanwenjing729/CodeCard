@@ -1,12 +1,12 @@
 import { useReducer } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/AppNavigator';
-import type { PracticeContent } from '../types';
-import { courses } from '../data/courses';
-import { useProgressStore } from '../store/useProgressStore';
-import QuestionRenderer, { isCorrectAnswer } from '../components/cards/QuestionRenderer';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
+import type { PracticeContent } from '@/types';
+import ScreenHeader from '@/components/shared/ScreenHeader';
+import { courses } from '@/data/courses';
+import { useProgressStore, XP_PER_PRACTICE } from '@/store/useProgressStore';
+import QuestionRenderer, { isCorrectAnswer } from '@/components/cards/QuestionRenderer';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
 
@@ -49,13 +49,21 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
 
 export default function QuizScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
-  const insets = useSafeAreaInsets();
-  const addXP = useProgressStore((s) => s.addXP);
-  const completeCard = useProgressStore((s) => s.completeCard);
+  const rewardCard = useProgressStore((s) => s.rewardCard);
+  const saveQuizScore = useProgressStore((s) => s.saveQuizScore);
 
   const course = courses.find((c) => c.id === courseId);
   const node = course?.nodes.find((n) => n.id === nodeId);
-  const cards = (node?.cards ?? []).filter((c) => c.cardType === 'practice');
+
+  const allNodeCards = node?.cards ?? [];
+  const nonPracticeCards = allNodeCards.filter((c) => c.cardType !== 'practice');
+  if (nonPracticeCards.length > 0) {
+    console.warn(
+      `[CodeCard] Quiz node "${nodeId}" has ${nonPracticeCards.length} non-practice card(s):`,
+      nonPracticeCards.map((c) => c.id),
+    );
+  }
+  const cards = allNodeCards.filter((c) => c.cardType === 'practice');
 
   const [state, dispatch] = useReducer(quizReducer, {
     index: 0,
@@ -78,10 +86,7 @@ export default function QuizScreen({ route, navigation }: Props) {
     dispatch({ type: 'SUBMIT' });
     if (isCorrectAnswer(rawAnswer, content.answer)) {
       dispatch({ type: 'SCORE' });
-      const isNew = completeCard(courseId, card.id);
-      if (isNew) {
-        addXP(courseId, 10);
-      }
+      rewardCard(courseId, card.id, XP_PER_PRACTICE);
     }
   };
 
@@ -89,6 +94,7 @@ export default function QuizScreen({ route, navigation }: Props) {
     if (index < cards.length - 1) {
       dispatch({ type: 'NEXT', nextIndex: index + 1 });
     } else {
+      saveQuizScore(courseId, nodeId, score);
       dispatch({ type: 'DONE' });
     }
   };
@@ -130,14 +136,12 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Text style={styles.headerBack}>← 返回</Text>
-        </TouchableOpacity>
-        <Text style={styles.progress}>
-          {index + 1} / {cards.length}
-        </Text>
-      </View>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        backLabel="返回"
+        right={<Text style={styles.progress}>{index + 1} / {cards.length}</Text>}
+        variant="compact"
+      />
 
       <View style={styles.questionWrap}>
         <QuestionRenderer
@@ -160,19 +164,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  headerBack: {
-    fontSize: 15,
-    color: '#4a9eff',
   },
   progress: {
     fontSize: 14,

@@ -9,7 +9,7 @@ import Animated, {
 import GridRenderer from './shared/GridRenderer';
 import VarLabel from './shared/VarLabel';
 import AddressColumn from './shared/AddressColumn';
-import type { MemoryBoxScenario } from '../../types';
+import type { MemoryBoxScenario } from '@/types';
 
 // ===== 动画参数 =====
 const CELL_SIZE = 36;

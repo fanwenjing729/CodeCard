@@ -1,4 +1,4 @@
-import type { PathNode } from '../../../../types';
+import type { PathNode } from '@/types';
 
 // 基础模块
 export const basicsNodes: PathNode[] = [

@@ -1,20 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/AppNavigator';
-import { courses } from '../data/courses';
-import { getAnimScenario } from '../data/animations';
-import renderCard from '../components/cards/renderCard';
-import { useProgressStore } from '../store/useProgressStore';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
+import ScreenHeader from '@/components/shared/ScreenHeader';
+import { courses } from '@/data/courses';
+import { getAnimScenario } from '@/data/animations';
+import renderCard from '@/components/cards/renderCard';
+import { useProgressStore, XP_PER_CARD, XP_PER_PRACTICE } from '@/store/useProgressStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Node'>;
 
 export default function NodeScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
-  const insets = useSafeAreaInsets();
-  const addXP = useProgressStore((s) => s.addXP);
-  const completeCard = useProgressStore((s) => s.completeCard);
+  const rewardCard = useProgressStore((s) => s.rewardCard);
   const setNodePosition = useProgressStore((s) => s.setNodePosition);
   const savedIndex = useProgressStore(
     (s) => s.courses[courseId]?.nodePositions[nodeId] ?? 0,
@@ -73,10 +71,7 @@ export default function NodeScreen({ route, navigation }: Props) {
         return;
       }
     }
-    const isNew = completeCard(courseId, card.id);
-    if (isNew) {
-      addXP(courseId, 5);
-    }
+    rewardCard(courseId, card.id, XP_PER_CARD);
     if (isLast) {
       setDone(true);
     } else {
@@ -98,13 +93,10 @@ export default function NodeScreen({ route, navigation }: Props) {
     (correct: boolean) => {
       const c = cardRef.current;
       if (correct && c) {
-        const isNew = completeCard(courseId, c.id);
-        if (isNew) {
-          addXP(courseId, 10);
-        }
+        rewardCard(courseId, c.id, XP_PER_PRACTICE);
       }
     },
-    [courseId, completeCard, addXP],
+    [courseId, rewardCard],
   );
 
   const handlePracticeNext = useCallback(() => {
@@ -146,15 +138,13 @@ export default function NodeScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Text style={styles.backBtn}>← 返回</Text>
-        </TouchableOpacity>
-        <Text style={styles.module}>{node?.module}</Text>
-        <Text style={styles.progress}>
-          {index + 1} / {cards.length}
-        </Text>
-      </View>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        backLabel="返回"
+        center={<Text style={styles.module}>{node?.module}</Text>}
+        right={<Text style={styles.progress}>{index + 1} / {cards.length}</Text>}
+        variant="compact"
+      />
 
       <View style={styles.cardArea}>
         {renderCard({
@@ -205,18 +195,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  backBtn: {
-    fontSize: 15,
-    color: '#4a9eff',
+  cardArea: {
+    flex: 1,
   },
   module: {
     fontSize: 14,
@@ -226,9 +206,6 @@ const styles = StyleSheet.create({
   progress: {
     fontSize: 13,
     color: '#999',
-  },
-  cardArea: {
-    flex: 1,
   },
   footer: {
     padding: 16,

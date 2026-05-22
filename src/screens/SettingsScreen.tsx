@@ -1,24 +1,34 @@
-import { StyleSheet, Text, View, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useProgressStore } from '../store/useProgressStore';
-import { courses } from '../data/courses';
-
-// ============================================================
-// 扩展口 #1：登录后在此 import authStore
-// import { useAuthStore } from '../store/authStore';
-// ============================================================
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useProgressStore } from '@/store/useProgressStore';
+import { useAuthStore } from '@/store/authStore';
+import { manualSync } from '@/store/syncEngine';
+import { courses } from '@/data/courses';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const coursesState = useProgressStore((s) => s.courses);
   const resetCourse = useProgressStore((s) => s.resetCourse);
   const flush = useProgressStore((s) => s.flush);
 
-  // ============================================================
-  // 扩展口 #2：登录后在此读取用户信息
-  // const user = useAuthStore((s) => s.user);
-  // const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  // ============================================================
+  const user = useAuthStore((s) => s.user);
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const handleResetCourse = (courseId: string, title: string) => {
     Alert.alert(
@@ -48,10 +58,7 @@ export default function SettingsScreen() {
           text: '全部清除',
           style: 'destructive',
           onPress: () => {
-            useProgressStore.setState({
-              global: { totalXP: 0, level: 1 },
-              courses: {},
-            });
+            courses.forEach((c) => resetCourse(c.id));
             flush();
           },
         },
@@ -59,39 +66,87 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleLogout = () => {
+    Alert.alert('退出登录', '退出后学习数据保留在本地，不会丢失。', [
+      { text: '取消', style: 'cancel' },
+      {
+        text: '退出',
+        style: 'destructive',
+        onPress: () => useAuthStore.getState().logout(),
+      },
+    ]);
+  };
+
+  const handleSync = async () => {
+    if (!user) return;
+    setSyncing(true);
+    try {
+      const result = await manualSync(user.id);
+      setLastSync(result.lastSyncedAt);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const formatSyncTime = (d: Date | null) => {
+    if (!d) return '暂未同步';
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
-      {/* ============================================================
-           扩展口 #3：登录后在此区块上方插入 Profile Section
-           <View style={styles.section}>
-             <Text style={styles.sectionTitle}>账号</Text>
-             <View style={styles.profileRow}>
-               <Image source={{ uri: user.avatar }} style={styles.avatar} />
-               <View>
-                 <Text style={styles.profileName}>{user.name}</Text>
-                 <Text style={styles.profileId}>UID: {user.id}</Text>
-               </View>
-             </View>
-             <TouchableOpacity style={styles.row} onPress={...}>
-               <Text style={styles.rowText}>修改密码</Text>
-               <Text style={styles.arrow}>›</Text>
-             </TouchableOpacity>
-             <TouchableOpacity style={styles.row} onPress={handleLogout}>
-               <Text style={[styles.rowText, styles.dangerText]}>退出登录</Text>
-             </TouchableOpacity>
-           </View>
-           ============================================================ */}
+      {/* 账号 */}
+      {isLoggedIn && user ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>账号</Text>
+          <View style={styles.profileRow}>
+            <View>
+              <Text style={styles.profileName}>{user.phone ?? user.name ?? '用户'}</Text>
+              <Text style={styles.profileId}>UID: {user.id.slice(0, 8)}</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.row} onPress={handleLogout} activeOpacity={0.7}>
+            <Text style={[styles.rowText, styles.dangerText]}>退出登录</Text>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
-      {/* ============================================================
-           扩展口 #4：登录后在此区块上方插入 Sync Section
-           <View style={styles.section}>
-             <Text style={styles.sectionTitle}>同步</Text>
-             <Text style={styles.syncStatus}>上次同步：2026-05-21 14:30</Text>
-             <TouchableOpacity style={styles.row} onPress={syncNow}>
-               <Text style={styles.rowText}>立即同步</Text>
-             </TouchableOpacity>
-           </View>
-           ============================================================ */}
+      {/* 同步 */}
+      {isLoggedIn ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>同步</Text>
+          <Text style={styles.syncStatus}>上次同步：{formatSyncTime(lastSync)}</Text>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={handleSync}
+            activeOpacity={0.7}
+            disabled={syncing}
+          >
+            <Text style={styles.rowText}>立即同步</Text>
+            {syncing ? (
+              <ActivityIndicator size="small" color="#4a9eff" />
+            ) : (
+              <Text style={styles.arrow}>›</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      {/* 登录入口（未登录时） */}
+      {!isLoggedIn ? (
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => navigation.navigate('Login')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.rowText}>登录以同步进度</Text>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* 数据管理 */}
       <View style={styles.section}>
@@ -99,8 +154,6 @@ export default function SettingsScreen() {
 
         {courses.map((c) => {
           const progress = coursesState[c.id];
-          // 扩展口 #5：已登录时，在 label 上加同步图标
-          // const synced = isLoggedIn ? ' ☁️' : '';
           return (
             <TouchableOpacity
               key={c.id}
@@ -111,7 +164,7 @@ export default function SettingsScreen() {
               <View style={styles.rowLeft}>
                 <View style={[styles.dot, { backgroundColor: c.color }]} />
                 <Text style={styles.rowText}>
-                  重置{c.title}进度（{progress?.completedCards?.length ?? 0} 张已完成）
+                  重置{c.title}进度（{progress?.completedCards?.length ?? 0} 张已完成）{isLoggedIn ? ' ☁️' : ''}
                 </Text>
               </View>
               <Text style={styles.arrow}>›</Text>
@@ -206,33 +259,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     marginVertical: 4,
   },
-  // ============================================================
-  // 扩展口 #6：登录后使用的样式（取消注释）
-  // profileRow: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   marginBottom: 12,
-  // },
-  // avatar: {
-  //   width: 48,
-  //   height: 48,
-  //   borderRadius: 24,
-  //   marginRight: 12,
-  // },
-  // profileName: {
-  //   fontSize: 18,
-  //   fontWeight: '600',
-  //   color: '#222',
-  // },
-  // profileId: {
-  //   fontSize: 13,
-  //   color: '#999',
-  //   marginTop: 2,
-  // },
-  // syncStatus: {
-  //   fontSize: 13,
-  //   color: '#999',
-  //   marginBottom: 8,
-  // },
-  // ============================================================
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#222',
+  },
+  profileId: {
+    fontSize: 13,
+    color: '#999',
+    marginTop: 2,
+  },
+  syncStatus: {
+    fontSize: 13,
+    color: '#999',
+    marginBottom: 8,
+  },
 });

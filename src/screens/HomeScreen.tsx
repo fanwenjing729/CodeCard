@@ -2,41 +2,58 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/AppNavigator';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { courses } from '../data/courses';
+import { courses } from '@/data/courses';
+import { useProgressStore } from '@/store/useProgressStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const coursesProgress = useProgressStore((s) => s.courses);
 
   return (
     <View style={styles.container}>
       <Text style={[styles.heading, { marginTop: insets.top + 42 }]}>选择学科</Text>
       <View style={{ marginTop: 21 }}>
-        {courses.map((c) => (
-          <TouchableOpacity
-            key={c.id}
-            style={styles.courseCard}
-            onPress={() => navigation.navigate('Course', { courseId: c.id })}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.courseIcon, { backgroundColor: c.color }]}>
-              {c.icon ? (
-                <MaterialCommunityIcons name={c.icon as any} size={24} color="#fff" />
-              ) : (
-                <Text style={styles.courseIconText}>{c.title[0]}</Text>
-              )}
-            </View>
-            <View style={styles.courseInfo}>
-              <Text style={styles.courseTitle}>{c.title}</Text>
-              <Text style={styles.courseMeta}>{c.nodes.filter((n) => n.cards.length > 0).length} 个模块</Text>
-            </View>
-            <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
-        ))}
+        {courses.map((c) => {
+          const progress = coursesProgress[c.id];
+          const done = progress?.completedCards?.length ?? 0;
+          const total = c.nodes.reduce((sum, n) => sum + n.cards.length, 0);
+          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+          return (
+            <TouchableOpacity
+              key={c.id}
+              style={styles.courseCard}
+              onPress={() => navigation.navigate('Course', { courseId: c.id })}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.courseIcon, { backgroundColor: c.color }]}>
+                {c.icon ? (
+                  <MaterialCommunityIcons name={c.icon as any} size={24} color="#fff" />
+                ) : (
+                  <Text style={styles.courseIconText}>{c.title[0]}</Text>
+                )}
+              </View>
+              <View style={styles.courseInfo}>
+                <Text style={styles.courseTitle}>{c.title}</Text>
+                <Text style={styles.courseMeta}>
+                  {c.nodes.filter((n) => n.cards.length > 0).length} 个模块
+                  {total > 0 ? ` · ${done}/${total} · ${pct}%` : ''}
+                </Text>
+                {total > 0 && (
+                  <View style={styles.miniBar}>
+                    <View style={[styles.miniBarFill, { width: `${pct}%` as any, backgroundColor: c.color }]} />
+                  </View>
+                )}
+              </View>
+              <Text style={styles.arrow}>›</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -90,6 +107,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     marginTop: 2,
+    marginBottom: 4,
+  },
+  miniBar: {
+    height: 3,
+    backgroundColor: '#e8edf2',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  miniBarFill: {
+    height: '100%',
+    borderRadius: 2,
   },
   arrow: {
     fontSize: 22,

@@ -7,7 +7,7 @@ import Animated, {
   withDelay,
   Easing,
 } from 'react-native-reanimated';
-import type { VarAlloc } from '../../../types';
+import type { VarAlloc } from '@/types';
 
 interface VarLabelProps {
   alloc: VarAlloc;

@@ -1,18 +1,17 @@
 import { useMemo } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/AppNavigator';
-import { courses } from '../data/courses';
-import { useProgressStore } from '../store/useProgressStore';
-import ListItem from '../components/shared/ListItem';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
+import ScreenHeader from '@/components/shared/ScreenHeader';
+import { courses } from '@/data/courses';
+import { useProgressStore } from '@/store/useProgressStore';
+import ListItem from '@/components/shared/ListItem';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Module'>;
 
 export default function ModuleScreen({ route, navigation }: Props) {
   const { courseId, moduleId } = route.params;
   const coursesProgress = useProgressStore((s) => s.courses);
-  const insets = useSafeAreaInsets();
   const course = courses.find((c) => c.id === courseId);
   const themeColor = course?.color ?? '#4a9eff';
 
@@ -28,13 +27,13 @@ export default function ModuleScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top + 43, borderBottomColor: themeColor + '40' }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Text style={[styles.backBtn, { color: themeColor }]}>← 模块</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{moduleName}</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        title={moduleName}
+        backLabel="模块"
+        themeColor={themeColor}
+        variant="default"
+      />
 
       <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 36 }]}>
         {nodes.map((node) => {
@@ -86,22 +85,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-  },
-  backBtn: {
-    fontSize: 15,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#222',
   },
   listContent: {
     padding: 16,

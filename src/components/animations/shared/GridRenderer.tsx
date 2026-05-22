@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
-import type { VarAlloc } from '../../../types';
+import type { VarAlloc } from '@/types';
 
 interface GridRendererProps {
   rows: number;

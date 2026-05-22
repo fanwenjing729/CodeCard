@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
-import { useProgressStore } from '../store/useProgressStore';
-import { courses } from '../data/courses';
+import { useProgressStore } from '@/store/useProgressStore';
+import { courses } from '@/data/courses';
 
 function xpForLevelStart(level: number): number {
   return 50 * (level - 1) * level;
