@@ -3,6 +3,7 @@ import type { MemoryBoxScenario } from '@/types';
 export const variableStorageScenario: MemoryBoxScenario = {
   id: 'variable-storage',
   title: '变量内存布局',
+  totalSteps: 7,
   cellsPerRow: 8,
   totalRows: 6,
   steps: [

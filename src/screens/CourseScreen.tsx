@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Colors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -21,7 +22,7 @@ export default function CourseScreen({ route, navigation }: Props) {
   const { courseId } = route.params;
   const coursesProgress = useProgressStore((s) => s.courses);
   const course = courses.find((c) => c.id === courseId);
-  const themeColor = course?.color ?? '#4a9eff';
+  const themeColor = course?.color ?? Colors.primary;
 
   const modules = useMemo(() => {
     return course ? groupByModule(course.nodes) : [];
@@ -79,7 +80,7 @@ export default function CourseScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
   },
   listContent: {
     padding: 16,
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
   },
   empty: {
     textAlign: 'center',
-    color: '#999',
+    color: Colors.textMuted,
     marginTop: 60,
     fontSize: 15,
   },

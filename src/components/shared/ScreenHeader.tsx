@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Colors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
@@ -17,7 +18,7 @@ export default function ScreenHeader({
   center,
   right,
   backLabel = '返回',
-  themeColor = '#4a9eff',
+  themeColor = Colors.primary,
   variant,
 }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
@@ -60,15 +61,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: Colors.border,
   },
   backBtn: {
     fontSize: 15,
-    color: '#4a9eff',
+    color: Colors.primary,
   },
   title: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#222',
+    color: Colors.text,
   },
 });

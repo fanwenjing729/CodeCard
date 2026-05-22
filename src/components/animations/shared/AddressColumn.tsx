@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
+import { Colors } from '@/theme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -86,7 +87,7 @@ const styles = StyleSheet.create({
     paddingRight: 6,
   },
   text: {
-    color: '#666',
+    color: Colors.textSecondary,
     fontSize: 11,
     fontFamily: 'monospace',
   },

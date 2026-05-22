@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { Colors } from '@/theme';
 import type { PracticeContent } from '@/types';
 
 export function normalize(s: string): string {
@@ -46,10 +47,10 @@ export default function QuestionRenderer({
       {/* 选择题 */}
       {!isFill &&
         content.options?.map((opt) => {
-          let bg = '#f0f4ff';
-          if (submitted && opt === content.answer) bg = '#d4edda';
-          if (submitted && opt === selected && opt !== content.answer) bg = '#f8d7da';
-          if (!submitted && opt === selected) bg = '#cce5ff';
+          let bg: string = Colors.optionBg;
+          if (submitted && opt === content.answer) bg = Colors.correctBg;
+          if (submitted && opt === selected && opt !== content.answer) bg = Colors.wrongBg;
+          if (!submitted && opt === selected) bg = Colors.optionSelectedBg;
 
           return (
             <TouchableOpacity
@@ -76,7 +77,7 @@ export default function QuestionRenderer({
             onChangeText={onFillChange}
             editable={!submitted}
             placeholder="输入你的答案..."
-            placeholderTextColor="#bbb"
+            placeholderTextColor={Colors.textPlaceholder}
             autoCapitalize="none"
             autoCorrect={false}
           />
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
   question: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#222',
+    color: Colors.text,
     marginBottom: 24,
     lineHeight: 26,
   },
@@ -141,40 +142,40 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#d0d8f0',
+    borderColor: Colors.optionBorder,
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: Colors.optionText,
   },
   fillWrap: {
     marginBottom: 8,
   },
   fillInput: {
     borderWidth: 1,
-    borderColor: '#d0d0d0',
+    borderColor: Colors.borderLight,
     borderRadius: 10,
     padding: 14,
     fontSize: 16,
-    color: '#333',
-    backgroundColor: '#fafafa',
+    color: Colors.optionText,
+    backgroundColor: Colors.fillInputBg,
   },
   fillCorrect: {
-    borderColor: '#2ed573',
-    backgroundColor: '#d4edda',
+    borderColor: Colors.success,
+    backgroundColor: Colors.correctBg,
   },
   fillWrong: {
-    borderColor: '#ff6b6b',
-    backgroundColor: '#f8d7da',
+    borderColor: Colors.wrongBorder,
+    backgroundColor: Colors.wrongBg,
   },
   correctAnswer: {
     marginTop: 8,
     fontSize: 13,
-    color: '#666',
+    color: Colors.textSecondary,
   },
   submitBtn: {
     marginTop: 8,
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   submitText: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -195,34 +196,34 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   feedbackCorrect: {
-    backgroundColor: '#d4edda',
+    backgroundColor: Colors.correctBg,
   },
   feedbackWrong: {
-    backgroundColor: '#f8d7da',
+    backgroundColor: Colors.wrongBg,
   },
   feedbackIcon: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#222',
+    color: Colors.text,
     marginBottom: 8,
   },
   explanation: {
     fontSize: 14,
     lineHeight: 20,
-    color: '#555',
+    color: Colors.explanationText,
   },
   nextBtn: {
     marginTop: 12,
-    backgroundColor: '#ff9f43',
+    backgroundColor: Colors.warning,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
   },
   nextBtnCorrect: {
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
   },
   nextText: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },

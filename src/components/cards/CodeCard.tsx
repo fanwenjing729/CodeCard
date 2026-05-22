@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Colors } from '@/theme';
 import type { CodeContent } from '@/types';
 
 interface Props {
@@ -36,7 +37,7 @@ export default function CodeCard({ content }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
   },
   content: {
     flexGrow: 1,
@@ -46,11 +47,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#222',
+    color: Colors.text,
     marginBottom: 16,
   },
   codeBlock: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: Colors.codeBg,
     borderRadius: 12,
     padding: 16,
   },
@@ -62,12 +63,12 @@ const styles = StyleSheet.create({
     marginHorizontal: -16,
     paddingHorizontal: 16,
     borderLeftWidth: 3,
-    borderLeftColor: '#4a9eff',
+    borderLeftColor: Colors.primary,
   },
   lineNum: {
     fontFamily: 'monospace',
     fontSize: 12,
-    color: '#888',
+    color: Colors.codeLineNum,
     width: 24,
     marginRight: 8,
     textAlign: 'right',
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 14,
     lineHeight: 22,
-    color: '#d4d4d4',
+    color: Colors.codeText,
     flex: 1,
   },
 });

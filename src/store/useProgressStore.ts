@@ -7,13 +7,14 @@ export interface CourseProgress {
   xp: number;
   quizScores: Record<string, number>;
   nodePositions: Record<string, number>;
+  wrongCards: string[];
 }
 
 function getOrCreateCourse(
   courses: Record<string, CourseProgress>,
   courseId: string,
 ): CourseProgress {
-  return courses[courseId] ?? { completedCards: [], xp: 0, quizScores: {}, nodePositions: {} };
+  return courses[courseId] ?? { completedCards: [], xp: 0, quizScores: {}, nodePositions: {}, wrongCards: [] };
 }
 
 function calcLevel(totalXP: number): number {
@@ -29,13 +30,39 @@ function calcLevel(totalXP: number): number {
 }
 
 const STORAGE_KEY = 'codecard-progress';
+const CURRENT_VERSION = 2;
 
 interface PersistedData {
+  version: number;
   global: {
     totalXP: number;
     level: number;
   };
   courses: Record<string, CourseProgress>;
+}
+
+// 迁移链：每个 key 是"从该版本迁到下一版"的函数
+const MIGRATIONS: Record<number, (data: any) => any> = {
+  1: (data) => ({
+    ...data,
+    version: 2,
+    courses: Object.fromEntries(
+      Object.entries(data.courses).map(([id, c]: [string, any]) => [
+        id,
+        { ...c, wrongCards: [] },
+      ]),
+    ),
+  }),
+};
+
+function migrate(data: any): PersistedData {
+  let version: number = data.version ?? 1;
+  while (MIGRATIONS[version]) {
+    data = MIGRATIONS[version](data);
+    version++;
+  }
+  data.version = CURRENT_VERSION;
+  return data as PersistedData;
 }
 
 export const XP_PER_CARD = 5;
@@ -47,12 +74,16 @@ interface ProgressStore extends PersistedData {
   rewardCard: (courseId: string, cardId: string, xpAmount: number) => boolean;
   saveQuizScore: (courseId: string, nodeId: string, score: number) => void;
   setNodePosition: (courseId: string, nodeId: string, cardIndex: number) => void;
+  addWrongCard: (courseId: string, cardId: string) => void;
+  removeWrongCard: (courseId: string, cardId: string) => void;
+  uncompleteCard: (courseId: string, cardId: string) => void;
   hydrate: () => Promise<void>;
   flush: () => Promise<void>;
   resetCourse: (courseId: string) => void;
 }
 
 const initialState: PersistedData = {
+  version: CURRENT_VERSION,
   global: {
     totalXP: 0,
     level: 1,
@@ -62,7 +93,7 @@ const initialState: PersistedData = {
 
 // 提取可序列化数据，排除方法
 function pickData(s: ProgressStore): PersistedData {
-  return { global: s.global, courses: s.courses };
+  return { version: CURRENT_VERSION, global: s.global, courses: s.courses };
 }
 
 const save = async (data: PersistedData) => {
@@ -169,16 +200,56 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
     });
   },
 
+  addWrongCard: (courseId, cardId) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      if (c.wrongCards.includes(cardId)) return s;
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: { ...c, wrongCards: [...c.wrongCards, cardId] },
+        },
+      };
+    });
+  },
+
+  removeWrongCard: (courseId, cardId) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      if (!c.wrongCards.includes(cardId)) return s;
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: { ...c, wrongCards: c.wrongCards.filter((id) => id !== cardId) },
+        },
+      };
+    });
+  },
+
+  uncompleteCard: (courseId, cardId) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      if (!c.completedCards.includes(cardId)) return s;
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: { ...c, completedCards: c.completedCards.filter((id) => id !== cardId) },
+        },
+      };
+    });
+  },
+
   hydrate: async () => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw);
       if (!data || typeof data !== 'object') return;
-      set((s) => ({
-        global: data.global ? { ...initialState.global, ...data.global } : s.global,
-        courses: data.courses && typeof data.courses === 'object' ? data.courses : s.courses,
-      }));
+      const migrated = migrate(data);
+      set({
+        global: migrated.global,
+        courses: migrated.courses,
+      });
     } catch (e) {
       console.warn('[CodeCard] AsyncStorage read failed:', e);
     }
@@ -199,7 +270,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
         },
         courses: {
           ...s.courses,
-          [courseId]: { completedCards: [], xp: 0, quizScores: {}, nodePositions: {} },
+          [courseId]: { completedCards: [], xp: 0, quizScores: {}, nodePositions: {}, wrongCards: [] },
         },
       };
     });

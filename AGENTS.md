@@ -13,13 +13,21 @@ This document IS the source of truth. Do NOT read source files unless explicitly
 
 | Task type | What to read | What NOT to read |
 |-----------|-------------|------------------|
-| Add course / module / node / card | This doc + `src/data/courses/cpp/01-basics/index.ts` (as template) | Any other file |
-| Add animation | This doc + `src/data/animations/index.ts` + `scenarios/variableStorage.ts` (as template) | Any other file |
+| Add course / module / node / card | This doc + `src/data/courses/cpp/01-basics/hello-world.ts` (as node template) + `01-basics/index.ts` (as module template) | Any other file |
+| Add animation (any type) | This doc ONLY — do NOT read source | All source files |
 | Fix store / progress bug | `src/store/useProgressStore.ts` + the screen reporting the bug | Other screens |
 | Fix card rendering bug | The specific card component + `renderCard.tsx` | Other components |
 | Modify SettingsScreen UI | This doc + `SettingsScreen.tsx` | Other screens |
 | Modify ProgressScreen | `ProgressScreen.tsx` only | Other screens |
 | Add login / cloud sync / avatar | This doc ONLY — do NOT read source | All source files |
+| Theme / color / style change | `src/theme.ts` + `docs/AAAAui-reference.md` — do NOT read components | Component source files |
+| Data migration / store structure change | `src/store/useProgressStore.ts` + `docs/store-invariants.md` | Other store files, screens |
+| Remote content / CDN / CMS | This doc ONLY (see"将来规模化"section) — do NOT read source | All source files |
+| Add test framework | This doc ONLY (see"将来规模化"section) + `docs/store-invariants.md` | All source files |
+| Extract content to Markdown | This doc ONLY (see"将来规模化"section) — do NOT read source | All source files |
+| Branch path navigation | `docs/branch-path-design.md` — do NOT read source | All source files |
+| Add payment / permissions / IAP | This doc ONLY (see"将来规模化 → 付费与权限系统") — do NOT read source | All source files |
+| **Any future architecture / scaling change** | **This doc first** — search for relevant section, only read source files if this doc says so | Everything else |
 
 Violating this table wastes tokens and context. Trust this document.
 
@@ -37,11 +45,65 @@ Local-first Android learning app. Card-based micro-learning with instant feedbac
 | State | Zustand 5 + manual AsyncStorage persist |
 | Animation | react-native-reanimated 4.1.7 + react-native-svg 15 |
 | Icons | @expo/vector-icons (MaterialCommunityIcons) |
+| Theme | `src/theme.ts` — 46 design tokens, 19 components consume |
 
-## File map — where everything lives
+## Theme system (src/theme.ts)
+
+所有视觉属性必须通过 theme token 引用，禁止在组件中硬编码 hex 颜色。
+
+```ts
+import { Colors, FontSize, FontWeight, Radius, Spacing, Layout } from '@/theme';
+```
+
+### Colors tokens (46 个)
+
+| 分类 | Token | 值 | 用途 |
+|------|-------|------|------|
+| 品牌 | `primary` | `#4a9eff` | 按钮、进度条、TabBar 选中 |
+| 语义 | `success` | `#2ed573` | 正确反馈 |
+| | `danger` | `#ff4757` | 错误/危险操作 |
+| | `warning` | `#ff9f43` | 警告 |
+| 背景 | `bg` | `#fff` | 页面背景 |
+| | `bgSecondary` | `#f8f9fa` | 次级背景 |
+| | `bgTertiary` | `#f5f5f5` | 三级背景 |
+| 文字 | `text` | `#222` | 标题/正文 |
+| | `textSecondary` | `#666` | 次要文字 |
+| | `textMuted` | `#999` | 辅助文字 |
+| | `textPlaceholder` | `#bbb` | 占位符 |
+| | `textInverse` | `#fff` | 深色背景上的文字 |
+| | `bodyText` | `#444` | 概念卡正文 |
+| 边框 | `border` | `#eee` | 默认边框 |
+| | `borderLight` | `#d0d0d0` | 浅边框 |
+| 代码 | `codeBg` | `#1e1e1e` | 代码块背景 |
+| | `codeText` | `#d4d4d4` | 代码文字 |
+| | `codeLineNum` | `#888` | 行号 |
+| 问答 | `optionBg` | `#f0f4ff` | 选项默认背景 |
+| | `optionSelectedBg` | `#cce5ff` | 选项选中背景 |
+| | `optionBorder` | `#d0d8f0` | 选项边框 |
+| | `optionText` | `#333` | 选项文字 |
+| | `correctBg` | `#d4edda` | 正确答案背景 |
+| | `wrongBg` | `#f8d7da` | 错误答案背景 |
+| | `wrongBorder` | `#ff6b6b` | 错误答案边框 |
+| | `fillInputBg` | `#fafafa` | 填空输入框背景 |
+| | `explanationText` | `#555` | 答案解析 |
+| 动画 | `gridEmpty` | `#2a2a3e` | 内存网格空单元格 |
+| | `gridEmptyStroke` | `#3a3a4e` | 空单元格描边 |
+| ... | ... | ... | (完整列表见 theme.ts) |
+
+### 加新颜色
+
+在 `theme.ts` 的 `Colors` 对象中加一行，然后组件中引用 `Colors.xxx`。不给组件写死 hex。
+
+### 暗色模式
+
+将来实现暗色模式只需要：
+1. 在 `theme.ts` 加 `DarkColors` 对象（同 key，不同值）
+2. 加一个 `useColorScheme()` hook 切换
+3. 不改任何组件代码
 
 ```
 src/
+├── theme.ts                   ← Design tokens (Colors, FontSize, Spacing, Radius, Layout)
 ├── types/index.ts            ← All shared TypeScript interfaces
 ├── navigation/AppNavigator.tsx ← Root stack + bottom tabs
 ├── store/
@@ -59,7 +121,8 @@ src/
 │   └── LoginScreen.tsx        ← Login placeholder (close button, route registered)
 ├── components/
 │   └── shared/
-│       └── ScreenHeader.tsx   ← Back/center/right header, compact: 33pt padding
+│       ├── ScreenHeader.tsx   ← Back/center/right header, compact: 33pt padding
+│       └── ErrorBoundary.tsx  ← Catch render errors, flush progress, show retry UI
 ├── components/
 │   ├── cards/
 │   │   ├── renderCard.tsx     ← Card type dispatcher (switch on cardType)
@@ -68,7 +131,8 @@ src/
 │   │   ├── PracticeCard.tsx   ← Wraps QuestionRenderer with local state
 │   │   └── QuestionRenderer.tsx ← Shared question UI (choice/fill options, feedback)
 │   └── animations/
-│       ├── MemoryBox.tsx      ← Variable memory layout animation (Reanimated + SVG)
+│       ├── MemoryBox.tsx      ← Memory layout animation (Reanimated + SVG)
+│       ├── LottiePlayer.tsx   ← Lottie JSON player (AE exports)
 │       └── shared/
 │           ├── GridRenderer.tsx ← SVG memory cell grid
 │           ├── VarLabel.tsx     ← Animated variable name/type labels
@@ -78,7 +142,11 @@ src/
 │   │   ├── index.ts           ← export courses: Course[] (add new subjects here)
 │   │   └── cpp/               ← C++ course
 │   │       ├── index.ts       ← Course definition (id, title, color, nodes[])
-│   │       ├── 01-basics/     ← ✅ 2 nodes / 5 cards (only module with content)
+│   │       ├── 01-basics/     ← ✅ 3 nodes / 22 cards
+│   │       │   ├── index.ts       ← import + export basicsNodes[]
+│   │       │   ├── hello-world.ts ← 第一个程序 (3 cards)
+│   │       │   ├── variables.ts   ← 变量声明 (8 cards)
+│   │       │   └── io.ts          ← 输入与输出 (7 cards)
 │   │       ├── 02-advanced/   ← ⬜ empty
 │   │       ├── 03-oop/        ← ⬜ empty
 │   │       ├── 04-stl/        ← ⬜ empty
@@ -106,11 +174,13 @@ PathNode {
   id: string;              // e.g. "cpp-01-start"
   courseId: string;        // must match parent Course.id
   type: 'knowledge' | 'quiz';
-  moduleId: string;        // stable identifier, e.g. "basics"
+  moduleId: ModuleId;      // "basics" | "advanced" | "oop" | "stl" | "generics" | "modern"
   module: string;          // display name, e.g. "基础"
   title: string;           // e.g. "第一个程序"
   cards: Card[];
 }
+
+ModuleId = 'basics' | 'advanced' | 'oop' | 'stl' | 'generics' | 'modern'
 
 // ---- Card types ----
 Card {
@@ -167,6 +237,8 @@ VarAlloc {
 // Actions
 addXP(courseId, amount)           // adds to course.xp + global.totalXP, recalculates level
 completeCard(courseId, cardId)    // returns true if newly completed (dup-proof)
+rewardCard(courseId, cardId, xp)  // completeCard + addXP in one call
+saveQuizScore(courseId, nodeId, score)
 setNodePosition(courseId, nodeId, cardIndex)  // saves reading position
 resetCourse(courseId)             // clears one course, deducts from global XP
 hydrate()                         // loads from AsyncStorage (called once in App.tsx)
@@ -177,6 +249,39 @@ flush()                           // immediately writes to AsyncStorage
 - `subscribe()` debounced 500ms auto-save
 - `AppState.addEventListener('change')` flush on background/exit
 - Manual `JSON.parse/stringify`, no zustand middleware (avoids Fabric compat issue)
+- Persistent data is versioned (`CURRENT_VERSION` constant) — every save writes the version number
+
+### 修改数据结构（迁移机制）
+
+`PersistedData` 带 `version: number` 字段。`hydrate()` 时自动跑迁移链，从旧版本逐级升到 `CURRENT_VERSION`。
+
+**操作步骤（改数据结构时）：**
+
+1. 改 `CURRENT_VERSION` 常量（+1）
+2. 在 `MIGRATIONS` 表里加一个迁移函数：
+
+```ts
+// CURRENT_VERSION 原来是 1，改成 2
+const CURRENT_VERSION = 2;
+
+const MIGRATIONS: Record<number, (data: any) => any> = {
+  // key = 旧版本号，value = 从该版本迁到下一版的函数
+  1: (data) => ({
+    ...data,
+    version: 2,
+    courses: Object.fromEntries(
+      Object.entries(data.courses).map(([id, c]: [string, any]) => [
+        id,
+        { ...c, newField: defaultValue },  // ← 你的新字段
+      ])
+    ),
+  }),
+};
+```
+
+3. 如果 `PersistedData` 或 `CourseProgress` 接口也改了，同步更新 TypeScript 类型
+
+就这三步。已安装用户的旧版本数据会在下次 `hydrate()` 时自动迁移，不会丢数据、不会崩。迁移链上的每个函数只负责一个版本的跳跃，链式串联。
 
 ## Navigation (src/navigation/AppNavigator.tsx)
 
@@ -193,6 +298,13 @@ RootStack (NativeStack, headerShown: false)
 ```
 
 Route params typed in `RootStackParamList`. No auth wall — app is fully usable without login.
+
+## Error Boundary (src/components/shared/ErrorBoundary.tsx)
+
+包裹 `<NavigationContainer>` 的最外层 class 组件。任何 render 异常被捕获后：
+1. `componentDidCatch` 调用 `useProgressStore.getState().flush()` 保存进度
+2. 显示"出错了，进度已保存 + 重试"按钮
+3. 点重试清除错误状态，重新 render 子树
 
 ## How screens read data
 
@@ -219,33 +331,77 @@ NodeScreen → renderCard({card, animStep, onPracticeComplete, onPracticeNext, i
 
 QuizScreen uses QuestionRenderer directly (no PracticeCard wrapper).
 
-## Animation registry
+## Animation system — multi-type
 
-`src/data/animations/index.ts`:
-```
-animationRegistry: Record<string, {
-  scenario: MemoryBoxScenario;     // eagerly imported (no Reanimated deps)
-  Component: ComponentType | null; // lazy-loaded via require()
-  loadComponent(): void;
-}>
+所有动画遵循统一接口。添加新动画不改任何源文件，只加数据+组件+注册。
+
+### 接口契约
+
+```ts
+// 所有动画场景必须满足（src/types/index.ts）
+AnimScenario {
+  id: string;         // registry key
+  title: string;      // 显示名
+  totalSteps: number; // 总步数
+}
+
+// 组件必须接受（src/components/animations/）
+ComponentType<{ scenario: AnimScenario; step: number }>
+// step 从 0 到 totalSteps-1，组件根据 step 渲染对应画面
 ```
 
-To add an animation:
-1. Create scenario in `scenarios/{name}.ts`
-2. Create component in `components/animations/{Name}.tsx`
-3. Register in `index.ts` (+3 lines)
+### 调度链路
+
+```
+NodeScreen                     → getAnimScenario(id) → scenario.totalSteps（控制步进）
+renderCard (case 'animation')  → getAnimComponent(id) → React.createElement(component, { scenario, step })
+```
+
+### 当前动画类型
+
+| 类型 | Scenario 定义 | 组件 | 特点 |
+|------|-------------|------|------|
+| MemoryBox | `MemoryBoxScenario extends AnimScenario` | `MemoryBox.tsx` | SVG 网格布局，`steps: MemoryBoxStep[]` |
+| Lottie | `LottieScenario extends AnimScenario` | `LottiePlayer.tsx` | AE 导出 JSON，`lottieFile: string` |
+
+### 添加 MemoryBox 动画
+
+1. 在 `src/data/animations/scenarios/{name}.ts` 创建 `MemoryBoxScenario`（模板：`variableStorage.ts`）
+2. registry 加一行：`'{animId}': { scenario: ..., Component: MemoryBox as ... }`
+3. 组件复用 `MemoryBox.tsx`，不需要新建
+
+### 添加 Lottie 动画
+
+1. AE 导出 Lottie JSON → 放入 `assets/lottie/`
+2. 在 `src/data/animations/scenarios/{name}.ts` 创建 `LottieScenario`（模板：`lottieLoopFlow.ts`）
+3. registry 加一行：`'{animId}': { scenario: ..., Component: LottiePlayer as ... }`
+4. 组件复用 `LottiePlayer.tsx`，不需要新建
+
+### 添加全新动画类型（如执行流程图）
+
+1. 在 `src/types/index.ts` 定义新 `XxxScenario extends AnimScenario`（+4 行）
+2. 在 `src/components/animations/` 创建新组件，接收 `{ scenario: XxxScenario; step: number }`
+3. registry 加一行注册
+4. **不改 renderCard.tsx、NodeScreen.tsx、animationRegistry 结构**
 
 ## Content authoring — no source changes needed
 
 ### Add a new course (e.g. "数据结构")
 1. Create `src/data/courses/ds/index.ts` (copy pattern from `cpp/index.ts`)
-2. Create module folders under `ds/{module}/index.ts`
+2. Create module folders under `ds/{module}/`
 3. Add `import { dsCourse } from './ds'` + add to `courses` array in `src/data/courses/index.ts`
 
 ### Add a new node to a module
-Copy a node object from the template, fill in:
+
+**CRITICAL: 一个节点 = 一个文件。禁止把多个节点写进同一个文件。禁止把所有节点塞进 index.ts。index.ts 只做 import + export，不写卡片数据。**（模板：`01-basics/hello-world.ts`）
+
+1. 在模块目录下创建 `{topic}.ts`（如 `operators.ts`、`loops.ts`）
+2. 按模板填写节点数据：
+
 ```typescript
-{
+import type { PathNode } from '@/types';
+
+export const operatorsNode: PathNode = {
   id: '{courseId}-{moduleNum}-{topic}',
   courseId: 'cpp',
   type: 'knowledge',         // or 'quiz' for module-end quiz
@@ -253,8 +409,17 @@ Copy a node object from the template, fill in:
   module: '基础',            // display: shown in UI
   title: '节点标题',
   cards: [ ... ],
-}
+};
 ```
+
+3. 在模块 `index.ts` 中 import + 加入数组：
+
+```typescript
+import { operatorsNode } from './operators';
+// 加进 basicsNodes 数组
+```
+
+4. 文件名用 kebab-case：`hello-world.ts`、`operators.ts`、`if-else.ts`。每个 export 的变量名用 camelCase + `Node` 后缀：`helloWorldNode`、`operatorsNode`
 
 Module IDs by convention:
 
@@ -351,19 +516,167 @@ AppNavigator     → <LoginScreen>                   ← 路由注册
 
 ## 将来加入真实登录——操作步骤
 
-只需替换 3 个文件的实现，接口签名不动：
+**不改任何现有文件的代码。** 替换 3 个 no-op 实现 + 新建几个文件即可。
 
-1. **替换 `authStore.ts` 实现** — `initialize()` 从 supabase 恢复 session，`loginByPhone/verifyOtp/loginByWechat` 调 SDK，`logout()` 调 `supabase.auth.signOut`。useAuthStore 的 selector 签名不变。
-2. **替换 `syncEngine.ts` 实现** — `uploadProgress` upsert 到 `user_progress` 表，`syncOnLogin` 下载合并后回写。函数签名不变。
-3. **替换 `LoginScreen.tsx` UI** — 占位 → 手机号输入 + 微信登录按钮。文件名不变。
+### 1. 替换 `authStore.ts` 实现
 
-此外需新增：
-- `src/lib/supabase.ts`（客户端初始化）
-- `.env`（`EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY`）
-- `app.json` 加 `scheme: "codecard"`
-- Supabase Dashboard 建表 + 开 RLS
+`initialize()` 从后端恢复 session，`loginByPhone/verifyOtp/loginByWechat` 调 SDK，`logout()` 清除 token。useAuthStore 的 selector 签名不变。
 
-**SettingsScreen / AppNavigator / App.tsx 完全不动。**
+### 2. 替换 `syncEngine.ts` 实现——核心：syncOnLogin 全流程
+
+```
+用户登录成功（拿到 userId）
+        ↓
+syncEngine.syncOnLogin(userId)
+        ↓
+  ┌─────────────────────────────────────────┐
+  │ 1. 读本地 PersistedData                  │  ← AsyncStorage.getItem('codecard-progress')
+  │ 2. GET /progress/{userId}               │  ← 查远程
+  │ 3. merge(local, remote)                 │  ← 客户端合并
+  │ 4. PUT /progress/{userId} + body={合并结果} │  ← 写回远程
+  │ 5. 合并结果写入本地 Zustand store          │  ← hydrate
+  └─────────────────────────────────────────┘
+```
+
+**合并策略（merge 函数，写在 syncEngine.ts 里）：**
+
+```ts
+function merge(local: PersistedData, remote: PersistedData | null): PersistedData {
+  if (!remote) return local;
+
+  return {
+    version: CURRENT_VERSION,
+    global: {
+      totalXP: Math.max(local.global.totalXP, remote.global.totalXP),
+      level: calcLevel(Math.max(local.global.totalXP, remote.global.totalXP)),
+    },
+    courses: mergeCourses(local.courses, remote.courses),
+  };
+}
+
+function mergeCourses(
+  local: Record<string, CourseProgress>,
+  remote: Record<string, CourseProgress>,
+): Record<string, CourseProgress> {
+  const allIds = new Set([...Object.keys(local), ...Object.keys(remote)]);
+  const merged: Record<string, CourseProgress> = {};
+  for (const id of allIds) {
+    const l = local[id];
+    const r = remote[id];
+    merged[id] = {
+      completedCards: [...new Set([...(l?.completedCards ?? []), ...(r?.completedCards ?? [])])],
+      xp: Math.max(l?.xp ?? 0, r?.xp ?? 0),
+      quizScores: { ...(r?.quizScores ?? {}), ...(l?.quizScores ?? {}) },
+      nodePositions: { ...(r?.nodePositions ?? {}), ...(l?.nodePositions ?? {}) },
+    };
+  }
+  return merged;
+}
+```
+
+**三条规则：**
+- `completedCards` → 并集（两边完成的都算）
+- `xp / totalXP` → 取最大值（XP 只增不减，同步不会让数字变小）
+- `quizScores / nodePositions` → 本地覆盖远程（本地是最新操作）
+
+### 3. 后端数据库
+
+只需一张表，存的是和 AsyncStorage 里完全相同的 JSON：
+
+```sql
+CREATE TABLE user_progress (
+  user_id    TEXT PRIMARY KEY,
+  data       JSONB NOT NULL,        -- PersistedData 原样存取
+  version    INTEGER DEFAULT 1,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+后端只做存取不做业务逻辑。合并判断在客户端 `syncEngine` 里完成，换 BaaS、换自建后端、换协议，都不影响合并逻辑。
+
+### 4. 替换 `LoginScreen.tsx` UI
+
+占位 UI → 手机号输入 + 微信登录按钮。文件名不变。
+
+### 5. 新建文件
+
+```
+src/lib/supabase.ts        ← 客户端初始化（或用其他 BaaS SDK）
+src/api/
+├── client.ts              ← fetch/axios 封装 + token 拦截器
+├── auth.ts                ← login / register / refreshToken
+└── progress.ts            ← upload / download
+.env                        ← EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY
+app.json                    ← 加 scheme: "codecard"
+```
+
+### 6. 增量改动（非破坏性）
+
+| 文件 | 加什么 | 为什么 |
+|------|--------|--------|
+| `useProgressStore.ts` | `dirtyCards: string[]` 字段 + `markDirty(cardId)` action | 标记"已学但未同步"的卡片，同步后清除。不影响现有 action |
+| `syncEngine.ts` | 替换 no-op 为真实网络调用 | **设计如此** |
+
+### 改动总结
+
+| 文件 | 现有代码改动 |
+|------|:--:|
+| `syncEngine.ts` | 替换 no-op 实现 |
+| `authStore.ts` | 替换 no-op 实现 |
+| `LoginScreen.tsx` | 替换占位 UI |
+| `useProgressStore.ts` | 增量加 dirtyCards |
+| `src/api/*`、`src/lib/*` | 新建 |
+| **SettingsScreen / AppNavigator / App.tsx / 所有课程数据** | **零改动** |
+
+## 将来加后端——无需重构
+
+当前架构遵循 **UI 只读 Zustand，后端对 UI 透明** 的原则。1-2 年后加后端只需新增文件 + 替换 no-op 实现，不动现有代码。
+
+### 架构原则（记这个就够了）
+
+```
+Screen → Zustand store → UI 渲染         ← 永远从本地读，不感知后端
+         ↕                   
+        syncEngine → 后端 API            ← 后台悄悄同步，Screen 不知道
+```
+
+### 已有接口角色
+
+| 接口 | no-op 现状 | 有后端后 | 改什么 |
+|------|-----------|---------|--------|
+| `authStore` | 用户 null | 调后端登录 API，存 token | 替换实现，接口不变 |
+| `syncEngine` | 三函数空返回 | POST/GET 远程数据 | 替换实现，函数签名不变 |
+| `useProgressStore` | AsyncStorage 本地 | 数据不变，加 `dirty` 标记（哪些未同步） | **不替换**，增量加字段 |
+
+### 需要新建的文件（全部新建，零现有文件改动）
+
+```
+src/api/
+├── client.ts        ← Axios/fetch 封装，baseURL + 拦截器
+├── auth.ts          ← login / register / refreshToken
+└── progress.ts      ← upload / download / merge
+src/store/
+├── offlineQueue.ts  ← 离线操作队列（断网时暂存，恢复后重放）
+└── networkStore.ts  ← isOnline 状态
+```
+
+### 可能增量改动的位置（非破坏性）
+
+| 文件 | 加什么 | 说明 |
+|------|--------|------|
+| `useProgressStore.ts` | 加 `dirtyCards: Set<string>` | 标记"已学但未同步"的卡片，不影响现有 action |
+| `syncEngine.ts` | 替换 no-op 为真实网络调用 | **设计如此** |
+
+### 不会被锁定的技术选型
+
+| 决策 | 当前状态 | 1-2 年后能否换 |
+|------|---------|--------------|
+| BaaS vs 自建后端 | 未选，syncEngine 是纯函数 | ✅ 随时换 |
+| Supabase vs 其他 | 未绑定，没有 import supabase | ✅ 随时换 |
+| REST vs WebSocket | 未选，syncEngine 是 async 函数 | ✅ 随时换 |
+| Zustand | 在用 | ✅ Zustand API 稳定，无中间件依赖 |
+
+**核心约束只有一个：`PersistedData` 结构（`global + courses + completedCards + xp`）是数据契约。后端 `user_progress` 表必须接受这个 JSON 结构。改了这个结构才需要改现有代码，不改结构就完全隔离。**
 
 ## SettingsScreen 完整布局
 
@@ -391,6 +704,182 @@ AppNavigator     → <LoginScreen>                   ← 路由注册
 - 重置课程/清空数据前弹出确认对话框
 - 危险操作卡片仅 `hasProgress` 为 true 时渲染
 
+## WrongCardsScreen 两级导航
+
+```
+ProgressScreen                    WrongCardsScreen               WrongCardsScreen
+  [错题集 3]  ──────────────→    ┌─ ← 错题集 ──────────┐       ┌─ ← 错题集  C++ ────┐
+                                  │                       │       │                       │
+                                  │  ● C++         3  ›  │  →   │  基础                 │
+                                  │    sizeof(int) 的... │       │  ┌───────────────┐   │
+                                  │                       │       │  │ 入口函数是？   │   │
+                                  │  ● Python      1  ›  │       │  │ 答案：main()  │   │
+                                  │                       │       │  └───────────────┘   │
+                                  │                       │       │  共 3 道 · 答对自动   │
+                                  └───────────────────────┘       └───────────────────────┘
+```
+
+- 第一级：按课程分组的卡片列表，每张显示课程色圆点 + 课程名 + 错题数角标 + 首题预览
+- 第二级：点击课程进入，显示该课程所有错题（题目 + 答案 + 解析），返回标签为"错题集"
+- 路由：`WrongCards: { courseId?: string }`，无 courseId 显示课程列表，有 courseId 显示详情
+- 详情页使用 `navigation.push`，支持同路由叠加
+- 空态：第一级显示 🎯 暂无错题，第二级显示 ✅ 全部掌握
+- 答对自动移除：NodeScreen / QuizScreen 中答对同一张卡 → `removeWrongCard` → 错题集自动更新
+
+### 数据流
+
+```
+NodeScreen / QuizScreen 答错 → addWrongCard(courseId, cardId) → CourseProgress.wrongCards[]
+NodeScreen / QuizScreen 答对 → removeWrongCard(courseId, cardId) → 从 wrongCards[] 移除
+
+WrongCardsScreen 读取：
+  wrongCards[] (仅存 cardId) → 遍历 courses 数据匹配 → 获取最新题目/答案/解析
+```
+
+- 只存 `cardId`，不存题目内容。改了解析文案 → 错题集自动显示最新版
+- 新增课程/模块/练习卡 → 自动出现在错题集，无需改任何 UI 代码
+- 重置课程 → `wrongCards: []` 一并清空
+- 数据迁移 v1→v2 自动补 `wrongCards: []`
+
+### ProgressScreen 错题入口
+
+```
+┌─ ⚠ 错题集 ──────────── 3 › ─┐
+│  ● C++              2 道    │
+│  ● Python           1 道    │
+└──────────────────────────────┘
+```
+
+0 题时显示 `✅ 全部掌握`（绿色，不可点击）。点击进入 WrongCardsScreen 第一级。
+
+## 将来规模化——什么时候改、怎么改
+
+以下三项在 v1.0 solo 开发阶段不需要动。各自有明确的触发条件，条件满足后再动手。
+
+### 1. 远程可更新内容
+
+**现状：** 课程数据写死在 `src/data/courses/` 的 TS 文件中，改一个错别字也要重新 build 发版。
+
+**触发条件（满足任一条即启动）：**
+- 课程 ≥ 3 门，且每门 ≥ 3 个模块有实际内容
+- 内容更新频率 ≥ 一周一次
+- 有第二个人参与写内容（非开发者）
+
+**怎么改：**
+1. 课程数据从 TS 文件迁出，存为 JSON 文件，上传到 CDN（或 Supabase Storage）
+2. `src/data/courses/` 改为加载器：启动时先读本地缓存，再 `fetch` CDN 检查新版本
+3. 有网 → 下载最新 JSON → 覆盖本地缓存 → 渲染新内容
+4. 无网 → 用本地缓存，不阻塞
+5. 版本号字段控制增量更新，只下载变更的课程文件
+
+**不改什么：** `Card` / `PathNode` / `Course` 的 TypeScript 类型不变。加载器返回的类型签名和现在的 `courses` 数组完全一样，所有 Screen 不感知数据来源变化。
+
+**关键约束：** 远程 JSON 的 schema 必须和当前 `Course[]` 类型对齐。如果加新 cardType，先改 `src/types/index.ts`，再改 CDN 上的 JSON。
+
+### 2. 测试
+
+**现状：** `package.json` 里没有测试框架，`"lint": "tsc --noEmit"` 只做类型检查。核心逻辑（calcLevel、completeCard、rewardCard、merge）靠手动验证。
+
+**触发条件（满足任一条即启动）：**
+- 有第二个人开始改 store 逻辑
+- `useProgressStore.ts` 超过 300 行
+- 接后端同步后合并逻辑变复杂（冲突解决、离线队列）
+- 出现过一次"改了 store 但没发现 break 了 XX 功能"的线上事故
+
+**怎么改：**
+1. 装 Jest + @testing-library/react-native（Expo 项目 Jest 已内置，只需 `npx expo install jest-expo jest`）
+2. 先给纯函数补用例：`calcLevel`（边界 0/99/100/299/300）、`completeCard`（去重/新课自建 entry）、`rewardCard`（XP+完成原子性）、`merge/migrate`
+3. 纯函数用例跑通后，再考虑组件测试
+4. 参考 `docs/store-invariants.md` 里的不变量清单写断言
+
+**不改什么：** 不引入 E2E 框架（Detox/Maestro），不追求覆盖率数字。测试只覆盖"改坏了会导致数据丢失或 XP 算错"的路径。
+
+### 3. 内容创作格式——大段文字抽出
+
+**现状：** 课程正文直接写在 TS 文件里，用 `\n` 换行。`body: '第一行\n\n第二行'` 可读性差。
+
+**触发条件（满足任一条即启动）：**
+- 单张概念卡的 `body` 超过 500 字
+- 一个模块有 ≥ 10 张概念卡
+- 有非技术人员需要写/审校课程内容
+
+**怎么改（选一个方案）：**
+
+**方案 A — Markdown 文件（推荐）：**
+1. 在 `src/data/courses/cpp/01-basics/` 下新建 `content.md`
+2. 写一个 `parseMarkdown(md: string): Card[]` 函数，按 `##` 分割卡片，按 `###` 分割字段
+3. 原 `index.ts` 只保留结构（id、type、moduleId），`content` 字段从 md 文件读取
+4. 编辑器里写 Markdown 比 TS 字符串舒服得多
+
+**方案 B — 远程 CMS（方案 A 的延续）：**
+1. 内容迁到 Notion / Google Sheets / 自定义后台
+2. build 时或运行时拉取 → 转 JSON → 加载
+3. 非技术人员直接在表格里填内容，不需要碰代码
+
+**不改什么：** `Card` 接口不变。渲染组件（ConceptCard、CodeCard）不变。只是数据从 TS 挪到 Markdown/远程，加载器返回的还是 `Card[]`。
+
+### 4. 付费与权限系统
+
+**现状：** 无付费/权限概念，所有课程免费可访问。HomeScreen → CourseScreen 无拦截。
+
+**触发条件：** 准备上线第一门付费课程时启动。
+
+**怎么改：**
+
+```
+HomeScreen                    CourseScreen
+  C++                       进入前判断：
+  Python  🔒   ←点它→        hasAccess? → 进课
+  数据结构  🔒                : → 弹付费提示
+```
+
+1. **`types/index.ts` — `PathNode` 加可选字段：**
+```ts
+PathNode {
+  requiresSubscription?: boolean;  // 不填 = 免费模块
+}
+```
+
+2. **新建 `store/permissionStore.ts`：**
+```ts
+// Zustand store
+entitledNodes: Set<string>;  // 已购买的模块 nodeId
+isSubscribed: boolean;       // 是否有有效订阅（全解锁）
+
+// Actions
+checkAccess(nodeId): boolean;
+setEntitlements(nodes: string[]): void;
+```
+
+3. **新建 `src/lib/payments.ts` — RevenueCat / IAP 封装**
+
+4. **CourseScreen.tsx — +5 行：** 付费模块显示 🔒 图标，免费模块正常显示
+
+5. **ModuleScreen.tsx — +5 行：** 进入模块前调 `checkAccess(nodeId)`，无权限弹付费 Modal
+
+6. **所有现存模块数据不加字段**（`requiresSubscription` 默认 undefined → 免费）
+
+**数据示例——C++ 后面几个模块设为付费：**
+```ts
+// 01-basics：不加字段，免费
+{ id: 'cpp-01-basics-io', ... }
+
+// 02-advanced：加字段，付费
+{ id: 'cpp-02-pointers', requiresSubscription: true, ... }
+```
+
+**不改什么：**
+- 所有卡片组件、renderCard、NodeScreen、QuizScreen — 卡片渲染不关心权限
+- useProgressStore — 进度和付费正交
+- wrongCards/错题集 — 免费模块的错题一样记录
+- HomeScreen — 课程列表不变（付费粒度在模块不在课程）
+- AppNavigator — 路由不变
+- 权限检查只在 CourseScreen（显示锁）和 ModuleScreen（进入拦截）两处
+
+**和不改代码的关系：** 权限 store 是纯增量，和 authStore 一样先抽接口。但和 authStore 不同的是——没有任何现有屏幕引用它（不像 SettingsScreen 引用了 authStore），所以现在不抽，等上线付费时再抽。到时候按这个文档改，AI 不需要读源码。
+
+---
+
 ## Key conventions
 
 - All card content uses `\n` for line breaks (not `\r\n`)
@@ -402,3 +891,5 @@ AppNavigator     → <LoginScreen>                   ← 路由注册
 - ScreenHeader compact variant uses `paddingTop: insets.top + 33` for card views (NodeScreen, QuizScreen)
 - All imports use `@/` path alias (e.g. `@/store/authStore`, not `../store/authStore`)
 - LoginScreen has a close button (×) in the top-right corner
+- All colors use `Colors` tokens from `@/theme` — no hardcoded hex in components. New component → `import { Colors } from '@/theme'` → use `Colors.primary` not `'#4a9eff'`
+- `theme.ts` is the single source of truth for colors, fonts, spacing, radius. Change a token → entire app updates. Dark mode = add `DarkColors` object + toggle logic, zero component changes.

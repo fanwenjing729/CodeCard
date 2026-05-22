@@ -11,6 +11,7 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
+import { Colors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,7 +21,9 @@ import { manualSync } from '@/store/syncEngine';
 import { courses } from '@/data/courses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { version } from '../../package.json';
+import Constants from 'expo-constants';
+
+const version = Constants.expoConfig?.version ?? '1.0.0';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -125,7 +128,7 @@ export default function SettingsScreen() {
             {user?.avatar ? (
               <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
             ) : (
-              <MaterialCommunityIcons name="account" size={52} color="#ccc" />
+              <MaterialCommunityIcons name="account" size={52} color={Colors.arrow} />
             )}
           </View>
         </TouchableOpacity>
@@ -137,7 +140,7 @@ export default function SettingsScreen() {
                 <Text style={styles.displayIdText} numberOfLines={1}>
                   {user?.displayId || '设置用户名'}
                 </Text>
-                <MaterialCommunityIcons name="pencil" size={14} color="#999" />
+                <MaterialCommunityIcons name="pencil" size={14} color={Colors.textMuted} />
               </View>
             </TouchableOpacity>
             <Text style={styles.phoneText}>{user?.phone ?? user?.name ?? ''}</Text>
@@ -152,7 +155,7 @@ export default function SettingsScreen() {
                 activeOpacity={0.7}
               >
                 {syncing ? (
-                  <ActivityIndicator size="small" color="#4a9eff" />
+                  <ActivityIndicator size="small" color={Colors.primary} />
                 ) : (
                   <Text style={styles.actionButtonText}>立即同步</Text>
                 )}
@@ -273,34 +276,34 @@ function formatTime(d: Date): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.bgTertiary,
   },
   content: {
     padding: 16,
     paddingBottom: 40,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
   },
   dangerSection: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#ffccd5',
+    borderColor: Colors.dangerBorder,
   },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#999',
+    color: Colors.textMuted,
     marginBottom: 12,
   },
   dangerTitle: {
-    color: '#ff4757',
+    color: Colors.danger,
   },
   row: {
     flexDirection: 'row',
@@ -321,18 +324,18 @@ const styles = StyleSheet.create({
   },
   rowText: {
     fontSize: 16,
-    color: '#222',
+    color: Colors.text,
   },
   rowValue: {
     fontSize: 14,
-    color: '#999',
+    color: Colors.textMuted,
   },
   arrow: {
     fontSize: 18,
-    color: '#ccc',
+    color: Colors.arrow,
   },
   dangerText: {
-    color: '#ff4757',
+    color: Colors.danger,
   },
 
   // 头像区域
@@ -345,7 +348,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#eee',
+    backgroundColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -363,17 +366,17 @@ const styles = StyleSheet.create({
   displayIdText: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#222',
+    color: Colors.text,
     maxWidth: 220,
   },
   phoneText: {
     fontSize: 14,
-    color: '#999',
+    color: Colors.textMuted,
     marginTop: 4,
   },
   syncText: {
     fontSize: 13,
-    color: '#bbb',
+    color: Colors.textPlaceholder,
     marginTop: 12,
   },
   actionRow: {
@@ -385,26 +388,26 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
   },
   actionButtonText: {
     fontSize: 15,
-    color: '#fff',
+    color: Colors.textInverse,
     fontWeight: '600',
   },
   actionButtonOutline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#ff4757',
+    borderColor: Colors.danger,
   },
   actionButtonOutlineText: {
     fontSize: 15,
-    color: '#ff4757',
+    color: Colors.danger,
     fontWeight: '600',
   },
   notLoggedInText: {
     fontSize: 16,
-    color: '#aaa',
+    color: Colors.disabledText,
     marginTop: 14,
   },
   loginButton: {
@@ -412,11 +415,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 28,
     borderRadius: 8,
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
   },
   loginButtonText: {
     fontSize: 15,
-    color: '#fff',
+    color: Colors.textInverse,
     fontWeight: '600',
   },
 
@@ -428,7 +431,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalCard: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     borderRadius: 14,
     padding: 24,
     width: 280,
@@ -436,18 +439,18 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#222',
+    color: Colors.text,
     textAlign: 'center',
     marginBottom: 16,
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: Colors.inputBorder,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 16,
-    color: '#222',
+    color: Colors.text,
   },
   modalButtons: {
     flexDirection: 'row',
@@ -461,15 +464,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalButtonConfirm: {
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
   },
   modalButtonCancel: {
     fontSize: 16,
-    color: '#999',
+    color: Colors.textMuted,
   },
   modalButtonConfirmText: {
     fontSize: 16,
-    color: '#fff',
+    color: Colors.textInverse,
     fontWeight: '600',
   },
 });

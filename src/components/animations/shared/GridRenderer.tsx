@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Colors } from '@/theme';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
 import type { VarAlloc } from '@/types';
 
@@ -37,7 +38,7 @@ export default function GridRenderer({
     }
 
     const result: CellInfo[] = [];
-    const emptyColor = '#2a2a3e';
+    const emptyColor = Colors.gridEmpty;
 
     for (let i = 0; i < totalCells; i++) {
       const row = Math.floor(i / cols);
@@ -54,7 +55,7 @@ export default function GridRenderer({
   return (
     <Svg width={svgWidth} height={svgHeight}>
       {cells.map((cell, i) => {
-        const isActive = cell.fill !== '#2a2a3e';
+        const isActive = cell.fill !== Colors.gridEmpty;
         return (
           <React.Fragment key={i}>
             <Rect
@@ -64,7 +65,7 @@ export default function GridRenderer({
               height={cellSize}
               rx={4}
               fill={cell.fill}
-              stroke={isActive ? cell.fill : '#3a3a4e'}
+              stroke={isActive ? cell.fill : Colors.gridEmptyStroke}
               strokeWidth={1}
             />
             {cell.label && (
@@ -72,7 +73,7 @@ export default function GridRenderer({
                 x={cell.x + cellSize / 2}
                 y={cell.y + cellSize / 2 + 4}
                 textAnchor="middle"
-                fill="#fff"
+                fill={Colors.bg}
                 fontSize={10}
                 fontWeight="bold"
               >

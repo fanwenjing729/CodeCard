@@ -9,11 +9,13 @@ export interface Course {
 }
 
 // ===== 学习路径节点 =====
+export type ModuleId = 'basics' | 'advanced' | 'oop' | 'stl' | 'generics' | 'modern';
+
 export interface PathNode {
   id: string;
   courseId: string;
   type: 'knowledge' | 'quiz';
-  moduleId: string;
+  moduleId: ModuleId;
   module: string;
   title: string;
   cards: Card[];
@@ -70,6 +72,13 @@ export interface CodeContent {
   highlights: number[];
 }
 
+// ===== 动画基类 =====
+export interface AnimScenario {
+  id: string;
+  title: string;
+  totalSteps: number;
+}
+
 // ===== MemoryBox 动画专用 =====
 export interface VarAlloc {
   name: string;
@@ -86,11 +95,14 @@ export interface MemoryBoxStep {
   annotation: string;
 }
 
-export interface MemoryBoxScenario {
-  id: string;
-  title: string;
+export interface MemoryBoxScenario extends AnimScenario {
   cellsPerRow: number;
   totalRows: number;
   steps: MemoryBoxStep[];
+}
+
+// ===== Lottie 动画专用 =====
+export interface LottieScenario extends AnimScenario {
+  lottieFile: string;
 }
 

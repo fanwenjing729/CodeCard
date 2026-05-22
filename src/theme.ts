@@ -18,6 +18,8 @@ export const Colors = {
   textSecondary: '#666',
   textMuted: '#999',
   textPlaceholder: '#bbb',
+  textInverse: '#fff',
+  bodyText: '#444',
   border: '#eee',
   borderLight: '#d0d0d0',
   arrow: '#ccc',
@@ -29,6 +31,22 @@ export const Colors = {
   progressBarBg: '#e8edf2',
   tabBarInactive: '#999',
   disabledBg: '#8899aa',
+  disabledText: '#aaa',
+  // 问答组件
+  optionBg: '#f0f4ff',
+  optionSelectedBg: '#cce5ff',
+  optionBorder: '#d0d8f0',
+  optionText: '#333',
+  fillInputBg: '#fafafa',
+  explanationText: '#555',
+  wrongBorder: '#ff6b6b',
+  // 其他 UI
+  dangerBorder: '#ffccd5',
+  inputBorder: '#ddd',
+  tabBarBorder: '#e0e0e0',
+  // 动画
+  gridEmpty: '#2a2a3e',
+  gridEmptyStroke: '#3a3a4e',
 } as const;
 
 // ===== 字号 =====

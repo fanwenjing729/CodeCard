@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Colors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
 import { courses } from '@/data/courses';
 import { getAnimScenario } from '@/data/animations';
 import renderCard from '@/components/cards/renderCard';
+import type { PracticeState } from '@/components/cards/PracticeCard';
 import { useProgressStore, XP_PER_CARD, XP_PER_PRACTICE } from '@/store/useProgressStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Node'>;
@@ -14,6 +16,9 @@ export default function NodeScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
   const rewardCard = useProgressStore((s) => s.rewardCard);
   const setNodePosition = useProgressStore((s) => s.setNodePosition);
+  const addWrongCard = useProgressStore((s) => s.addWrongCard);
+  const removeWrongCard = useProgressStore((s) => s.removeWrongCard);
+  const uncompleteCard = useProgressStore((s) => s.uncompleteCard);
   const savedIndex = useProgressStore(
     (s) => s.courses[courseId]?.nodePositions[nodeId] ?? 0,
   );
@@ -32,6 +37,12 @@ export default function NodeScreen({ route, navigation }: Props) {
   doneRef.current = done;
   const cardRef = useRef(cards[index]);
   cardRef.current = cards[index];
+
+  const practiceStates = useRef<Map<string, PracticeState>>(new Map());
+
+  const handlePracticeStateChange = useCallback((cardId: string, state: PracticeState) => {
+    practiceStates.current.set(cardId, state);
+  }, []);
 
   const card = cards[index];
   const isLast = index === cards.length - 1;
@@ -59,7 +70,7 @@ export default function NodeScreen({ route, navigation }: Props) {
   const getAnimTotalSteps = (): number => {
     if (!card || card.cardType !== 'animation') return 1;
     const scenario = getAnimScenario(card.content.animationId);
-    return scenario?.steps.length ?? 1;
+    return scenario?.totalSteps ?? 1;
   };
 
   const advance = () => {
@@ -92,11 +103,16 @@ export default function NodeScreen({ route, navigation }: Props) {
   const handlePracticeComplete = useCallback(
     (correct: boolean) => {
       const c = cardRef.current;
-      if (correct && c) {
+      if (!c) return;
+      if (correct) {
         rewardCard(courseId, c.id, XP_PER_PRACTICE);
+        removeWrongCard(courseId, c.id);
+      } else {
+        addWrongCard(courseId, c.id);
+        uncompleteCard(courseId, c.id);
       }
     },
-    [courseId, rewardCard],
+    [courseId, rewardCard, addWrongCard, removeWrongCard, uncompleteCard],
   );
 
   const handlePracticeNext = useCallback(() => {
@@ -153,6 +169,8 @@ export default function NodeScreen({ route, navigation }: Props) {
           onPracticeComplete: handlePracticeComplete,
           onPracticeNext: handlePracticeNext,
           isLast,
+          practiceState: practiceStates.current.get(card.id),
+          onPracticeStateChange: (s) => handlePracticeStateChange(card.id, s),
         })}
       </View>
 
@@ -193,7 +211,7 @@ export default function NodeScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
   },
   cardArea: {
     flex: 1,
@@ -201,16 +219,16 @@ const styles = StyleSheet.create({
   module: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: Colors.textSecondary,
   },
   progress: {
     fontSize: 13,
-    color: '#999',
+    color: Colors.textMuted,
   },
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: Colors.border,
   },
   footerRow: {
     flexDirection: 'row',
@@ -218,42 +236,42 @@ const styles = StyleSheet.create({
   },
   prevBtn: {
     flex: 1,
-    backgroundColor: '#8899aa',
+    backgroundColor: Colors.disabledBg,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
   },
   nextBtn: {
     flex: 2,
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
   },
   nextBtnDone: {
-    backgroundColor: '#2ed573',
+    backgroundColor: Colors.success,
   },
   navBtnDisabled: {
     opacity: 0.4,
   },
   navText: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
   empty: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: Colors.textMuted,
   },
   resultWrap: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
@@ -265,22 +283,22 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#2ed573',
+    color: Colors.success,
     marginBottom: 8,
   },
   resultSubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.textSecondary,
     marginBottom: 32,
   },
   resultBtn: {
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 48,
     paddingVertical: 14,
     borderRadius: 10,
   },
   resultBtnText: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },

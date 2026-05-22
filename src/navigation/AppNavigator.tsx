@@ -1,9 +1,11 @@
 import React from 'react';
+import { Colors } from '@/theme';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+import ErrorBoundary from '@/components/shared/ErrorBoundary';
 import HomeScreen from '@/screens/HomeScreen';
 import CourseScreen from '@/screens/CourseScreen';
 import ModuleScreen from '@/screens/ModuleScreen';
@@ -12,6 +14,7 @@ import QuizScreen from '@/screens/QuizScreen';
 import ProgressScreen from '@/screens/ProgressScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import LoginScreen from '@/screens/LoginScreen';
+import WrongCardsScreen from '@/screens/WrongCardsScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -20,6 +23,7 @@ export type RootStackParamList = {
   Node: { courseId: string; nodeId: string };
   Quiz: { courseId: string; nodeId: string };
   Login: undefined;
+  WrongCards: { courseId?: string } | undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -30,12 +34,12 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#4a9eff',
-        tabBarInactiveTintColor: '#999',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textMuted,
         tabBarLabelStyle: { fontSize: 13 },
         tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopColor: '#e0e0e0',
+          backgroundColor: Colors.bg,
+          borderTopColor: Colors.tabBarBorder,
           height: 58,
           paddingTop: 4,
         },
@@ -77,15 +81,18 @@ function MainTabs() {
 
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
-      <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        <RootStack.Screen name="MainTabs" component={MainTabs} />
-        <RootStack.Screen name="Course" component={CourseScreen} />
-        <RootStack.Screen name="Module" component={ModuleScreen} />
-        <RootStack.Screen name="Node" component={NodeScreen} />
-        <RootStack.Screen name="Quiz" component={QuizScreen} />
-        <RootStack.Screen name="Login" component={LoginScreen} />
-      </RootStack.Navigator>
-    </NavigationContainer>
+    <ErrorBoundary>
+      <NavigationContainer>
+        <RootStack.Navigator screenOptions={{ headerShown: false }}>
+          <RootStack.Screen name="MainTabs" component={MainTabs} />
+          <RootStack.Screen name="Course" component={CourseScreen} />
+          <RootStack.Screen name="Module" component={ModuleScreen} />
+          <RootStack.Screen name="Node" component={NodeScreen} />
+          <RootStack.Screen name="Quiz" component={QuizScreen} />
+          <RootStack.Screen name="Login" component={LoginScreen} />
+          <RootStack.Screen name="WrongCards" component={WrongCardsScreen} />
+        </RootStack.Navigator>
+      </NavigationContainer>
+    </ErrorBoundary>
   );
 }

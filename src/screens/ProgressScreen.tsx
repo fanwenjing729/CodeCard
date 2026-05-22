@@ -1,8 +1,13 @@
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Colors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle } from 'react-native-svg';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useProgressStore } from '@/store/useProgressStore';
 import { courses } from '@/data/courses';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
 
 function xpForLevelStart(level: number): number {
   return 50 * (level - 1) * level;
@@ -31,7 +36,7 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
           cx={RING_CENTER}
           cy={RING_CENTER}
           r={RING_RADIUS}
-          stroke="#e8edf2"
+          stroke={Colors.progressBarBg}
           strokeWidth={RING_STROKE}
           fill="none"
           strokeLinecap="round"
@@ -43,7 +48,7 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
           cx={RING_CENTER}
           cy={RING_CENTER}
           r={RING_RADIUS}
-          stroke="#4a9eff"
+          stroke={Colors.primary}
           strokeWidth={RING_STROKE}
           fill="none"
           strokeLinecap="round"
@@ -66,8 +71,23 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
 // ---- 页面 ----
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const global = useProgressStore((s) => s.global);
   const coursesProgress = useProgressStore((s) => s.courses);
+
+  const totalWrongCards = Object.values(coursesProgress).reduce(
+    (sum, c) => sum + (c.wrongCards?.length ?? 0),
+    0,
+  );
+
+  // 按课程统计错题数
+  const courseWrongCounts: { courseId: string; title: string; color: string; count: number }[] = [];
+  for (const course of courses) {
+    const count = coursesProgress[course.id]?.wrongCards?.length ?? 0;
+    if (count > 0) {
+      courseWrongCounts.push({ courseId: course.id, title: course.title, color: course.color, count });
+    }
+  }
 
   const currentLevelStart = xpForLevelStart(global.level);
   const nextLevelXP = global.level * 100;
@@ -85,6 +105,37 @@ export default function ProgressScreen() {
           nextLevelXP={nextLevelXP}
         />
       </View>
+
+      {/* 错题集 */}
+      {totalWrongCards === 0 ? (
+        <View style={styles.wrongCardEmpty}>
+          <MaterialCommunityIcons name="check-circle-outline" size={20} color={Colors.success} />
+          <Text style={styles.wrongCardEmptyText}>全部掌握</Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={styles.wrongCard}
+          onPress={() => navigation.navigate('WrongCards')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.wrongHeader}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.warning} />
+            <Text style={styles.wrongHeaderTitle}>错题集</Text>
+            <View style={styles.wrongBadge}>
+              <Text style={styles.wrongBadgeText}>{totalWrongCards}</Text>
+            </View>
+            <View style={{ flex: 1 }} />
+            <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.arrow} />
+          </View>
+          {courseWrongCounts.map((c) => (
+            <View key={c.courseId} style={styles.wrongCourseRow}>
+              <View style={[styles.wrongCourseDot, { backgroundColor: c.color }]} />
+              <Text style={styles.wrongCourseName}>{c.title}</Text>
+              <Text style={styles.wrongCourseCount}>{c.count} 道</Text>
+            </View>
+          ))}
+        </TouchableOpacity>
+      )}
 
       {/* 各学科进度 */}
       <View style={styles.section}>
@@ -126,7 +177,7 @@ export default function ProgressScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.bgTertiary,
   },
   content: {
     padding: 16,
@@ -134,7 +185,7 @@ const styles = StyleSheet.create({
   },
   // ---- 等级卡片 ----
   levelCard: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     borderRadius: 16,
     padding: 28,
     alignItems: 'center',
@@ -153,23 +204,91 @@ const styles = StyleSheet.create({
   ringLevel: {
     fontSize: 48,
     fontWeight: '800',
-    color: '#222',
+    color: Colors.text,
     lineHeight: 50,
   },
   ringLV: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#4a9eff',
+    color: Colors.primary,
     marginTop: -2,
     marginBottom: 4,
   },
   ringXP: {
     fontSize: 12,
-    color: '#999',
+    color: Colors.textMuted,
+  },
+  // ---- 错题集 ----
+  wrongCard: {
+    backgroundColor: Colors.bg,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+  },
+  wrongCardEmpty: {
+    backgroundColor: Colors.bg,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wrongCardEmptyText: {
+    fontSize: 14,
+    color: Colors.success,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  wrongHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  wrongHeaderTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.text,
+    marginLeft: 8,
+  },
+  wrongBadge: {
+    backgroundColor: Colors.warning,
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    paddingHorizontal: 5,
+  },
+  wrongBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.bg,
+  },
+  wrongCourseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  wrongCourseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 8,
+  },
+  wrongCourseName: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  wrongCourseCount: {
+    fontSize: 13,
+    color: Colors.textMuted,
   },
   // ---- 学科 ----
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
@@ -177,7 +296,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#999',
+    color: Colors.textMuted,
     marginBottom: 16,
     textTransform: 'uppercase',
   },
@@ -198,7 +317,7 @@ const styles = StyleSheet.create({
   courseName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#222',
+    color: Colors.text,
   },
   courseBarWrap: {
     flexDirection: 'row',
@@ -207,7 +326,7 @@ const styles = StyleSheet.create({
   courseBar: {
     flex: 1,
     height: 6,
-    backgroundColor: '#e8edf2',
+    backgroundColor: Colors.progressBarBg,
     borderRadius: 3,
     overflow: 'hidden',
     marginRight: 10,
@@ -218,7 +337,7 @@ const styles = StyleSheet.create({
   },
   courseBarText: {
     fontSize: 12,
-    color: '#999',
+    color: Colors.textMuted,
     width: 70,
     textAlign: 'right',
   },

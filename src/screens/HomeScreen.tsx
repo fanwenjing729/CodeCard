@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Colors } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -33,7 +34,7 @@ export default function HomeScreen() {
             >
               <View style={[styles.courseIcon, { backgroundColor: c.color }]}>
                 {c.icon ? (
-                  <MaterialCommunityIcons name={c.icon as any} size={24} color="#fff" />
+                  <MaterialCommunityIcons name={c.icon as any} size={24} color={Colors.textInverse} />
                 ) : (
                   <Text style={styles.courseIconText}>{c.title[0]}</Text>
                 )}
@@ -62,25 +63,25 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     padding: 16,
   },
   heading: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#222',
+    color: Colors.text,
     marginBottom: 20,
     marginTop: 64,
   },
   courseCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: Colors.bgSecondary,
     padding: 16,
     borderRadius: 12,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: Colors.border,
   },
   courseIcon: {
     width: 44,
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   courseIconText: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 20,
     fontWeight: '700',
   },
@@ -101,17 +102,17 @@ const styles = StyleSheet.create({
   courseTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#222',
+    color: Colors.text,
   },
   courseMeta: {
     fontSize: 13,
-    color: '#999',
+    color: Colors.textMuted,
     marginTop: 2,
     marginBottom: 4,
   },
   miniBar: {
     height: 3,
-    backgroundColor: '#e8edf2',
+    backgroundColor: Colors.progressBarBg,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
   },
   arrow: {
     fontSize: 22,
-    color: '#ccc',
+    color: Colors.arrow,
     fontWeight: '300',
   },
 });

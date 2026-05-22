@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Colors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -14,11 +15,11 @@ export default function LoginScreen() {
         onPress={() => navigation.goBack()}
         activeOpacity={0.6}
       >
-        <MaterialCommunityIcons name="close" size={24} color="#666" />
+        <MaterialCommunityIcons name="close" size={24} color={Colors.textSecondary} />
       </TouchableOpacity>
 
       <View style={styles.body}>
-        <MaterialCommunityIcons name="account-circle-outline" size={64} color="#ccc" />
+        <MaterialCommunityIcons name="account-circle-outline" size={64} color={Colors.arrow} />
         <Text style={styles.title}>登录</Text>
         <Text style={styles.subtitle}>登录功能即将上线</Text>
         <Text style={styles.hint}>
@@ -33,7 +34,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.bgTertiary,
   },
   closeButton: {
     alignSelf: 'flex-end',
@@ -48,17 +49,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '600',
-    color: '#222',
+    color: Colors.text,
     marginTop: 16,
   },
   subtitle: {
     fontSize: 15,
-    color: '#999',
+    color: Colors.textMuted,
     marginTop: 8,
   },
   hint: {
     fontSize: 14,
-    color: '#bbb',
+    color: Colors.textPlaceholder,
     marginTop: 24,
     textAlign: 'center',
     lineHeight: 22,

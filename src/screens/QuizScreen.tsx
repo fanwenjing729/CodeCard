@@ -1,5 +1,6 @@
-import { useReducer } from 'react';
+import { useReducer, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Colors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import type { PracticeContent } from '@/types';
@@ -51,6 +52,9 @@ export default function QuizScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
   const rewardCard = useProgressStore((s) => s.rewardCard);
   const saveQuizScore = useProgressStore((s) => s.saveQuizScore);
+  const addWrongCard = useProgressStore((s) => s.addWrongCard);
+  const removeWrongCard = useProgressStore((s) => s.removeWrongCard);
+  const uncompleteCard = useProgressStore((s) => s.uncompleteCard);
 
   const course = courses.find((c) => c.id === courseId);
   const node = course?.nodes.find((n) => n.id === nodeId);
@@ -76,6 +80,20 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   const { index, score, done, submitted, selected, fillAnswer } = state;
   const card = cards[index];
+
+  const scoreRef = useRef(score);
+  scoreRef.current = score;
+  const doneRef = useRef(done);
+  doneRef.current = done;
+
+  // 退出时保存测验分数（中途返回也存）
+  useEffect(() => {
+    return () => {
+      if (!doneRef.current) {
+        saveQuizScore(courseId, nodeId, scoreRef.current);
+      }
+    };
+  }, [courseId, nodeId, saveQuizScore]);
   const content = card?.content as PracticeContent | undefined;
 
   const handleSubmit = () => {
@@ -87,6 +105,10 @@ export default function QuizScreen({ route, navigation }: Props) {
     if (isCorrectAnswer(rawAnswer, content.answer)) {
       dispatch({ type: 'SCORE' });
       rewardCard(courseId, card.id, XP_PER_PRACTICE);
+      removeWrongCard(courseId, card.id);
+    } else {
+      addWrongCard(courseId, card.id);
+      uncompleteCard(courseId, card.id);
     }
   };
 
@@ -163,11 +185,11 @@ export default function QuizScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
   },
   progress: {
     fontSize: 14,
-    color: '#999',
+    color: Colors.textMuted,
     fontWeight: '600',
   },
   questionWrap: {
@@ -175,42 +197,42 @@ const styles = StyleSheet.create({
   },
   resultWrap: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   resultTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#2ed573',
+    color: Colors.success,
     marginBottom: 12,
   },
   resultScore: {
     fontSize: 48,
     fontWeight: '800',
-    color: '#222',
+    color: Colors.text,
     marginBottom: 32,
   },
   backBtn: {
-    backgroundColor: '#4a9eff',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 40,
     paddingVertical: 12,
     borderRadius: 10,
   },
   backBtnText: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 16,
     fontWeight: '600',
   },
   empty: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: Colors.textMuted,
     marginBottom: 16,
   },
 });

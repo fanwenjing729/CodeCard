@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Colors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -13,7 +14,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
   const { courseId, moduleId } = route.params;
   const coursesProgress = useProgressStore((s) => s.courses);
   const course = courses.find((c) => c.id === courseId);
-  const themeColor = course?.color ?? '#4a9eff';
+  const themeColor = course?.color ?? Colors.primary;
 
   const completedCards = useMemo(() => {
     return coursesProgress[courseId]?.completedCards ?? [];
@@ -84,7 +85,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
   },
   listContent: {
     padding: 16,
@@ -94,7 +95,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.bgTertiary,
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
@@ -103,15 +104,15 @@ const styles = StyleSheet.create({
   nodeTitleEmpty: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#999',
+    color: Colors.textMuted,
   },
   comingSoon: {
     fontSize: 12,
-    color: '#bbb',
+    color: Colors.textPlaceholder,
   },
   empty: {
     textAlign: 'center',
-    color: '#999',
+    color: Colors.textMuted,
     marginTop: 60,
     fontSize: 15,
   },

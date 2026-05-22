@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Colors } from '@/theme';
 import type { TextContent } from '@/types';
 
 interface Props {
@@ -20,7 +21,7 @@ export default function ConceptCard({ content }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.bg,
   },
   content: {
     flexGrow: 1,
@@ -30,12 +31,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#222',
+    color: Colors.text,
     marginBottom: 16,
   },
   body: {
     fontSize: 16,
     lineHeight: 26,
-    color: '#444',
+    color: Colors.bodyText,
   },
 });

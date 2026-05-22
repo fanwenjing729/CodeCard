@@ -4,12 +4,12 @@
 
 | # | 模块 | 节点数 | 内容 |
 |---|------|--------|------|
-| 01 | 基础 | 13 | 程序结构 / 变量类型 / 注释命名 / 输入运算 / 常量 / 字符串 / 作用域 / 条件分支 / 逻辑比较 / for循环 / while循环 / 数组 / 函数入门 |
-| 02 | 进阶 | — | 指针 / 引用 / 动态内存 / 函数重载 / 文件IO |
-| 03 | 面向对象 | — | 类与对象 / 构造析构 / 继承 / 多态 / 运算符重载 |
-| 04 | STL | — | vector / string / map / algorithm / iterator |
-| 05 | 泛型 | — | 模板函数 / 模板类 / 模板特化 / 概念 (C++20) |
-| 06 | 现代 C++ | — | 智能指针 / lambda / 移动语义 / constexpr / range |
+| 01 | 基础 | 13 | ~57 卡 | 程序结构 / 变量类型 / 注释命名 / 输入运算 / 常量 / 字符串 / 作用域 / 条件分支 / 逻辑比较 / for循环 / while循环 / 数组 / 函数入门 |
+| 02 | 进阶 | 5 | ~24 卡 | 指针 / 引用 / 动态内存 / 函数重载 / 文件IO |
+| 03 | 面向对象 | 5 | ~28 卡 | 类与对象 / 构造析构 / 继承 / 多态 / 运算符重载 |
+| 04 | STL | 5 | ~21 卡 | vector / string / map / algorithm / iterator |
+| 05 | 泛型 | 4 | ~18 卡 | 模板函数 / 模板类 / 模板特化 / 概念 (C++20) |
+| 06 | 现代 C++ | 5 | ~21 卡 | 智能指针 / lambda / 移动语义 / constexpr / range |
 
 ---
 
@@ -30,10 +30,11 @@
 | c1 | concept | 什么是变量 | 变量 = 内存中有名字的存储空间，C++ 是强类型语言 |
 | c2 | code | 变量声明示例 | int age=25; double price=9.99; char grade='A'; bool isPassed=true; const double PI=3.14159 |
 | c3 | concept | 类型全家福 | int(4B)、float(4B)、double(8B)、char(1B)、bool(1B)；short/long/unsigned 扩展（unsigned 做循环条件会死循环陷阱） |
-| c4 | concept | auto 类型推导 | `auto x = 10;` 自动推导 int；`auto y = 3.14;` 推导 double；现代 C++ 推荐用 auto 减少冗长类型名 |
-| c5 | concept | 前缀与后缀自增 | `++i` 先加后用，`i++` 先用后加；for 循环中效果相同，表达式中有本质区别（`int b = i++;` vs `int b = ++i;`） |
-| c6 | concept | 未初始化变量 | 局部变量不初始化有随机值——这是未定义行为(UB)；推荐声明时立即初始化：`int x = 0;` 或用列表初始化 `int x{};` |
-| c7 | practice | `sizeof(int)` 典型值？ | choice: 2 / 4 / 8 / 取决于编译器 → 4 |
+| c4 | **animation** | **类型在内存中的大小** | 在 MemoryBox 网格上声明 4 种类型变量（int/double/char/bool），直观对比格子占用数量。`int` 占 4 格、`char` 占 1 格、`double` 占 8 格 |
+| c5 | concept | auto 类型推导 | `auto x = 10;` 自动推导 int；`auto y = 3.14;` 推导 double；现代 C++ 推荐用 auto 减少冗长类型名 |
+| c6 | concept | 前缀与后缀自增 | `++i` 先加后用，`i++` 先用后加；for 循环中效果相同，表达式中有本质区别（`int b = i++;` vs `int b = ++i;`） |
+| c7 | concept | 未初始化变量 | 局部变量不初始化有随机值——这是未定义行为(UB)；推荐声明时立即初始化：`int x = 0;` 或用列表初始化 `int x{};` |
+| c8 | practice | `sizeof(int)` 典型值？ | choice: 2 / 4 / 8 / 取决于编译器 → 4 |
 
 ### 1.3 注释、命名空间与格式 ✨ 已扩展
 
@@ -76,7 +77,8 @@
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
 | c1 | concept | 块作用域 | `{}` 内声明的变量只在该块内可见；外层代码访问不到内层变量；离开 `{}` 后变量销毁；里层可以访问外层变量，反之不可 |
-| c2 | code | 作用域示例 | 同名变量遮蔽(shadowing)：内层 `int x = 10;` 屏蔽外层 `x`；离开内层后外层 `x` 依然是旧值 |
+| c2 | **animation** | **作用域的生命周期** | MemoryBox 动画分两步：(1) 变量在 `{}` 内被分配格子；(2) 离开 `{}` 时格子被释放、颜色变灰。直观展示创建→销毁 |
+| c3 | code | 作用域示例 | 同名变量遮蔽(shadowing)：内层 `int x = 10;` 屏蔽外层 `x`；离开内层后外层 `x` 依然是旧值 |
 
 ### 1.8 条件分支
 
@@ -121,8 +123,9 @@
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
 | c1 | concept | 数组是什么 | 连续内存，索引从 0 开始，无越界检查，固定大小 |
-| c2 | code | 遍历与求和 | `int arr[5] = {1,2,3,4,5};` + for 循环累加；`sizeof(arr)/sizeof(arr[0])` 算长度 |
-| c3 | practice | `int a[3]={1,2,3};` 访问 `a[3]`？ | choice: 返回0 / 编译错误 / 未定义行为 → 未定义行为 |
+| c2 | **animation** | **数组的连续内存布局** | 声明 `int arr[5]={1,2,3,4,5}`→MemoryBox 显示连续 5×4=20 个格子，每 4 格一个 int，标上 arr[0]~arr[4] 和地址。突出"连续" |
+| c3 | code | 遍历与求和 | `int arr[5] = {1,2,3,4,5};` + for 循环累加；`sizeof(arr)/sizeof(arr[0])` 算长度 |
+| c4 | practice | `int a[3]={1,2,3};` 访问 `a[3]`？ | choice: 返回0 / 编译错误 / 未定义行为 → 未定义行为 |
 
 ### 1.13 函数入门
 
@@ -136,51 +139,250 @@
 
 ---
 
-## 02 进阶（待设计）
+## 02 进阶 (5 节点 / ~23 卡片)
 
-| # | 节点 | 卡片数 | 内容要点 |
-|---|------|--------|---------|
-| 2.1 | 指针基础 | 3-4 | `&` 取地址 / `*` 解引用 / 指针与数组 |
-| 2.2 | 引用 | 2-3 | 左值引用 `T&` / 引用 vs 指针 / const 引用 |
-| 2.3 | 动态内存 | 3 | `new` / `delete` / 内存泄漏 / `nullptr` |
-| 2.4 | 函数重载 | 2-3 | 同名不同参 / 默认参数 / 二义性 |
-| 2.5 | 文件 IO | 2-3 | `fstream` / 读写文本 / 错误处理 |
+### 2.1 指针基础
 
-## 03 面向对象（待设计）
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 指针是什么 | 指针 = 存储内存地址的变量；`int* p` 声明一个指向 int 的指针；`&x` 取变量地址，`*p` 解引用访问指向的值 |
+| c2 | code | 指针基本操作 | `int x = 42; int* p = &x; cout << *p;` 输出 42；`*p = 100;` 通过指针修改原变量 |
+| c3 | **animation** | **指针与解引用可视化** | MemoryBox 上：`x` 占 4 格，值 42；`p` 也占格子，存的是 `x` 的地址编号。高亮显示 "p → x" 的箭头。`*p = 100` 时，箭头沿地址找到 `x` 的格子，值更新为 100 |
+| c4 | concept | nullptr 与空指针 | `nullptr` 表示"不指向任何对象"；C++11 以前用 `NULL`（不推荐）；解引用空指针是未定义行为 |
+| c5 | code | 指针与数组 | `int arr[] = {1,2,3}; int* p = arr;` 数组名退化为指针；`*(p+1)` 等价于 `arr[1]`；`p++` 移动到下一元素 |
+| c6 | concept | const 与指针的排列组合 | `const int* p` = 指向常量的指针（不能通过 p 改值）；`int* const p` = 常量指针（p 本身不能改指向）；`const int* const p` = 两者都不改；口诀：const 在 * 左边=指向只读，在 * 右边=指针只读 |
+| c7 | practice | `int x=10; int* p=&x; *p=20;` x 的值？ | fill: 20（通过指针修改了原变量） |
 
-| # | 节点 | 内容要点 |
-|---|------|---------|
-| 3.1 | 类与对象 | class / 访问控制(public/private) / 成员函数 |
-| 3.2 | 构造与析构 | 构造函数 / 初始化列表 / 析构函数 / RAII |
-| 3.3 | 继承 | 继承语法 / 访问权限 / 虚函数 |
-| 3.4 | 多态 | 虚函数表 / override / final |
-| 3.5 | 运算符重载 | 成员 vs 非成员 / 常用运算符 |
+### 2.2 引用
 
-## 04 STL（待设计）
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 引用是什么 | `int& r = x;` 引用是变量的别名、必须初始化、不能重新绑定；与指针不同——引用更安全、语法更简洁 |
+| c2 | code | 引用 vs 指针对比 | 交换函数：`void swap(int& a, int& b)` vs `void swap(int* a, int* b)`；引用版调用更自然 `swap(x, y)` |
+| c3 | concept | const 引用 | `const int& r = x;` 只读不修改；可绑定临时对象 `const int& r = 5;`；常用于函数参数避免拷贝 |
+| c4 | practice | 引用必须初始化？ | choice: 是 / 否 → 是，`int& r;` 编译错误 |
 
-| # | 节点 | 内容要点 |
-|---|------|---------|
-| 4.1 | vector | 动态数组 / push_back / reserve |
-| 4.2 | string | 与 C 串对比 / 常用方法 |
-| 4.3 | map/set | 有序 vs 无序 / 查找效率 |
-| 4.4 | algorithm | sort / find / for_each |
-| 4.5 | iterator | 迭代器概念 / begin/end / 范围 for |
+### 2.3 动态内存
 
-## 05 泛型（待设计）
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 堆 vs 栈 | 栈：局部变量自动管理，大小有限；堆：`new` 手动分配，需 `delete` 释放，大小灵活 |
+| c2 | **animation** | **栈与堆的物理隔离** | MemoryBox 两片区域：上方栈区（局部变量 `int* p`），下方堆区（`new int(42)` 分配的格子）。`p` 存的是堆区地址，画箭头。`delete p` 后堆区格子变灰释放，`p` 悬空 |
+| c3 | code | new 与 delete | `int* p = new int(42);` 堆上分配；`delete p; p = nullptr;` 释放后置空防野指针；`int* arr = new int[100]; delete[] arr;` |
+| c4 | concept | 内存泄漏 | `new` 后忘记 `delete` → 内存泄漏；多次泄漏导致程序耗尽内存；delete 数组要用 `delete[]` 而不是 `delete` |
+| c5 | practice | `int* p = new int;` 忘写 `delete p;` 的后果？ | choice: 编译错误 / 内存泄漏 / 程序崩溃 → 内存泄漏 |
 
-| # | 节点 | 内容要点 |
-|---|------|---------|
-| 5.1 | 函数模板 | template\<typename T\> / 隐式实例化 |
-| 5.2 | 类模板 | 泛型容器 / 显式实例化 |
-| 5.3 | 模板特化 | 全特化 / 偏特化 / SFINAE 概念 |
-| 5.4 | 概念 (C++20) | concept / requires / 约束 |
+### 2.4 函数重载
 
-## 06 现代 C++（待设计）
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 重载规则 | 同名函数、参数列表不同（个数/类型）→ 编译器根据实参匹配；返回类型不同不算重载 |
+| c2 | code | 重载示例 | `int max(int a, int b);` + `double max(double a, double b);` + `int max(int a, int b, int c);` |
+| c3 | concept | 默认参数与二义性 | 默认参数从右向左定义；`void f(int a, int b=0)`；默认参数 + 重载需避免二义性（编译器不知道该调哪个） |
+| c4 | practice | 以下哪组构成合法重载？ | choice: `void f(int)`和`int f(int)` / `void f(int)`和`void f(double)` / `void f(int)`和`void f(int a)` → `void f(int)`和`void f(double)` |
 
-| # | 节点 | 内容要点 |
-|---|------|---------|
-| 6.1 | 智能指针 | unique_ptr / shared_ptr / weak_ptr |
-| 6.2 | lambda | 捕获列表 / 泛型 lambda / 函数式编程 |
-| 6.3 | 移动语义 | 右值引用 / std::move / 移动构造 |
-| 6.4 | constexpr | 编译期计算 / constexpr 函数 |
-| 6.5 | range/variant | C++20 ranges / std::variant / 结构化绑定 |
+### 2.5 文件 IO
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 流 扩展 | `cin`/`cout` 是标准流；`ifstream` 读文件，`ofstream` 写文件；RAII 自动关闭（离开作用域即关闭） |
+| c2 | code | 读写文本文件 | `ofstream out("data.txt"); out << "Hello"; out.close();` + `ifstream in("data.txt"); string s; getline(in, s);` |
+| c3 | concept | 错误处理 | `if (!in.is_open())` 检查文件是否打开成功；`in.fail()` 检查读操作是否失败；常见错误：路径不存在、权限不足 |
+| c4 | practice | `ifstream` 打开不存在的文件会怎样？ | choice: 崩溃 / 创建空文件 / 打开失败 is_open() 返回 false → 打开失败 |
+
+---
+
+## 03 面向对象 (5 节点 / ~27 卡片)
+
+### 3.1 类与对象
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 类 vs 对象 | 类是蓝图（`class Student { };`），对象是实例（`Student s;`）；类 = 数据成员 + 成员函数的集合 |
+| c2 | code | 第一个类 | `class Student { public: string name; int score; void print() { cout << name << score; } };` + 调用 `s.print()` |
+| c3 | concept | 访问控制 | `public` = 类内外都能访问；`private` = 只有类内能访问；`private` 是默认（struct 默认 public）；封装 = 隐藏实现 |
+| c4 | code | getter/setter | `private: int score; public: int getScore() { return score; } void setScore(int s) { if(s>=0) score = s; }` |
+| c5 | concept | this 指针 | 成员函数内 `this` 指向调用该函数的对象自身；`this->score` 等价于 `score`（通常省略）；返回 `*this` 可实现链式调用 `obj.setA(1).setB(2)` |
+| c6 | concept | static 成员 | `static` 成员变量属于类而非对象，所有对象共享一份；`static` 成员函数无 `this` 指针、只能访问静态成员；典型用途：对象计数、单例模式 |
+| c7 | practice | 以下哪项是封装的好处？ | choice: 代码更短 / 防止外部直接篡改数据 / 运行更快 → 防止外部直接篡改数据 |
+
+### 3.2 构造与析构
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 构造函数 | 与类同名、无返回类型、创建对象时自动调用；默认构造无参；参数化构造可带参数 |
+| c2 | code | 初始化列表 | `Student(string n, int s) : name(n), score(s) { }` 初始化列表比赋值更高效（直接构造，非先默认再赋值） |
+| c3 | concept | 析构函数与 RAII | `~ClassName()` 对象销毁时自动调用；RAII = 资源获取即初始化：构造时获取资源、析构时释放 |
+| c4 | code | RAII 示例 | `class FileHandle { FILE* f; public: FileHandle(const char* p) { f = fopen(p, "r"); } ~FileHandle() { fclose(f); } };` |
+| c5 | concept | 拷贝构造与赋值运算符 | 拷贝构造：`T(const T& other)` — 用同类型对象初始化新对象；赋值运算符：`T& operator=(const T& other)` — 已存在对象的赋值；不写时编译器自动生成浅拷贝（指针成员会共享，危险）；Rule of 3：自定义了析构/拷贝构造/赋值之一，通常三个都要写 |
+| c6 | code | 深拷贝示例 | `class Buffer { char* data; size_t len; Buffer(const Buffer& b) : len(b.len) { data = new char[len]; memcpy(data, b.data, len); } };` 浅拷贝只复制指针→两个对象指向同一内存→析构时 double free |
+| c7 | **animation** | **浅拷贝 vs 深拷贝** | MemoryBox 三步：(1) 对象 a 在栈上，data 指向堆区；(2) 浅拷贝 `Buffer b = a` → 两个对象的 data 指向同一块堆内存；(3) a 析构释放堆区→b 的 data 变成悬空指针。深拷贝：各自拥有独立堆区副本 |
+| c8 | practice | 析构函数什么时候调用？ | choice: 手动调用 / 对象离开作用域时自动调用 / new 对象时 → 对象离开作用域时自动调用 |
+
+### 3.3 继承
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 继承是什么 | `class Dog : public Animal { };` 子类获得父类的 public 和 protected 成员；继承 = 代码复用 + "is-a" 关系 |
+| c2 | code | 继承示例 | `class Animal { public: void eat(); }; class Dog : public Animal { public: void bark(); };` dog 可以 eat + bark |
+| c3 | concept | 构造与析构顺序 | 构造：父类先构造 → 子类后构造；析构：子类先析构 → 父类后析构（栈的逆序） |
+| c4 | practice | 私有的父类成员能被子类访问吗？ | choice: 能 / 不能（需用 protected 或 public 成员函数） → 不能 |
+
+### 3.4 多态
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 虚函数 | `virtual void speak();` 让函数调用在运行时根据实际对象类型决定（动态绑定）；非虚函数在编译时决定（静态绑定） |
+| c2 | code | 多态示例 | 基类指针数组：`Animal* a[] = {new Dog(), new Cat()}; for(auto p : a) p->speak();` 每个输出自己的声音 |
+| c3 | concept | override 与 final | `override` 显式标记重写（编译器检查是否真的重写父类虚函数）；`final` 禁止子类继续重写 |
+| c4 | code | 抽象类 | `class Shape { virtual double area() = 0; };` 纯虚函数 = 0 → 抽象类不能实例化；子类必须实现纯虚函数 |
+| c5 | practice | 不用 virtual 会怎样？ | choice: 编译错误 / 始终调父类函数(静态绑定) / 随机调 → 始终调父类函数 |
+
+### 3.5 运算符重载
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 运算符重载 | 自定义类的 `+ - * / == <<` 等行为；成员函数 vs 友元函数两种写法；不能重载的操作符：`::` `.` `.*` `?:` |
+| c2 | code | 成员函数重载 | `class Point { int x,y; Point operator+(const Point& p) { return Point(x+p.x, y+p.y); } };` |
+| c3 | code | 重载 `<<` | 需用友元：`friend ostream& operator<<(ostream& os, const Point& p) { os << p.x << p.y; return os; }` |
+| c4 | practice | 能重载 `*` 但不能改优先级？ | choice: 正确 / 错误 → 正确（重载不改变优先级和结合性） |
+
+---
+
+## 04 STL (5 节点 / ~21 卡片)
+
+### 4.1 vector
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | vector 是什么 | `std::vector<T>` = 动态数组，自动管理内存，大小可变；原生数组 vs vector：vector 更安全（有边界检查 `.at()`） |
+| c2 | code | 常用操作 | `vector<int> v = {1,2,3}; v.push_back(4); v.pop_back(); v.size(); v[0]` vs `v.at(0)`（后者抛异常） |
+| c3 | concept | capacity 与 reserve | `size()` = 元素个数，`capacity()` = 已分配的容量；`reserve(n)` 预分配空间避免反复扩容；扩容会 copy 所有元素 |
+| c4 | practice | `vector<int> v(10);` 中 v.size() 是？ | fill: 10（构造 10 个默认值 0 的元素） |
+
+### 4.2 string
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | string 深入 | `std::string` 是 `basic_string<char>` 的别名；C 风格对比：`strlen` O(n) vs `.size()` O(1)；`c_str()` 获取 C 串指针 |
+| c2 | code | 高级操作 | `s.replace(pos, len, "new"); s.find("lo"); s.compare("other"); to_string(3.14); stoi("42"); stod("3.14")` |
+| c3 | concept | string_view | `std::string_view` 不拥有数据，只"查看"；O(1) 的 substr；生命周期短，原字符串销毁后 view 悬空 |
+| c4 | practice | `string s = "abc";` 修改第 2 个字符的最简方式？ | choice: `s[1]='x'` / `s.at(1)='x'` / `s.replace(1,1,"x")` → `s[1]='x'` |
+
+### 4.3 map / set
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 关联容器 | `map<Key, Value>` 键值对、键唯一、自动排序；`set<T>` 不重复元素集合、自动排序；`unordered_map` 哈希表 O(1) 而非 O(log n) |
+| c2 | code | map 常用操作 | `map<string, int> m; m["alice"] = 90; m.count("bob"); for(auto& [k,v] : m)` 结构化绑定遍历 |
+| c3 | code | set 常用操作 | `set<int> s = {3,1,2}; s.insert(4); s.erase(2); s.count(3);` 元素自动升序 |
+| c4 | code | unordered_map vs map | `unordered_map<string, int>` 哈希表 O(1) 查找、无序；`map<string, int>` 红黑树 O(log n) 查找、按键排序；键无顺序需求时优先 unordered_map；有排序/范围查询需求用 map |
+| c5 | practice | map 中 `m["new_key"]` 如果不存在？ | choice: 抛异常 / 创建该 key 值为默认值 / 编译错误 → 创建该 key 值为默认值（operator[] 的隐式插入行为） |
+
+### 4.4 algorithm
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 算法库概览 | `<algorithm>` 头文件提供 100+ 通用算法；分类：排序、查找、修改、数值；都用迭代器操作，与容器解耦 |
+| c2 | code | 排序与查找 | `sort(v.begin(), v.end());` `auto it = find(v.begin(), v.end(), 42);` `binary_search(v.begin(), v.end(), 42);`（需先排序） |
+| c3 | code | 常用算法 | `reverse(v.begin(), v.end()); count(v.begin(), v.end(), 1); min_element/max_element; for_each(v.begin(), v.end(), [](int x) { ... });` |
+| c4 | practice | `find` 未找到返回什么？ | choice: nullptr / v.end() / -1 → v.end()（返回迭代器，未找到返回尾后迭代器） |
+
+### 4.5 iterator
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 迭代器概念 | 迭代器 = 通用的"指针"抽象，解耦算法与容器；`begin()` 指向首元素，`end()` 指向尾后；`++` 前进，`*` 解引用 |
+| c2 | code | 迭代器分类 | 输入/输出/前向/双向/随机访问（vector 是随机访问，list 是双向）；`auto it = v.begin(); advance(it, 2);` |
+| c3 | concept | 范围 for 的真相 | `for(auto& x : v)` 本质是迭代器的语法糖：`for(auto it = begin(v); it != end(v); ++it)` |
+| c4 | practice | `vector<int> v = {};` 中 `v.begin() == v.end()`？ | choice: 是 / 否 / 未定义 → 是（空容器的 begin 等于 end） |
+
+---
+
+## 05 泛型 (~18 卡片)
+
+### 5.1 函数模板
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 模板是什么 | `template<typename T>` 让函数适用于多种类型；编译器根据调用时的实参类型自动生成对应版本（隐式实例化） |
+| c2 | code | 通用 max | `template<typename T> T myMax(T a, T b) { return a > b ? a : b; }` 同时支持 int、double、string |
+| c3 | concept | 模板参数推导 | 编译器从实参推导 T；`myMax(3, 5)` → T=int；`myMax(3.0, 5)` → 编译错误（T 歧义），需 `myMax<double>(3.0, 5)` |
+| c4 | practice | 函数模板的代码何时生成？ | choice: 运行时 / 编译时（实例化） / 链接时 → 编译时 |
+
+### 5.2 类模板
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 类模板 | 类本身是模板：`template<typename T> class Box { T value; };` 天然支持泛型容器 |
+| c2 | code | 泛型 Pair | `template<typename T1, typename T2> class Pair { T1 first; T2 second; }; Pair<int, string> p{1, "hello"};` |
+| c3 | concept | CTAD | C++17 类模板参数推导：`Pair p{1, "hello"};` 自动推导为 `Pair<int, const char*>`，无需显式指定类型 |
+| c4 | practice | `vector<int>` 中的 int 是什么？ | choice: 函数参数 / 模板参数 / 返回值类型 → 模板参数 |
+
+### 5.3 模板特化
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 全特化 | 为特定类型写专门的实现：`template<> class Box<bool> { /* 用 bitset 优化 */ };` 替代泛型版本 |
+| c2 | concept | 偏特化 | 专门化部分模板参数：`template<typename T> class Box<T*> { /* 指针版本 */ };` 只匹配指针类型 |
+| c3 | code | 特化示例 | 通用 max 对 `const char*` 比较地址而非内容 — 特化用 `strcmp` 修复 |
+| c4 | practice | 全特化 vs 偏特化的区别？ | choice: 无区别 / 全特化所有参数都确定，偏特化只确定部分 → 全特化所有参数都确定 |
+
+### 5.4 概念 (C++20)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 概念是什么 | `concept Addable = requires(T a, T b) { a + b; };` 约束模板参数；编译期检查，报错信息比传统模板清晰 10 倍 |
+| c2 | code | concept 使用 | `template<Addable T> T sum(T a, T b) { return a + b; }` 传入没有 + 的类型会得到可读的编译错误 |
+| c3 | practice | concept 定义了一个？ | choice: 类型 / 编译期谓词（一组要求） / 类 → 编译期谓词 |
+
+---
+
+## 06 现代 C++ (~21 卡片)
+
+### 6.1 智能指针
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 为什么需要智能指针 | 原始指针：容易泄漏、双重 delete、野指针；智能指针 = RAII 包装，自动管理生命周期 |
+| c2 | concept | unique_ptr | `unique_ptr<T>` 独占所有权、不可拷贝（保证唯一）、`make_unique` 创建、`std::move` 转移所有权 |
+| c3 | code | unique_ptr 示例 | `auto p = make_unique<int>(42); auto q = move(p);` p 变为 nullptr，q 拥有该资源；离开作用域自动 delete |
+| c4 | concept | shared_ptr | `shared_ptr<T>` 共享所有权、引用计数；计数归零自动释放；`make_shared` 一次分配（控制块+对象）；注意循环引用 |
+| c5 | code | weak_ptr | `weak_ptr<T>` 不增加引用计数、解决 shared_ptr 循环引用；`lock()` 返回 shared_ptr（对象还存在）或空 |
+| c6 | practice | unique_ptr 能拷贝吗？ | choice: 能 / 不能 / 能但只浅拷贝 → 不能（独占所有权，编译期禁止） |
+
+### 6.2 lambda
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | lambda 是什么 | `[](int x) { return x*2; }` 匿名函数对象；捕获列表 `[]`、参数 `()`、函数体 `{}`；本质是编译器生成的仿函数类 |
+| c2 | code | 捕获方式 | `[=]` 按值捕获全部（只读）；`[&]` 按引用捕获全部；`[x, &y]` 混合；`[this]` 捕获 this 指针访问成员 |
+| c3 | code | lambda 实战 | `sort(v.begin(), v.end(), [](int a, int b) { return abs(a) < abs(b); });` + `auto add = [](auto a, auto b) { return a+b; };` 泛型 lambda |
+| c4 | practice | `[=]` 捕获的变量能在 lambda 内修改吗？ | choice: 能 / 不能（需加 mutable） / 编译错误 → 不能（需加 mutable） |
+
+### 6.3 移动语义
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 左值与右值 | 左值 = 有名字、可取地址（`int x;`）；右值 = 临时对象、即将销毁（`x+5`、`string("tmp")`）；`&&` 右值引用 |
+| c2 | concept | 移动 vs 拷贝 | 拷贝 = 深复制全部资源（慢）；移动 = "窃取"临时对象的资源（快），把源对象指针搬过来，源置空 |
+| c3 | code | std::move | `vector<int> v2 = move(v1);` v1 被"掏空"变成空容器，v2 接管原数据；move 不移动任何东西，只是类型转换 |
+| c4 | code | 移动构造 | `class Buffer { char* data; Buffer(Buffer&& other) noexcept : data(other.data) { other.data = nullptr; } };` |
+| c5 | practice | `std::move` 之后原对象还能用吗？ | choice: 能用且值不变 / 能用但处于"有效但未指定"状态 / 立即崩溃 → 能用但处于"有效但未指定"状态 |
+
+### 6.4 constexpr
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | constexpr 深入 | 编译期求值保证；C++11 函数只能一行 return，C++14 允许分支循环，C++20 允许 `new` / `try`；`consteval` 强制编译期 |
+| c2 | code | 编译期计算 | `constexpr int fib(int n) { return n <= 1 ? n : fib(n-1) + fib(n-2); } constexpr int f5 = fib(5);` 在编译期算出 5 |
+| c3 | practice | constexpr 函数一定在编译期执行？ | choice: 一定 / 不一定（取决于调用上下文是否为 constexpr） → 不一定 |
+
+### 6.5 range / variant / 结构化绑定
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | Ranges (C++20) | `ranges::filter(v, even)` 管道式组合；惰性求值（不生成中间容器）；`views::transform/filter/take` |
+| c2 | concept | variant 与 optional | `variant<int, string, double>` 类型安全的联合体；`optional<T>` 表示"可能有值"；`nullopt` 表示空 |
+| c3 | code | 结构化绑定 | `auto [x, y, z] = tuple(1, 2.0, "hi");` 拆分 pair/tuple/struct；`if(auto [it, ok] = m.insert(...); ok)` C++17 初始化语句 |
+| c4 | practice | `optional<int> o;` 访问 `*o` 会？ | choice: 返回 0 / 未定义行为 / 编译错误 → 未定义行为（应先用 has_value() 或 value() 抛异常） |

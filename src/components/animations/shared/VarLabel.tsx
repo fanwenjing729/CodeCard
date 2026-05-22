@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Text } from 'react-native';
+import { Colors } from '@/theme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -70,12 +71,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   name: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 14,
     fontWeight: '800',
   },
   meta: {
-    color: '#888',
+    color: Colors.codeLineNum,
     fontSize: 10,
     marginTop: 2,
   },
