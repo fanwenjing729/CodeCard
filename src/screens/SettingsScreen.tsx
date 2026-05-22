@@ -7,6 +7,9 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Image,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +19,8 @@ import { useAuthStore } from '@/store/authStore';
 import { manualSync } from '@/store/syncEngine';
 import { courses } from '@/data/courses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { version } from '../../package.json';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -26,9 +31,12 @@ export default function SettingsScreen() {
 
   const user = useAuthStore((s) => s.user);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+  const setDisplayId = useAuthStore((s) => s.setDisplayId);
 
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingDisplayId, setEditingDisplayId] = useState('');
 
   const handleResetCourse = (courseId: string, title: string) => {
     Alert.alert(
@@ -88,72 +96,128 @@ export default function SettingsScreen() {
     }
   };
 
-  const formatSyncTime = (d: Date | null) => {
-    if (!d) return '暂未同步';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const openEditDisplayId = () => {
+    setEditingDisplayId(user?.displayId ?? '');
+    setEditModalVisible(true);
   };
+
+  const confirmEditDisplayId = () => {
+    setDisplayId(editingDisplayId.trim());
+    setEditModalVisible(false);
+  };
+
+  const hasProgress = courses.some((c) => {
+    const p = coursesState[c.id];
+    return p && p.completedCards.length > 0;
+  });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
-      {/* 账号 */}
-      {isLoggedIn && user ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>账号</Text>
-          <View style={styles.profileRow}>
-            <View>
-              <Text style={styles.profileName}>{user.phone ?? user.name ?? '用户'}</Text>
-              <Text style={styles.profileId}>UID: {user.id.slice(0, 8)}</Text>
+      {/* 头像区域 */}
+      <View style={styles.avatarSection}>
+        <TouchableOpacity
+          onPress={() => {
+            if (!isLoggedIn) navigation.navigate('Login');
+          }}
+          activeOpacity={isLoggedIn ? 1 : 0.7}
+        >
+          <View style={styles.avatarCircle}>
+            {user?.avatar ? (
+              <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+            ) : (
+              <MaterialCommunityIcons name="account" size={52} color="#ccc" />
+            )}
+          </View>
+        </TouchableOpacity>
+
+        {isLoggedIn ? (
+          <>
+            <TouchableOpacity onPress={openEditDisplayId} activeOpacity={0.6}>
+              <View style={styles.displayIdRow}>
+                <Text style={styles.displayIdText} numberOfLines={1}>
+                  {user?.displayId || '设置用户名'}
+                </Text>
+                <MaterialCommunityIcons name="pencil" size={14} color="#999" />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.phoneText}>{user?.phone ?? user?.name ?? ''}</Text>
+
+            <Text style={styles.syncText}>上次同步：{lastSync ? formatTime(lastSync) : '暂未同步'}</Text>
+
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleSync}
+                disabled={syncing}
+                activeOpacity={0.7}
+              >
+                {syncing ? (
+                  <ActivityIndicator size="small" color="#4a9eff" />
+                ) : (
+                  <Text style={styles.actionButtonText}>立即同步</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.actionButtonOutline]}
+                onPress={handleLogout}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.actionButtonOutlineText}>退出登录</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.notLoggedInText}>未登录</Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.loginButtonText}>登录以同步进度</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
+      {/* 编辑 displayId 弹窗 */}
+      <Modal visible={editModalVisible} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>修改用户名</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={editingDisplayId}
+              onChangeText={setEditingDisplayId}
+              placeholder="输入用户名"
+              maxLength={20}
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.modalButtonCancel}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonConfirm]}
+                onPress={confirmEditDisplayId}
+              >
+                <Text style={styles.modalButtonConfirmText}>确认</Text>
+              </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity style={styles.row} onPress={handleLogout} activeOpacity={0.7}>
-            <Text style={[styles.rowText, styles.dangerText]}>退出登录</Text>
-            <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
         </View>
-      ) : null}
+      </Modal>
 
-      {/* 同步 */}
-      {isLoggedIn ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>同步</Text>
-          <Text style={styles.syncStatus}>上次同步：{formatSyncTime(lastSync)}</Text>
-          <TouchableOpacity
-            style={styles.row}
-            onPress={handleSync}
-            activeOpacity={0.7}
-            disabled={syncing}
-          >
-            <Text style={styles.rowText}>立即同步</Text>
-            {syncing ? (
-              <ActivityIndicator size="small" color="#4a9eff" />
-            ) : (
-              <Text style={styles.arrow}>›</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      ) : null}
-
-      {/* 登录入口（未登录时） */}
-      {!isLoggedIn ? (
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.row}
-            onPress={() => navigation.navigate('Login')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.rowText}>登录以同步进度</Text>
-            <Text style={styles.arrow}>›</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
-
-      {/* 数据管理 */}
+      {/* 重置课程进度 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>数据管理</Text>
+        <Text style={styles.sectionTitle}>重置课程进度</Text>
 
         {courses.map((c) => {
           const progress = coursesState[c.id];
+          const completed = progress?.completedCards?.length ?? 0;
           return (
             <TouchableOpacity
               key={c.id}
@@ -164,40 +228,46 @@ export default function SettingsScreen() {
               <View style={styles.rowLeft}>
                 <View style={[styles.dot, { backgroundColor: c.color }]} />
                 <Text style={styles.rowText}>
-                  重置{c.title}进度（{progress?.completedCards?.length ?? 0} 张已完成）{isLoggedIn ? ' ☁️' : ''}
+                  {c.title}
+                  {completed > 0 ? `（${completed} 张已完成）` : ''}
                 </Text>
               </View>
               <Text style={styles.arrow}>›</Text>
             </TouchableOpacity>
           );
         })}
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity
-          style={styles.row}
-          onPress={handleClearAll}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
-          <Text style={styles.arrow}>›</Text>
-        </TouchableOpacity>
       </View>
+
+      {/* 危险操作 */}
+      {hasProgress ? (
+        <View style={styles.dangerSection}>
+          <Text style={[styles.sectionTitle, styles.dangerTitle]}>危险操作</Text>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={handleClearAll}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
+            <Text style={styles.arrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* 关于 */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>关于</Text>
         <View style={styles.row}>
           <Text style={styles.rowText}>版本</Text>
-          <Text style={styles.rowValue}>CodeCard v1.0.0</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.rowText}>技术</Text>
-          <Text style={styles.rowValue}>Expo SDK 55 / RN 0.83</Text>
+          <Text style={styles.rowValue}>CodeCard v{version}</Text>
         </View>
       </View>
     </ScrollView>
   );
+}
+
+function formatTime(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 const styles = StyleSheet.create({
@@ -213,14 +283,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  dangerSection: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#ffccd5',
   },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
     color: '#999',
     marginBottom: 12,
-    textTransform: 'uppercase',
+  },
+  dangerTitle: {
+    color: '#ff4757',
   },
   row: {
     flexDirection: 'row',
@@ -254,35 +334,142 @@ const styles = StyleSheet.create({
   dangerText: {
     color: '#ff4757',
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#eee',
-    marginVertical: 4,
+
+  // 头像区域
+  avatarSection: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    marginBottom: 8,
   },
-  profileRow: {
+  avatarCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#eee',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 96,
+    height: 96,
+  },
+  displayIdRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginTop: 14,
+    gap: 6,
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  profileName: {
-    fontSize: 18,
+  displayIdText: {
+    fontSize: 20,
     fontWeight: '600',
     color: '#222',
+    maxWidth: 220,
   },
-  profileId: {
-    fontSize: 13,
+  phoneText: {
+    fontSize: 14,
     color: '#999',
-    marginTop: 2,
+    marginTop: 4,
   },
-  syncStatus: {
+  syncText: {
     fontSize: 13,
+    color: '#bbb',
+    marginTop: 12,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    marginTop: 14,
+    gap: 12,
+  },
+  actionButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#4a9eff',
+  },
+  actionButtonText: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  actionButtonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#ff4757',
+  },
+  actionButtonOutlineText: {
+    fontSize: 15,
+    color: '#ff4757',
+    fontWeight: '600',
+  },
+  notLoggedInText: {
+    fontSize: 16,
+    color: '#aaa',
+    marginTop: 14,
+  },
+  loginButton: {
+    marginTop: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    borderRadius: 8,
+    backgroundColor: '#4a9eff',
+  },
+  loginButtonText: {
+    fontSize: 15,
+    color: '#fff',
+    fontWeight: '600',
+  },
+
+  // 编辑弹窗
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCard: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 24,
+    width: 280,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#222',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#222',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    marginTop: 18,
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalButtonConfirm: {
+    backgroundColor: '#4a9eff',
+  },
+  modalButtonCancel: {
+    fontSize: 16,
     color: '#999',
-    marginBottom: 8,
+  },
+  modalButtonConfirmText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
   },
 });

@@ -26,7 +26,7 @@ export default function ScreenHeader({
     <View
       style={[
         variant === 'compact' ? styles.headerCompact : styles.headerDefault,
-        { paddingTop: insets.top + (variant === 'compact' ? 8 : 42) },
+        { paddingTop: insets.top + (variant === 'compact' ? 33 : 42) },
         variant === 'default' && { borderBottomColor: themeColor + '40' },
       ]}
     >

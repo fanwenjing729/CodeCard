@@ -11,7 +11,7 @@ import NodeScreen from '@/screens/NodeScreen';
 import QuizScreen from '@/screens/QuizScreen';
 import ProgressScreen from '@/screens/ProgressScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
-import LoginScreen from '../screens/LoginScreen';
+import LoginScreen from '@/screens/LoginScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
