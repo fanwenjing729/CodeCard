@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 图
-export const graphNodes: PathNode[] = [];
+export const graphModule: CourseModule = { moduleId: 'graph', nodes: [] };

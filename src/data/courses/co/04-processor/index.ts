@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 处理器
-export const processorNodes: PathNode[] = [];
+export const processorModule: CourseModule = { moduleId: 'processor', nodes: [] };

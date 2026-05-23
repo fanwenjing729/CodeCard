@@ -2,8 +2,12 @@ import type { ComponentType } from 'react';
 import type { AnimScenario } from '@/types';
 import { variableStorageScenario } from './scenarios/variableStorage';
 import { scopeLifecycleScenario } from './scenarios/scopeLifecycle';
+import { ifElseBranchScenario } from './scenarios/ifElseBranch';
+import { ifElseIfLadderScenario } from './scenarios/ifElseIfLadder';
+import { switchFallthroughScenario } from './scenarios/switchFallthrough';
 import MemoryBox from '@/components/animations/MemoryBox';
 import ScopeCodePlayer from '@/components/animations/ScopeCodePlayer';
+import BranchPlayer from '@/components/animations/BranchPlayer';
 // Lottie 示例（取消注释并放入 lottie JSON 文件后即可用）:
 // import { lottieLoopFlow } from './scenarios/lottieLoopFlow';
 // import LottiePlayer from '@/components/animations/LottiePlayer';
@@ -21,6 +25,18 @@ export const animationRegistry: Record<string, AnimationEntry> = {
   'variable-storage': {
     scenario: variableStorageScenario,
     Component: MemoryBox as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'if-else-branch': {
+    scenario: ifElseBranchScenario,
+    Component: BranchPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'if-else-if-ladder': {
+    scenario: ifElseIfLadderScenario,
+    Component: BranchPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'switch-fallthrough': {
+    scenario: switchFallthroughScenario,
+    Component: BranchPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
   },
   // Lottie 注册示例:
   // 'loop-flow': {

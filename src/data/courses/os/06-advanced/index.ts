@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 高级主题
-export const advancedNodes: PathNode[] = [];
+export const advancedModule: CourseModule = { moduleId: 'advanced', nodes: [] };

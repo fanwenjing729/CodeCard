@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 指令集
-export const isaNodes: PathNode[] = [];
+export const isaModule: CourseModule = { moduleId: 'isa', nodes: [] };

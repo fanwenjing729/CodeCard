@@ -1,4 +1,4 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
 // 现代 C++ 模块
-export const modernNodes: PathNode[] = [];
+export const modernModule: CourseModule = { moduleId: 'modern', nodes: [] };

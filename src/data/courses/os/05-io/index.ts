@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 设备管理
-export const ioNodes: PathNode[] = [];
+export const ioModule: CourseModule = { moduleId: 'io', nodes: [] };

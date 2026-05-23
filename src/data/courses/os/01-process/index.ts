@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 进程管理
-export const processNodes: PathNode[] = [];
+export const processModule: CourseModule = { moduleId: 'process', nodes: [] };

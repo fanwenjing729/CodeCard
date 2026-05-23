@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 文件系统
-export const filesystemNodes: PathNode[] = [];
+export const filesystemModule: CourseModule = { moduleId: 'filesystem', nodes: [] };

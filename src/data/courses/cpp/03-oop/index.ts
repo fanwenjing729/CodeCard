@@ -1,4 +1,4 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
 // 面向对象模块
-export const oopNodes: PathNode[] = [];
+export const oopModule: CourseModule = { moduleId: 'oop', nodes: [] };

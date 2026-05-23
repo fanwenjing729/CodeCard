@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 并发与同步
-export const concurrencyNodes: PathNode[] = [];
+export const concurrencyModule: CourseModule = { moduleId: 'concurrency', nodes: [] };

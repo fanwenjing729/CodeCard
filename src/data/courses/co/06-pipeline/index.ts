@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 流水线与高级架构
-export const pipelineNodes: PathNode[] = [];
+export const pipelineModule: CourseModule = { moduleId: 'pipeline', nodes: [] };

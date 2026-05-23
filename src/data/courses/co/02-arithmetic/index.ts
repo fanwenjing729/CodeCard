@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 运算器
-export const arithmeticNodes: PathNode[] = [];
+export const arithmeticModule: CourseModule = { moduleId: 'arithmetic', nodes: [] };

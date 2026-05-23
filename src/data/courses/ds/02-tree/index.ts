@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 树与堆
-export const treeNodes: PathNode[] = [];
+export const treeModule: CourseModule = { moduleId: 'tree', nodes: [] };

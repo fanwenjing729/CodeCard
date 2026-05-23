@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 网络安全
-export const securityNodes: PathNode[] = [];
+export const securityModule: CourseModule = { moduleId: 'security', nodes: [] };

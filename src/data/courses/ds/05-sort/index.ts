@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 排序
-export const sortNodes: PathNode[] = [];
+export const sortModule: CourseModule = { moduleId: 'sort', nodes: [] };

@@ -143,7 +143,7 @@ src/
 │   │   └── cpp/               ← C++ course
 │   │       ├── index.ts       ← Course definition (id, title, color, nodes[])
 │   │       ├── 01-basics/     ← ✅ 3 nodes / 22 cards
-│   │       │   ├── index.ts       ← import + export basicsNodes[]
+│   │       │   ├── index.ts       ← import + export basicsModule
 │   │       │   ├── hello-world.ts ← 第一个程序 (3 cards)
 │   │       │   ├── variables.ts   ← 变量声明 (8 cards)
 │   │       │   └── io.ts          ← 输入与输出 (7 cards)
@@ -396,6 +396,7 @@ getAnimComponent(animId): ComponentType<...> | null
 |------|----------|------|-------------|----------|------|
 | MemoryBox | `MemoryBoxScenario` | `MemoryBox.tsx` | `scenarios/variableStorage.ts` | 是 | 可用 |
 | ScopeCode | `ScopeCodeScenario` | `ScopeCodePlayer.tsx` | `scenarios/scopeLifecycle.ts` | 是 | 可用 |
+| Branch | `BranchScenario` | `BranchPlayer.tsx` | `scenarios/ifElseBranch.ts` | 是 | 可用 |
 | Lottie | `LottieScenario` | `LottiePlayer.tsx` | `scenarios/lottieLoopFlow.ts` | 是 | 骨架（需装 `lottie-react-native` + 取消注释） |
 
 ---
@@ -451,6 +452,63 @@ import ScopeCodePlayer from '@/components/animations/ScopeCodePlayer';
 ```
 
 **Step 4 — 不改任何组件代码。** 组件复用 `ScopeCodePlayer.tsx`。
+
+---
+
+### 添加 Branch 动画（4 步）
+
+适合展示"条件 → 分支路径二选一"的场景——代码区高亮条件行和两条分支，true 路径绿色高亮、false 路径灰色跳过。
+
+**Step 1 — 创建 Scenario 文件**
+
+在 `src/data/animations/scenarios/` 下新建文件：
+
+```ts
+import type { BranchScenario } from '@/types';
+
+export const myBranchScenario: BranchScenario = {
+  id: 'my-branch',
+  title: '标题',
+  totalSteps: 3,
+  sourceCode: 'int x = 10;\n\nif (x > 5) {\n    cout << "大";\n} else {\n    cout << "小";\n}',
+  steps: [
+    {
+      label: '步骤名',
+      highlightLines: [2],       // 条件行 / switch 行（蓝色高亮）
+      takenLines: [3],           // 本次执行的行（绿色高亮）
+      skippedLines: [5],         // 本次跳过的行（灰色）
+      annotation: '底部注释',
+    },
+    // ... 更多步骤
+  ],
+};
+```
+
+`takenLines` / `skippedLines` 设计思路：
+- 不区分 if/else/switch，只描述"当前这一步执行哪些行、跳过哪些行"
+- 没有 takenLines 时（空数组）→ 条件行显示 `?`，表示正在求值
+- 有 takenLines 时 → 条件行显示 `↓`，绿色行=执行，灰色行=跳过
+- switch 场景同样适用：匹配的 case 行放入 takenLines，其余 case 行放入 skippedLines
+
+**Step 2 — 注册到 Registry**
+
+```ts
+import { myBranchScenario } from './scenarios/myBranch';
+import BranchPlayer from '@/components/animations/BranchPlayer';
+
+'my-branch': {
+  scenario: myBranchScenario,
+  Component: BranchPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+},
+```
+
+**Step 3 — 在节点中插入动画卡**
+
+```ts
+{ cardType: 'animation', content: { animationId: 'my-branch' } }
+```
+
+**Step 4 — 不改任何组件代码。** 组件复用 `BranchPlayer.tsx`。
 
 ---
 
@@ -629,12 +687,11 @@ export const operatorsNode: PathNode = {
 };
 ```
 
-3. 在模块 `index.ts` 中 import + 加入数组：
+3. 在模块 `index.ts` 中 import + 加入 nodes 数组：
 
 ```typescript
 import { operatorsNode } from './operators';
-// 加进 basicsNodes 数组
-```
+// 加进 nodes 数组（在 const nodes: PathNode[] = [...] 中）
 
 4. 文件名用 kebab-case：`hello-world.ts`、`operators.ts`、`if-else.ts`。每个 export 的变量名用 camelCase + `Node` 后缀：`helloWorldNode`、`operatorsNode`
 

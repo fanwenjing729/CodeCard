@@ -1,10 +1,16 @@
 // ===== 学科层 =====
+export interface CourseModule {
+  moduleId: string;
+  nodes: PathNode[];
+}
+
 export interface Course {
   id: string;
   title: string;
   icon: string;
   color: string;
   nodes: PathNode[];
+  moduleCount: number;
   prerequisites?: string[];
 }
 
@@ -114,6 +120,20 @@ export interface ScopeCodeScenario extends AnimScenario {
   cellsPerRow: number;
   totalRows: number;
   steps: ScopeCodeStep[];
+}
+
+// ===== Branch 动画专用 =====
+export interface BranchStep {
+  label: string;
+  highlightLines: number[];  // 条件行 / switch 行
+  takenLines: number[];      // 本次执行的行（绿色高亮）
+  skippedLines: number[];    // 本次跳过的行（灰色）
+  annotation: string;
+}
+
+export interface BranchScenario extends AnimScenario {
+  sourceCode: string;
+  steps: BranchStep[];
 }
 
 // ===== Lottie 动画专用 =====

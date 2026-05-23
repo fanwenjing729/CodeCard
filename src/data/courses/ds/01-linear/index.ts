@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 线性结构
-export const linearNodes: PathNode[] = [];
+export const linearModule: CourseModule = { moduleId: 'linear', nodes: [] };

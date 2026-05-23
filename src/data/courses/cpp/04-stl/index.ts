@@ -1,4 +1,4 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
 // STL 模块
-export const stlNodes: PathNode[] = [];
+export const stlModule: CourseModule = { moduleId: 'stl', nodes: [] };

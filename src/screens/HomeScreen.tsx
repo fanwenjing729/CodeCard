@@ -25,14 +25,7 @@ export default function HomeScreen() {
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
           const done = Object.keys(progress?.completedCards ?? {}).length;
-          const { total, moduleCount } = c.nodes.reduce(
-            (acc, n) => {
-              acc.total += n.cards.length;
-              if (n.cards.length > 0) acc.moduleCount++;
-              return acc;
-            },
-            { total: 0, moduleCount: 0 },
-          );
+          const total = c.nodes.reduce((sum, n) => sum + n.cards.length, 0);
           const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
           return (
@@ -52,8 +45,8 @@ export default function HomeScreen() {
               <View style={styles.info}>
                 <Text style={styles.title}>{c.title}</Text>
                 <Text style={styles.meta}>
-                  {moduleCount > 0
-                    ? `${moduleCount} 个模块 · ${total} 张卡片`
+                  {c.moduleCount > 0
+                    ? `${c.moduleCount} 个模块 · ${total} 张卡片`
                     : '暂无内容'}
                 </Text>
                 {total > 0 && (

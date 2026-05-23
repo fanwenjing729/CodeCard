@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 查找
-export const searchNodes: PathNode[] = [];
+export const searchModule: CourseModule = { moduleId: 'search', nodes: [] };

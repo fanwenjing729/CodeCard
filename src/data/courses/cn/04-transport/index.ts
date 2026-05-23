@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 传输层
-export const transportNodes: PathNode[] = [];
+export const transportModule: CourseModule = { moduleId: 'transport', nodes: [] };

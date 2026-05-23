@@ -1,4 +1,3 @@
-import type { PathNode } from '@/types';
+import type { CourseModule } from '@/types';
 
-// 应用层
-export const applicationNodes: PathNode[] = [];
+export const applicationModule: CourseModule = { moduleId: 'application', nodes: [] };
