@@ -22,6 +22,7 @@
 | `cpp-course-design.md` | C++ 课程内容设计（模块规划、卡片分布） | 给 C++ 课程加内容时参考结构 |
 | `content-writing-guide.md` | 课程内容创作指南 — 抽象概念教学原则 + 卡片设计自检清单 | **写新节点前必读** |
 | `animations-design.md` | C++ 课程动画设计（全部基于 MemoryBox，scenario 模板） | 给 C++ 课加内存动画时用 |
+| `animation-design-thinking.md` | 动画设计思路 — 从 ScopeCodePlayer 三轮迭代提炼的决策链 | **设计新动画前必读** |
 | `layout-spacing.md` | 各页面间距记录 | 调页面布局/间距时对照 |
 | `font-guide.md` | 字体配置指南 | 改字体相关配置时参考 |
 | `future-features.md` | 已分析的未来扩展方案记录 | 准备做某个扩展功能时先看有没有现成方案 |

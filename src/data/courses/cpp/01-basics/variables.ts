@@ -13,7 +13,7 @@ export const variablesNode: PathNode = {
       cardType: 'concept',
       content: {
         title: '什么是变量',
-        body: '变量是内存中一块有名字的存储空间。声明变量时需要指定类型，C++ 是强类型语言。\n\n基本类型：int（整数）、double（浮点数）、char（字符）、bool（布尔值）。',
+        body: '变量是内存中一块有名字的存储空间。声明变量时必须指定类型——int 存整数，不能塞文字进去。C++ 是强类型语言，类型一旦确定就不能随意混用。\n\n基本类型：int（整数）、double（浮点数）、char（字符）、bool（布尔值）。',
       },
     },
     {
@@ -68,7 +68,7 @@ export const variablesNode: PathNode = {
       cardType: 'concept',
       content: {
         title: '初始化与赋值',
-        body: '初始化（声明时给值）和赋值（声明后再给值）是两个不同的操作：\n\nint x = 10;   // 初始化：声明同时赋值\nint y;\ny = 20;       // 赋值：先声明，后赋值\n\n关键区别：\n1. 未初始化的局部变量值是未定义的（UB），C++ 不会自动清零\n2. 全局变量和静态变量会自动初始化为 0\n3. C++11 起推荐用花括号初始化：int x{10};\n\n花括号初始化会检查类型收窄，更安全：\nint a{3.14};  // 编译错误！double 不能收窄为 int',
+        body: '初始化（声明时给值）和赋值（声明后再给值）是两个不同的操作：\n\nint x = 10;   // 初始化：声明同时赋值\nint y;\ny = 20;       // 赋值：先声明，后赋值\n\n核心规则：未初始化的局部变量，值是未定义的——C++ 不会自动清零。读到未初始化变量，结果不可预测（可能是任意垃圾值）。\n\n所以养成习惯：声明的同时就初始化它。\n\nint x{10};    // 现代 C++ 也推荐花括号初始化\n              // 比等号更严格：如果类型不匹配会直接报错\n              // int a{3.14};  // 错误！3.14 是 double，不能塞进 int',
       },
     },
     {
@@ -77,7 +77,7 @@ export const variablesNode: PathNode = {
       content: {
         question: '以下代码输出什么结果？\n\nint x;\ncout << x;',
         questionType: 'choice',
-        options: ['0', '不确定（垃圾值）', '编译错误', 'null'],
+        options: ['0', '不确定（垃圾值）', '编译错误', '程序崩溃'],
         answer: '不确定（垃圾值）',
         explanation: '在函数内部声明的局部变量如果不初始化，它的值是未定义的（不确定的垃圾值）。C++ 不会自动给局部变量赋 0。读取未初始化变量是未定义行为（Undefined Behavior），应该始终初始化变量。',
       },

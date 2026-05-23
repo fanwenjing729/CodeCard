@@ -4,6 +4,7 @@ import { variablesNode } from './variables';
 import { operatorsNode } from './operators';
 import { ioNode } from './io';
 import { constantsNode } from './constants';
+import { scopeNode } from './scope';
 
 export const basicsNodes: PathNode[] = [
   helloWorldNode,
@@ -11,4 +12,5 @@ export const basicsNodes: PathNode[] = [
   operatorsNode,
   ioNode,
   constantsNode,
+  scopeNode,
 ];

@@ -1,7 +1,9 @@
 import type { ComponentType } from 'react';
 import type { AnimScenario } from '@/types';
 import { variableStorageScenario } from './scenarios/variableStorage';
+import { scopeLifecycleScenario } from './scenarios/scopeLifecycle';
 import MemoryBox from '@/components/animations/MemoryBox';
+import ScopeCodePlayer from '@/components/animations/ScopeCodePlayer';
 // Lottie 示例（取消注释并放入 lottie JSON 文件后即可用）:
 // import { lottieLoopFlow } from './scenarios/lottieLoopFlow';
 // import LottiePlayer from '@/components/animations/LottiePlayer';
@@ -12,6 +14,10 @@ interface AnimationEntry {
 }
 
 export const animationRegistry: Record<string, AnimationEntry> = {
+  'scope-lifecycle': {
+    scenario: scopeLifecycleScenario,
+    Component: ScopeCodePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
   'variable-storage': {
     scenario: variableStorageScenario,
     Component: MemoryBox as ComponentType<{ scenario: AnimScenario; step: number }>,

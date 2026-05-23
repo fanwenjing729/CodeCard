@@ -13,7 +13,7 @@ export const ioNode: PathNode = {
       cardType: 'concept',
       content: {
         title: '用 cout 输出',
-        body: 'cout（console output）是 C++ 在屏幕上打印文字的方式。它来自 <iostream> 库，属于 std 命名空间。\n\nstd::cout << "Hello";  // 输出一行文字\nstd::cout << 42;       // 输出数字\nstd::cout << 3.14;     // 输出小数\n\n<< 叫"流插入运算符"，把右边的数据送进输出流。可以串联：\n\nstd::cout << "x = " << x << \'\\n\';\n\n\\n 是换行符。std::endl 也能换行，但会额外刷新缓冲区，一般用 \\n 就够了。',
+        body: 'cout（console output）是 C++ 在屏幕上打印文字的方式。它来自 <iostream> 库，属于 std 命名空间。\n\nstd::cout << "Hello";  // 输出一行文字\nstd::cout << 42;       // 输出数字\nstd::cout << 3.14;     // 输出小数\n\n<< 叫"流插入运算符"，把右边的数据送进输出流。可以串联：\n\nstd::cout << "x = " << x << \'\\n\';\n\n\\n 是换行符。std::endl 也能换行，但会额外做一次"刷新"（强制把内容立刻显示到屏幕），一般用 \\n 就够了。',
       },
     },
     {
@@ -123,7 +123,7 @@ export const ioNode: PathNode = {
         questionType: 'choice',
         options: ['完全一样，没有区别', '\\n 换行，endl 换行+刷新缓冲区', 'endl 换行，\\n 换行+刷新缓冲区', 'endl 只在 Windows 上有效'],
         answer: '\\n 换行，endl 换行+刷新缓冲区',
-        explanation: '两者都产生换行效果。区别是 std::endl 额外调用 flush() 刷新输出缓冲区，保证内容立即显示。频繁刷新会降低性能，所以一般用 \\n 就够了，需要立即显示时才用 endl。',
+        explanation: '两者都产生换行效果。区别是 std::endl 额外做了一次"刷新"——强制把内容立刻显示到屏幕上。频繁刷新会降低性能，所以一般用 \\n 就够了。需要立即看到输出（比如提示用户输入）时才用 endl。',
       },
     },
   ],

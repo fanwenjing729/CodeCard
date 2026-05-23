@@ -101,6 +101,21 @@ export interface MemoryBoxScenario extends AnimScenario {
   steps: MemoryBoxStep[];
 }
 
+// ===== ScopeCode 动画专用 =====
+export interface ScopeCodeStep {
+  label: string;
+  highlightLines: number[];
+  allocations: VarAlloc[];
+  annotation: string;
+}
+
+export interface ScopeCodeScenario extends AnimScenario {
+  sourceCode: string;
+  cellsPerRow: number;
+  totalRows: number;
+  steps: ScopeCodeStep[];
+}
+
 // ===== Lottie 动画专用 =====
 export interface LottieScenario extends AnimScenario {
   lottieFile: string;

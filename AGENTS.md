@@ -395,11 +395,66 @@ getAnimComponent(animId): ComponentType<...> | null
 | 类型 | Scenario | 组件 | 场景文件模板 | 复用组件？ | 状态 |
 |------|----------|------|-------------|----------|------|
 | MemoryBox | `MemoryBoxScenario` | `MemoryBox.tsx` | `scenarios/variableStorage.ts` | 是 | 可用 |
+| ScopeCode | `ScopeCodeScenario` | `ScopeCodePlayer.tsx` | `scenarios/scopeLifecycle.ts` | 是 | 可用 |
 | Lottie | `LottieScenario` | `LottiePlayer.tsx` | `scenarios/lottieLoopFlow.ts` | 是 | 骨架（需装 `lottie-react-native` + 取消注释） |
 
 ---
 
-### 添加 Lottie 动画（推荐，5 步）
+### 添加 ScopeCode 动画（4 步）
+
+适合展示"代码走读 + 内存状态同步"的场景——代码区高亮当前行，箭头指向下方内存格子，绿色=活着/灰色=已销毁。
+
+**Step 1 — 创建 Scenario 文件**
+
+在 `src/data/animations/scenarios/` 下新建文件：
+
+```ts
+import type { ScopeCodeScenario } from '@/types';
+
+export const myScopeScenario: ScopeCodeScenario = {
+  id: 'my-scope',
+  title: '标题',
+  totalSteps: 4,
+  sourceCode: 'int main() {\n  int x = 10;\n}',
+  cellsPerRow: 8,
+  totalRows: 2,
+  steps: [
+    {
+      label: '步骤名',
+      highlightLines: [1],   // 高亮 sourceCode 的第几行（0-indexed）
+      allocations: [
+        { name: 'x', type: 'int', typeSize: 4, value: '10', color: '#2ed573' },
+      ],
+      annotation: '底部注释',
+    },
+    // ... 更多步骤
+  ],
+};
+```
+
+**Step 2 — 注册到 Registry**
+
+```ts
+import { myScopeScenario } from './scenarios/myScope';
+import ScopeCodePlayer from '@/components/animations/ScopeCodePlayer';
+
+'my-scope': {
+  scenario: myScopeScenario,
+  Component: ScopeCodePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+},
+```
+
+**Step 3 — 在节点中插入动画卡**
+
+```ts
+{ cardType: 'animation', content: { animationId: 'my-scope' } }
+```
+
+**Step 4 — 不改任何组件代码。** 组件复用 `ScopeCodePlayer.tsx`。
+
+---
+
+### 添加 Lottie 动画（5 步）
 
 **前置条件：** 安装 `lottie-react-native`（Expo SDK 55 兼容版本），取消 `LottiePlayer.tsx` 和 registry 里的注释。
 
@@ -522,28 +577,27 @@ import { arrayStorageScenario } from './scenarios/arrayStorage';
 
 ---
 
-### 添加全新动画类型（如 SpriteSheet、流程图）
+### 添加全新动画类型（参考 ScopeCodePlayer 实现）
 
-当 MemoryBox 和 Lottie 都不满足需求时，自定义新的动画类型。
+当 MemoryBox / ScopeCode / Lottie 都不满足需求时，自定义新的动画类型。**ScopeCodePlayer 就是按这个流程创建的——可以直接参考它的代码。**
 
-1. **在 `src/types/index.ts`** 定义新场景类型（~5 行）：
+1. **在 `src/types/index.ts`** 定义新场景类型（extends AnimScenario）：
    ```ts
-   export interface SpriteScenario extends AnimScenario {
-     frames: string[];     // PNG 资源 require 路径
-     frameRate?: number;   // 可选，帧率控制
+   // 参考：ScopeCodeScenario、ScopeCodeStep
+   export interface MyScenario extends AnimScenario {
+     // 你的字段
    }
    ```
 
 2. **在 `src/components/animations/`** 创建新组件，满足接口契约：
    ```tsx
-   interface Props { scenario: SpriteScenario; step: number; }
-   export default function SpritePlayer({ scenario, step }: Props) {
-     // 根据 step 渲染对应帧
-     return <Image source={scenario.frames[step]} />;
+   interface Props { scenario: MyScenario; step: number; }
+   export default function MyPlayer({ scenario, step }: Props) {
+     // 根据 step 渲染
    }
    ```
 
-3. **Registry 注册一行**（和 Lottie/MemoryBox 完全一样）。
+3. **Registry 注册一行**（和已有动画完全一样）。
 
 4. **不改 renderCard.tsx、NodeScreen.tsx、animationRegistry 结构。**
 
