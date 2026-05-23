@@ -75,5 +75,24 @@ export const ioNode: PathNode = {
         highlights: [0, 4, 5, 7, 10],
       },
     },
+    {
+      id: 'cpp-01-basics-io-c8',
+      cardType: 'concept',
+      content: {
+        title: '转义字符',
+        body: '转义字符是以反斜杠 \\ 开头的特殊字符序列，用来表示无法直接打出的字符。\n\n常用转义字符：\n• \\\\n — 换行（newline）\n• \\\\t — 水平制表符（Tab，对齐用）\n• \\\\\\\\ — 反斜杠本身\n• \\\\" — 双引号\n• \\\\\' — 单引号\n\n示例：\nstd::cout << "第一行\\\\n第二行";\n// 输出两行文字\n\nstd::cout << "姓名\\\\t年龄\\\\t分数\\\\n";\n// 用 Tab 对齐表头\n\nstd::cout << "他说：\\\\"Hello\\\\"";\n// 输出：他说："Hello"\n\n注意：转义字符在字符串中只占一个字符位置，不是两个。',
+      },
+    },
+    {
+      id: 'cpp-01-basics-io-c9',
+      cardType: 'practice',
+      content: {
+        question: '\\n 在字符串中表示什么？',
+        questionType: 'choice',
+        options: ['字母 n', '换行符', '反斜杠 n', '空字符'],
+        answer: '换行符',
+        explanation: '\\n 是一个转义字符，代表换行（newline）。反斜杠 \\ 和后面的字母组成一个整体，编译器把它当作一个特殊字符而不是两个普通字符。例如 cout << "A\\nB" 会在两行分别输出 A 和 B。',
+      },
+    },
   ],
 };

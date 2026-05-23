@@ -9,7 +9,7 @@ export interface Course {
 }
 
 // ===== 学习路径节点 =====
-export type ModuleId = 'basics' | 'advanced' | 'oop' | 'stl' | 'generics' | 'modern';
+export type ModuleId = string;
 
 export interface PathNode {
   id: string;

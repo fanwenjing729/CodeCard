@@ -84,5 +84,24 @@ export const variablesNode: PathNode = {
         explanation: 'double 是 C++ 中表示双精度浮点数的关键字。对应的单精度是 float（4 字节），一般情况优先用 double（8 字节，精度更高）。',
       },
     },
+    {
+      id: 'cpp-01-basics-var-c9',
+      cardType: 'concept',
+      content: {
+        title: '标识符命名规则',
+        body: '变量名（标识符）必须遵守以下规则：\n\n1. 只能由字母（A-Z, a-z）、数字（0-9）和下划线（_）组成\n2. 必须以字母或下划线开头，不能以数字开头\n3. 区分大小写：age 和 Age 是两个不同的变量\n4. 不能使用 C++ 关键字（如 int, double, return, if, for 等）\n\n命名惯例：\n• 小驼峰：studentName, totalScore（推荐）\n• 下划线：student_name, total_score\n• 大驼峰：StudentName（通常用于类名）\n\n合法的例子：age、_count、x1、firstName\n不合法的例子：2name（数字开头）、my-var（含连字符）、int（关键字）',
+      },
+    },
+    {
+      id: 'cpp-01-basics-var-c10',
+      cardType: 'practice',
+      content: {
+        question: '以下哪个是合法的 C++ 变量名？',
+        questionType: 'choice',
+        options: ['2ndPlace', 'my-variable', 'double', '_total'],
+        answer: '_total',
+        explanation: '_total 以下划线开头，合法。2ndPlace 以数字开头不合法，my-variable 含连字符 - 不合法（编译器会把它当作减法），double 是 C++ 关键字不能用作变量名。',
+      },
+    },
   ],
 };
