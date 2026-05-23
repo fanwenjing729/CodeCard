@@ -102,6 +102,14 @@ export const variablesNode: PathNode = {
     },
     {
       id: 'cpp-01-basics-var-c11',
+      cardType: 'concept',
+      content: {
+        title: '常见 C++ 关键字',
+        body: '关键字是 C++ 语言保留使用的词，不能用作变量名。IDE 通常会高亮显示它们。\n\n常见关键字清单（混个眼熟，不用背）：\n\nint  double  float  char  bool  void  auto\nshort  long  unsigned  signed\nconst  constexpr  sizeof  static\nif  else  switch  case  default\nfor  while  do  break  continue\ntrue  false  and  or  not\nreturn  cin  cout\nclass  struct  namespace  using  new  delete\npublic  private  protected  virtual  inline\n\n现阶段只要记住：命名时别跟这些词重名就行。',
+      },
+    },
+    {
+      id: 'cpp-01-basics-var-c12',
       cardType: 'practice',
       content: {
         question: '以下哪个是合法的 C++ 变量名？',

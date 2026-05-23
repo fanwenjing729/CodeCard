@@ -20,6 +20,7 @@
 | `architecture-timing-guide.md` | 架构问题分级：每个问题的触发条件、改造方案、改动量 | 考虑"什么时候做某个架构改进"时对照决策 |
 | `branch-path-design.md` | 练习卡答对/答错导向不同结尾的分支路径设计 | 实现分支学习路径时参考 |
 | `cpp-course-design.md` | C++ 课程内容设计（模块规划、卡片分布） | 给 C++ 课程加内容时参考结构 |
+| `content-writing-guide.md` | 课程内容创作指南 — 抽象概念教学原则 + 卡片设计自检清单 | **写新节点前必读** |
 | `animations-design.md` | C++ 课程动画设计（全部基于 MemoryBox，scenario 模板） | 给 C++ 课加内存动画时用 |
 | `layout-spacing.md` | 各页面间距记录 | 调页面布局/间距时对照 |
 | `font-guide.md` | 字体配置指南 | 改字体相关配置时参考 |
@@ -32,6 +33,7 @@
 
 1. **新接手项目** → `方案.md` → `AGENTS.md` → `docs/store-invariants.md`
 2. **日常开发** → 先搜 `AGENTS.md`，命中了就按指令做，不读源码
-3. **改 UI** → `AGENTS.md` + `docs/AAAAui-reference.md`
-4. **改 store** → `docs/store-invariants.md`
-5. **规划长期改进** → `docs/architecture-timing-guide.md` → `docs/future-features.md`
+3. **写新课程内容** → `docs/content-writing-guide.md` → `docs/cpp-course-design.md`
+4. **改 UI** → `AGENTS.md` + `docs/AAAAui-reference.md`
+5. **改 store** → `docs/store-invariants.md`
+6. **规划长期改进** → `docs/architecture-timing-guide.md` → `docs/future-features.md`
