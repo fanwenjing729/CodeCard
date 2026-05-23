@@ -15,6 +15,7 @@ This document IS the source of truth. Do NOT read source files unless listed bel
 | Add course / module / node / card | This doc + `hello-world.ts` (node template) + `01-basics/index.ts` (module template) | Any other file |
 | Add animation (any type) | `docs/animation-system.md` — do NOT read source | All source files |
 | Fix store / progress bug | `useProgressStore.ts` + the screen reporting the bug | Other screens |
+| Change level formula | `src/lib/xp.ts` + `docs/store-invariants.md` | Component files |
 | Fix card rendering bug | The specific card component + `renderCard.tsx` | Other components |
 | Modify SettingsScreen UI | This doc + `SettingsScreen.tsx` | Other screens |
 | Modify ProgressScreen | `ProgressScreen.tsx` only | Other screens |
@@ -54,6 +55,8 @@ import { Colors, FontSize, FontWeight, Radius, Spacing, Layout } from '@/theme';
 src/
 ├── theme.ts                   ← Design tokens
 ├── types/index.ts            ← All shared TypeScript interfaces
+├── lib/
+│   └── xp.ts                 ← XP 等级公式（calcLevel / xpForLevelStart / xpForNextLevel）
 ├── navigation/AppNavigator.tsx ← Root stack + bottom tabs
 ├── store/
 │   ├── useProgressStore.ts ← Zustand store (progress, XP, cards)

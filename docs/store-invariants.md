@@ -1,105 +1,128 @@
-# useProgressStore 改动触发场景 & 回归清单
+# useProgressStore 不变量 & 改动指南
 
-不用读源码。哪天你需要改这个文件，先看这里。
+不用读源码。改 store 或等级系统，先看这里。
 
-## 什么时候会回来改这个文件
+## 等级公式速查
 
-| 触发场景 | 具体改动 | 概率 |
-|---------|---------|------|
-| 接后端同步 | `CourseProgress` 加 `dirtyCards: string[]` | 一定发生 |
-| 加学习统计 | `CourseProgress` 加 `streakDays` / `lastStudyDate` | 很可能 |
-| 调整 XP 规则 | `XP_PER_CARD` / `XP_PER_PRACTICE` 改值，或分卡类型给不同 XP | 可能 |
-| 批量操作 | 加 `completeCards(courseId, cardIds[])` 批量完成 | 可能 |
-| 跨设备合并 | `hydrate()` 加合并策略（本地 vs 远程冲突） | 一定发生 |
-| 加错题复习功能 | `wrongCards` + `uncompleteCard` 已存在，复用即可 | 已实现 |
+所有等级公式抽到独立文件 `src/lib/xp.ts`，store 和 Screen 都从它 import，互不依赖。
 
-## 核心不变量（改完必须成立）
+### 改 XP_PER_LEVEL 就能调整体感
 
-### calcLevel
+| 常量 | 位置 | 当前值 | 作用 |
+|------|------|--------|------|
+| `XP_PER_LEVEL` | `src/lib/xp.ts:1` | `50` | **唯一源头**，改这一个数字，整个升级曲线跟着变 |
+
+### 三个导出函数（全在 `src/lib/xp.ts`）
+
+| 函数 | 公式 | 作用 | 谁在用 |
+|------|------|------|--------|
+| `calcLevel(totalXP)` | while 循环累减 `level * XP_PER_LEVEL` | totalXP → 等级 | `useProgressStore`（addXP / rewardCard / resetCourse / hydrate） |
+| `xpForLevelStart(level)` | `(XP_PER_LEVEL/2) * (level-1) * level` | 到达某等级需要多少累计 XP | `ProgressScreen` 算 `xpIntoLevel` |
+| `xpForNextLevel(level)` | `level * XP_PER_LEVEL` | 当前等级升下一级需要多少 XP | `ProgressScreen` 进度环分母 |
+
+### 依赖关系
+
 ```
-- calcLevel(0)   = 1     ← 零 XP 就是 1 级
-- calcLevel(99)  = 1     ← 100 XP 以下都是 1 级
-- calcLevel(100) = 2     ← 边界：刚好升级
-- calcLevel(299) = 2     ← 边界：2 级需要 200，100+200=300 才升 3
-- calcLevel(300) = 3
-- level N 需要累计 N*(N-1)*50 XP，等价于每级需要 level*100
-```
-
-### completeCard
-```
-- 同一张卡调两次 → 第二次返回 false，completedCards 不重复（O(1) 去重 via `cardId in completedCards`）
-- 新课第一次调 → 自动创建 CourseProgress，不会崩
-- completeCard 不改 XP，不改 level
+src/lib/xp.ts  ← 唯一公式源
+    ↑            ↑
+    |            |
+useProgressStore  ProgressScreen
+（import calcLevel）  （import xpForLevelStart, xpForNextLevel）
 ```
 
-### uncompleteCard
+store 和 Screen 没有任何 import 依赖关系，各自独立引用 xp.ts。
+
+### 关系
+
 ```
-- 从 completedCards 移除 cardId（destructure rest），不扣 XP
-- 不存在的 cardId → 静默忽略，不报错
-- 当前仅保留 action 定义，NodeScreen / QuizScreen 答错不再调用（答错不取消完成状态）
+xpForLevelStart(3) = XP_PER_LEVEL/2 * 2 * 3 = 25 * 6 = 150
+xpForNextLevel(3)  = 3 * 50 = 150
 ```
+
+- `xpForLevelStart(level) + xpForNextLevel(level) = xpForLevelStart(level + 1)`
+- `xpForLevelStart` 是 `calcLevel` 的逆运算求和公式
+
+### 调参效果（XP_PER_LEVEL = 50）
+
+| 等级 | 累计需要 | 本级到下级需要 |
+|------|----------|:--:|
+| Lv.1 | 0 | 50 |
+| Lv.2 | 50 | 100 |
+| Lv.3 | 150 | 150 |
+| Lv.4 | 300 | 200 |
+| Lv.5 | 500 | 250 |
+| Lv.10 | 2,250 | 500 |
+| Lv.20 | 9,500 | 1,000 |
+
+调成 `XP_PER_LEVEL = 100` 就是翻倍，调成 `30` 就是打六折，曲线形状不变。
+
+---
+
+## calcLevel 不变量
+
+```
+calcLevel(0)   = 1     ← 零 XP 就是 1 级
+calcLevel(49)  = 1     ← 不到 50 XP 都是 Lv.1
+calcLevel(50)  = 2     ← 刚好升级
+calcLevel(149) = 2     ← Lv.2→3 需要 100，累计 150 才升
+calcLevel(150) = 3
+```
+
+---
+
+## 各 action 不变量
 
 ### rewardCard
 ```
-- = completeCard + addXP 的合体效果
-- 同一张卡调两次 → 第二次返回 false，XP 不加（O(1) 去重）
-- XP 和 completedCards 要么一起生效，要么一起不生效（原子性）
+- = completeCard + addXP 合体
+- 同一张卡调两次 → 第二次返回 false，XP 不加（O(1) 去重 via `cardId in completedCards`）
+- XP 和 completedCards 要么一起生效，要么一起不生效
+```
+
+### addXP
+```
+- 直接加 XP 到 course 和 global
+- global.totalXP += amount，同步重算 level
+- 新课第一次调 → 自动创建 CourseProgress
 ```
 
 ### wrongCards
 ```
-- addWrongCard：同一张卡推两次 → 不重复（O(1) 去重 via `cardId in wrongCards`）
+- addWrongCard：同一张卡推两次 → 不重复（O(1) 去重）
 - removeWrongCard：不存在的 cardId → 静默忽略
-- wrongCards 只存 cardId，不存答案内容（类型：`Record<string, true>`）
-- resetCourse → wrongCards: {} 一并清空
+- wrongCards 只存 cardId（类型：`Record<string, true>`）
+- resetCourse → wrongCards 一并清空
 ```
 
 ### resetCourse
 ```
 - 扣掉的 XP = 该课程的 course.xp
 - global.totalXP 不会变成负数（Math.max(0, ...)）
-- level 根据扣除后的 XP 重新计算
-- 该课程的数据回到初始状态（含 wrongCards: []）
+- level 用 calcLevel 根据扣除后 XP 重新计算
+- 该课程回到初始状态
 ```
 
-### hydrate + migrate
-```
-- 启动时只调一次 hydrate()
-- hydrate 后 state 的结构必须和 PersistedData 类型完全对齐
-- 旧版本数据 → migrate() → 当前版本 → 写入 state
-- migrate 失败时不应 set 脏数据（当前是静默 catch，可接受）
-```
+---
 
-### calcLevel
-```
-- calcLevel(0)   = 1     ← 零 XP 就是 1 级
-- calcLevel(99)  = 1     ← 100 XP 以下都是 1 级
-- calcLevel(100) = 2     ← 边界：刚好升级
-- calcLevel(299) = 2     ← 边界：2 级需要 200，100+200=300 才升 3
-- calcLevel(300) = 3
-- level N 需要累计 N*(N-1)*50 XP，等价于每级需要 level*100
-```
+## hydrate + persist
 
-### completeCard (重复段，同前)
-### rewardCard (重复段，同前)
-### resetCourse (重复段，同前)
-
-### hydrate + migrate
 ```
 - 启动时只调一次 hydrate()
-- hydrate 后 state 的结构必须和 PersistedData 类型完全对齐
+- hydrate 成功后 hydrated: true
+- hydrate 失败（AsyncStorage 异常）→ 设 hydrated: true 走初始状态，不白屏
+- pickData 保存时 level 写占位值 1，每次 hydrate 用 calcLevel 重算
 - 旧版本数据 → migrate() → 当前版本 → 写入 state
-- migrate 失败时不应 set 脏数据（当前是静默 catch，可接受）
+- 防抖 500ms 写入 AsyncStorage
+- App 进后台立即 flush
 ```
 
-## 改后的快速验证（不用写测试）
+---
 
-在 NodeScreen 正常刷几张卡，然后：
-1. 退出 app 重开 → 进度还在（persistence 没坏）
-2. 同一张卡再刷一次 → XP 不涨（去重没坏）
-3. ProgressScreen 看等级 → 和 XP 数字匹配（calcLevel 没坏）
-4. 设置页重置课程 → XP 减少、卡片恢复未完成（resetCourse 没坏）
-5. 答错一道题 → 错题集出现 + 进度条减少（wrongCards + uncompleteCard 没坏）
-6. 再答对同一道题 → 错题集消失 + 进度条恢复（removeWrongCard + rewardCard 没坏）
+## 改后手动验证（5 分钟）
 
-5 分钟手动走完这六步，比任何自动化测试都更能确认"没改坏"。
+1. 正常刷几张卡 → XP 正常增加
+2. 退出 app 重开 → 进度还在
+3. 同一张卡再刷 → XP 不涨（去重）
+4. ProgressScreen → 等级/进度环和 XP 匹配
+5. 设置页重置课程 → XP 减少、等级可能下降
+6. 答错 → 错题集出现，答对 → 消失

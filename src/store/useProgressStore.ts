@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { calcLevel } from '@/lib/xp';
 
-export interface CourseProgress {
+interface CourseProgress {
   completedCards: Record<string, true>;
   xp: number;
   quizScores: Record<string, number>;
@@ -15,18 +16,6 @@ function getOrCreateCourse(
   courseId: string,
 ): CourseProgress {
   return courses[courseId] ?? { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} };
-}
-
-function calcLevel(totalXP: number): number {
-  let level = 1;
-  let threshold = 100;
-  let xp = totalXP;
-  while (xp >= threshold) {
-    xp -= threshold;
-    level++;
-    threshold = level * 100;
-  }
-  return level;
 }
 
 const STORAGE_KEY = 'codecard-progress';
@@ -112,7 +101,11 @@ const initialState: PersistedData = {
 
 // 提取可序列化数据，排除方法
 function pickData(s: ProgressStore): PersistedData {
-  return { version: CURRENT_VERSION, global: s.global, courses: s.courses };
+  return {
+    version: CURRENT_VERSION,
+    global: { totalXP: s.global.totalXP, level: 1 },
+    courses: s.courses,
+  };
 }
 
 const save = async (data: PersistedData) => {
@@ -237,11 +230,15 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
       const migrated = migrate(data);
       set({
         hydrated: true,
-        global: migrated.global,
+        global: {
+          ...migrated.global,
+          level: calcLevel(migrated.global.totalXP),
+        },
         courses: migrated.courses,
       });
     } catch (e) {
       console.warn('[CodeCard] AsyncStorage read failed:', e);
+      set({ hydrated: true });
     }
   },
 

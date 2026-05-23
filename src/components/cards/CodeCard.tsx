@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, FontSize } from '@/theme';
 import type { CodeContent } from '@/types';
 
 interface Props {
@@ -75,8 +75,8 @@ const styles = StyleSheet.create({
   },
   code: {
     fontFamily: 'monospace',
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: FontSize.code,
+    lineHeight: 19,
     color: Colors.codeText,
     flex: 1,
   },

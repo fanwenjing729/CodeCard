@@ -7,12 +7,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle } from 'react-native-svg';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useProgressStore } from '@/store/useProgressStore';
+import { xpForLevelStart, xpForNextLevel } from '@/lib/xp';
 import { courses } from '@/data/courses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
-
-function xpForLevelStart(level: number): number {
-  return 50 * (level - 1) * level;
-}
 
 // ---- 环形进度条 ----
 const RING_SIZE = 160;
@@ -97,8 +94,8 @@ export default function ProgressScreen() {
   }, [coursesProgress]);
 
   const currentLevelStart = useMemo(() => xpForLevelStart(global.level), [global.level]);
-  const nextLevelXP = global.level * 100;
-  const xpIntoLevel = global.totalXP - currentLevelStart;
+  const nextLevelXP = xpForNextLevel(global.level);
+  const xpIntoLevel = Math.max(0, global.totalXP - currentLevelStart);
   const xpPercent = useMemo(
     () => Math.min((xpIntoLevel / nextLevelXP) * 100, 100),
     [xpIntoLevel, nextLevelXP],

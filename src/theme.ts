@@ -69,6 +69,7 @@ export const FontSize = {
   heading: 22,
   hero: 24,
   xhero: 48,
+  code: 12,
 } as const;
 
 // ===== 字重 =====

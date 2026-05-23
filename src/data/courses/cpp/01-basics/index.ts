@@ -9,6 +9,7 @@ import { comparisonLogicNode } from './comparison-logic';
 import { conditionalsNode } from './conditionals';
 import { forLoopNode } from './for-loop';
 import { whileLoopNode } from './while-loop';
+import { breakContinueNode } from './break-continue';
 
 const nodes: PathNode[] = [
   helloWorldNode,
@@ -21,6 +22,7 @@ const nodes: PathNode[] = [
   conditionalsNode,
   forLoopNode,
   whileLoopNode,
+  breakContinueNode,
 ];
 
 export const basicsModule: CourseModule = { moduleId: 'basics', nodes };

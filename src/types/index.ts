@@ -174,7 +174,31 @@ export interface BreakContinueScenario extends AnimScenario {
   steps: BreakContinueStep[];
 }
 
-// ===== WhileDoWhile 动画专用 =====
+// ===== 奖励 / 反馈系统 =====
+
+export type RewardEventType = 'xp_gain' | 'level_up';
+
+export interface XpGainReward {
+  type: 'xp_gain';
+  amount: number;
+  source: 'card' | 'practice' | 'quiz';
+}
+
+export interface LevelUpReward {
+  type: 'level_up';
+  from: number;
+  to: number;
+}
+
+export type RewardEvent = XpGainReward | LevelUpReward;
+
+export interface RewardState {
+  /** 当前正在展示的奖励事件，null 表示无事件 */
+  current: RewardEvent | null;
+  /** 关闭当前事件，播放下一个 */
+  dismiss: () => void;
+}
+
 export interface WhileDoWhileStep {
   label: string;
   whileLines: number[];
