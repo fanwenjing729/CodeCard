@@ -44,6 +44,7 @@ export const Colors = {
   dangerBorder: '#ffccd5',
   inputBorder: '#ddd',
   tabBarBorder: '#e0e0e0',
+  backdrop: 'rgba(0,0,0,0.35)',
   // 动画
   gridEmpty: '#2a2a3e',
   gridEmptyStroke: '#3a3a4e',

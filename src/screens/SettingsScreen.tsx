@@ -11,7 +11,7 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, Spacing } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -218,23 +218,28 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>重置课程进度</Text>
 
-        {courses.map((c) => {
+        {courses.map((c, i) => {
           const progress = coursesState[c.id];
           const completed = progress?.completedCards?.length ?? 0;
+          const isLast = i === courses.length - 1;
           return (
             <TouchableOpacity
               key={c.id}
-              style={styles.row}
+              style={[styles.row, isLast && styles.rowLast]}
               onPress={() => handleResetCourse(c.id, c.title)}
               activeOpacity={0.7}
             >
-              <View style={styles.rowLeft}>
-                <View style={[styles.dot, { backgroundColor: c.color }]} />
-                <Text style={styles.rowText}>
-                  {c.title}
-                  {completed > 0 ? `（${completed} 张已完成）` : ''}
-                </Text>
+              <View style={[styles.rowIconBox, { backgroundColor: c.color }]}>
+                {c.icon ? (
+                  <MaterialCommunityIcons name={c.icon as any} size={18} color={Colors.textInverse} />
+                ) : (
+                  <Text style={styles.rowIconText}>{c.title[0]}</Text>
+                )}
               </View>
+              <Text style={styles.rowText}>
+                {c.title}
+                {completed > 0 ? `（${completed} 张已完成）` : ''}
+              </Text>
               <Text style={styles.arrow}>›</Text>
             </TouchableOpacity>
           );
@@ -246,12 +251,15 @@ export default function SettingsScreen() {
         <View style={styles.dangerSection}>
           <Text style={[styles.sectionTitle, styles.dangerTitle]}>危险操作</Text>
           <TouchableOpacity
-            style={styles.row}
+            style={[styles.row, styles.dangerRow]}
             onPress={handleClearAll}
             activeOpacity={0.7}
           >
-            <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
-            <Text style={styles.arrow}>›</Text>
+            <View style={styles.dangerRowLeft}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.danger} />
+              <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
+            </View>
+            <Text style={[styles.arrow, styles.dangerArrow]}>›</Text>
           </TouchableOpacity>
         </View>
       ) : null}
@@ -279,20 +287,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgTertiary,
   },
   content: {
-    padding: 16,
+    padding: Spacing.lg,
     paddingBottom: 40,
   },
   section: {
     backgroundColor: Colors.bg,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
   dangerSection: {
     backgroundColor: Colors.bg,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: Colors.dangerBorder,
   },
@@ -300,7 +308,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: Colors.textMuted,
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   dangerTitle: {
     color: Colors.danger,
@@ -308,23 +316,30 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
   },
-  rowLeft: {
-    flexDirection: 'row',
+  rowLast: {
+    borderBottomWidth: 0,
+  },
+  rowIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 10,
+  rowIconText: {
+    color: Colors.textInverse,
+    fontSize: 16,
+    fontWeight: '700',
   },
   rowText: {
     fontSize: 16,
     color: Colors.text,
+    flex: 1,
   },
   rowValue: {
     fontSize: 14,
@@ -334,6 +349,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.arrow,
   },
+  dangerRow: {
+    borderLeftWidth: 0,
+  },
+  dangerRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  dangerArrow: {
+    fontSize: 18,
+    color: Colors.danger,
+  },
   dangerText: {
     color: Colors.danger,
   },
@@ -341,8 +369,8 @@ const styles = StyleSheet.create({
   // 头像区域
   avatarSection: {
     alignItems: 'center',
-    paddingVertical: 24,
-    marginBottom: 8,
+    paddingVertical: Spacing.xxl,
+    marginBottom: Spacing.sm,
   },
   avatarCircle: {
     width: 96,
@@ -360,7 +388,7 @@ const styles = StyleSheet.create({
   displayIdRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 14,
+    marginTop: Spacing.base,
     gap: 6,
   },
   displayIdText: {
@@ -372,21 +400,21 @@ const styles = StyleSheet.create({
   phoneText: {
     fontSize: 14,
     color: Colors.textMuted,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   syncText: {
     fontSize: 13,
     color: Colors.textPlaceholder,
-    marginTop: 12,
+    marginTop: Spacing.md,
   },
   actionRow: {
     flexDirection: 'row',
-    marginTop: 14,
-    gap: 12,
+    marginTop: Spacing.base,
+    gap: Spacing.md,
   },
   actionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
     borderRadius: 8,
     backgroundColor: Colors.primary,
   },
@@ -408,10 +436,10 @@ const styles = StyleSheet.create({
   notLoggedInText: {
     fontSize: 16,
     color: Colors.disabledText,
-    marginTop: 14,
+    marginTop: Spacing.base,
   },
   loginButton: {
-    marginTop: 14,
+    marginTop: Spacing.base,
     paddingVertical: 10,
     paddingHorizontal: 28,
     borderRadius: 8,
@@ -426,14 +454,14 @@ const styles = StyleSheet.create({
   // 编辑弹窗
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: Colors.backdrop,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalCard: {
     backgroundColor: Colors.bg,
     borderRadius: 14,
-    padding: 24,
+    padding: Spacing.xxl,
     width: 280,
   },
   modalTitle: {
@@ -441,13 +469,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.text,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   modalInput: {
     borderWidth: 1,
     borderColor: Colors.inputBorder,
     borderRadius: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.base,
     paddingVertical: 10,
     fontSize: 16,
     color: Colors.text,
@@ -455,7 +483,7 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     marginTop: 18,
-    gap: 12,
+    gap: Spacing.md,
   },
   modalButton: {
     flex: 1,

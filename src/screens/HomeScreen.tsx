@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, FontSize, Radius, Spacing } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,37 +17,51 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.heading, { marginTop: insets.top + 42 }]}>选择学科</Text>
-      <View style={{ marginTop: 21 }}>
+      <View style={{ marginTop: insets.top + 42 }}>
+        <Text style={styles.heading}>CodeCard</Text>
+        <Text style={styles.subtitle}>选择学科开始学习</Text>
+      </View>
+      <View style={styles.list}>
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
           const done = progress?.completedCards?.length ?? 0;
-          const total = c.nodes.reduce((sum, n) => sum + n.cards.length, 0);
+          const { total, moduleCount } = c.nodes.reduce(
+            (acc, n) => {
+              acc.total += n.cards.length;
+              if (n.cards.length > 0) acc.moduleCount++;
+              return acc;
+            },
+            { total: 0, moduleCount: 0 },
+          );
           const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
           return (
             <TouchableOpacity
               key={c.id}
-              style={styles.courseCard}
+              style={[styles.card, { borderLeftColor: c.color }]}
               onPress={() => navigation.navigate('Course', { courseId: c.id })}
               activeOpacity={0.7}
             >
-              <View style={[styles.courseIcon, { backgroundColor: c.color }]}>
+              <View style={[styles.iconBox, { backgroundColor: c.color }]}>
                 {c.icon ? (
-                  <MaterialCommunityIcons name={c.icon as any} size={24} color={Colors.textInverse} />
+                  <MaterialCommunityIcons name={c.icon as any} size={26} color={Colors.textInverse} />
                 ) : (
-                  <Text style={styles.courseIconText}>{c.title[0]}</Text>
+                  <Text style={styles.iconText}>{c.title[0]}</Text>
                 )}
               </View>
-              <View style={styles.courseInfo}>
-                <Text style={styles.courseTitle}>{c.title}</Text>
-                <Text style={styles.courseMeta}>
-                  {c.nodes.filter((n) => n.cards.length > 0).length} 个模块
-                  {total > 0 ? ` · ${done}/${total} · ${pct}%` : ''}
+              <View style={styles.info}>
+                <Text style={styles.title}>{c.title}</Text>
+                <Text style={styles.meta}>
+                  {moduleCount > 0
+                    ? `${moduleCount} 个模块 · ${total} 张卡片`
+                    : '暂无内容'}
                 </Text>
                 {total > 0 && (
-                  <View style={styles.miniBar}>
-                    <View style={[styles.miniBarFill, { width: `${pct}%` as any, backgroundColor: c.color }]} />
+                  <View style={styles.progressRow}>
+                    <View style={styles.miniBar}>
+                      <View style={[styles.miniBarFill, { width: `${pct}%` as any, backgroundColor: c.color }]} />
+                    </View>
+                    <Text style={styles.pct}>{pct}%</Text>
                   </View>
                 )}
               </View>
@@ -63,66 +77,89 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bg,
-    padding: 16,
+    backgroundColor: Colors.bgTertiary,
   },
   heading: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 28,
+    fontWeight: '800',
     color: Colors.text,
-    marginBottom: 20,
-    marginTop: 64,
+    paddingHorizontal: Spacing.lg,
   },
-  courseCard: {
+  subtitle: {
+    fontSize: FontSize.base,
+    color: Colors.textMuted,
+    marginTop: 4,
+    paddingHorizontal: Spacing.lg,
+  },
+  list: {
+    marginTop: 20,
+    paddingHorizontal: Spacing.lg,
+  },
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.bgSecondary,
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: Colors.bg,
+    borderRadius: Radius.lg,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderLeftWidth: 4,
   },
-  courseIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginLeft: Spacing.lg,
+    marginVertical: Spacing.lg,
   },
-  courseIconText: {
+  iconText: {
     color: Colors.textInverse,
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
   },
-  courseInfo: {
+  info: {
     flex: 1,
+    marginLeft: 14,
+    marginRight: 8,
   },
-  courseTitle: {
+  title: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.text,
   },
-  courseMeta: {
+  meta: {
     fontSize: 13,
     color: Colors.textMuted,
-    marginTop: 2,
-    marginBottom: 4,
+    marginTop: 3,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
   },
   miniBar: {
-    height: 3,
+    flex: 1,
+    height: 4,
     backgroundColor: Colors.progressBarBg,
     borderRadius: 2,
     overflow: 'hidden',
+    marginRight: 10,
   },
   miniBarFill: {
     height: '100%',
     borderRadius: 2,
   },
+  pct: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    width: 36,
+    textAlign: 'right',
+  },
   arrow: {
     fontSize: 22,
     color: Colors.arrow,
     fontWeight: '300',
+    marginRight: Spacing.md,
   },
 });
