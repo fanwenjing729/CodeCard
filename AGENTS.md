@@ -333,7 +333,12 @@ QuizScreen uses QuestionRenderer directly (no PracticeCard wrapper).
 
 ## Animation system — multi-type
 
-所有动画遵循统一接口。添加新动画不改任何源文件，只加数据+组件+注册。
+所有动画遵循统一接口。添加新动画不改核心代码，只加数据+组件+注册。
+
+**不改的文件（零改动，永远）：**
+- `src/components/cards/renderCard.tsx` — 动画分支已存在，按 `cardType: 'animation'` 自动分发
+- `src/screens/NodeScreen.tsx` — 卡片遍历逻辑不变，步进控制不变
+- `src/types/index.ts` — `AnimationContent { animationId: string }` 已定义，Card 联合类型已包含
 
 ### 接口契约
 
@@ -342,7 +347,7 @@ QuizScreen uses QuestionRenderer directly (no PracticeCard wrapper).
 AnimScenario {
   id: string;         // registry key
   title: string;      // 显示名
-  totalSteps: number; // 总步数
+  totalSteps: number; // 总步数（≥2），用于 NodeScreen 的 ← 上一步 / 下一步 →
 }
 
 // 组件必须接受（src/components/animations/）
@@ -353,36 +358,189 @@ ComponentType<{ scenario: AnimScenario; step: number }>
 ### 调度链路
 
 ```
-NodeScreen                     → getAnimScenario(id) → scenario.totalSteps（控制步进）
-renderCard (case 'animation')  → getAnimComponent(id) → React.createElement(component, { scenario, step })
+数据层：Card { cardType:'animation', content:{ animationId:'xxx' } }
+         ↓
+渲染层：renderCard.tsx (case 'animation')
+         → getAnimScenario(animationId)  → AnimScenario（查 registry）
+         → getAnimComponent(animationId) → React 组件（查 registry）
+         → React.createElement(Component, { key: card.id, scenario, step: animStep })
+         ↓
+交互层：NodeScreen 管理 animStep 状态，← → 按钮推进/回退 step
+```
+
+### Registry 结构（src/data/animations/index.ts）
+
+```ts
+// 每加一个动画，只在这个对象里加一行
+export const animationRegistry: Record<string, AnimationEntry> = {
+  'variable-storage': {
+    scenario: variableStorageScenario,   // ← import 你的 scenario 对象
+    Component: MemoryBox as ComponentType<...>,  // ← import 你的组件（已有组件可直接复用）
+  },
+  // ← 你的新动画加在这里
+};
+
+// 两个查找函数（已实现，不需要改）
+getAnimScenario(animId): AnimScenario | undefined
+getAnimComponent(animId): ComponentType<...> | null
 ```
 
 ### 当前动画类型
 
-| 类型 | Scenario 定义 | 组件 | 特点 |
-|------|-------------|------|------|
-| MemoryBox | `MemoryBoxScenario extends AnimScenario` | `MemoryBox.tsx` | SVG 网格布局，`steps: MemoryBoxStep[]` |
-| Lottie | `LottieScenario extends AnimScenario` | `LottiePlayer.tsx` | AE 导出 JSON，`lottieFile: string` |
+| 类型 | Scenario | 组件 | 场景文件模板 | 复用组件？ | 状态 |
+|------|----------|------|-------------|----------|------|
+| MemoryBox | `MemoryBoxScenario` | `MemoryBox.tsx` | `scenarios/variableStorage.ts` | 是 | 可用 |
+| Lottie | `LottieScenario` | `LottiePlayer.tsx` | `scenarios/lottieLoopFlow.ts` | 是 | 骨架（需装 `lottie-react-native` + 取消注释） |
 
-### 添加 MemoryBox 动画
+---
 
-1. 在 `src/data/animations/scenarios/{name}.ts` 创建 `MemoryBoxScenario`（模板：`variableStorage.ts`）
-2. registry 加一行：`'{animId}': { scenario: ..., Component: MemoryBox as ... }`
-3. 组件复用 `MemoryBox.tsx`，不需要新建
+### 添加 Lottie 动画（推荐，5 步）
 
-### 添加 Lottie 动画
+**前置条件：** 安装 `lottie-react-native`（Expo SDK 55 兼容版本），取消 `LottiePlayer.tsx` 和 registry 里的注释。
 
-1. AE 导出 Lottie JSON → 放入 `assets/lottie/`
-2. 在 `src/data/animations/scenarios/{name}.ts` 创建 `LottieScenario`（模板：`lottieLoopFlow.ts`）
-3. registry 加一行：`'{animId}': { scenario: ..., Component: LottiePlayer as ... }`
-4. 组件复用 `LottiePlayer.tsx`，不需要新建
+**Step 1 — 导出 Lottie JSON**
 
-### 添加全新动画类型（如执行流程图）
+AE 安装 Bodymovin 插件 → 选择要导出的合成 → File → Export → Bodymovin → 选 "Standalone" → 生成 `.json` 文件。注意：AE 里的 raster 效果（粒子、模糊、混合模式）会丢失或转成 base64 内嵌，尽量只导出形状图层动画。
 
-1. 在 `src/types/index.ts` 定义新 `XxxScenario extends AnimScenario`（+4 行）
-2. 在 `src/components/animations/` 创建新组件，接收 `{ scenario: XxxScenario; step: number }`
-3. registry 加一行注册
-4. **不改 renderCard.tsx、NodeScreen.tsx、animationRegistry 结构**
+**Step 2 — 放入资源目录**
+
+将 `.json` 文件放入 `assets/lottie/`，例如 `assets/lottie/loop-flow.json`。
+
+**Step 3 — 创建 Scenario 文件**
+
+在 `src/data/animations/scenarios/` 下新建文件，例如 `loopFlow.ts`：
+
+```ts
+import type { LottieScenario } from '@/types';
+
+export const lottieLoopFlow: LottieScenario = {
+  id: 'loop-flow',                          // 唯一 ID，与 registry key 一致
+  title: '循环执行流程',                     // 显示名
+  totalSteps: 5,                            // 用户可步进的步数
+  lottieFile: './assets/lottie/loop-flow.json',
+};
+```
+
+`totalSteps` 决定用户分几步看完这段动画。LottiePlayer 内部把 `step / (totalSteps - 1)` 映射到 0–1 的播放进度。例如 `totalSteps: 5` → 步进 0/1/2/3/4 对应进度 0/0.25/0.50/0.75/1.0。
+
+**Step 4 — 注册到 Registry**
+
+在 `src/data/animations/index.ts` 中：
+
+```ts
+// 顶部加 import
+import { lottieLoopFlow } from './scenarios/loopFlow';
+import LottiePlayer from '@/components/animations/LottiePlayer';
+
+// registry 对象中加一行
+export const animationRegistry: Record<string, AnimationEntry> = {
+  // ... 已有条目 ...
+  'loop-flow': {
+    scenario: lottieLoopFlow,
+    Component: LottiePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+};
+```
+
+**Step 5 — 在节点中插入动画卡**
+
+在对应节点的 `cards[]` 中，把动画卡放到想出现的位置：
+
+```ts
+{ cardType: 'animation', content: { animationId: 'loop-flow' } }
+```
+
+如：概念卡 → 代码卡 → **动画卡** → 练习卡。用户翻到这一张时自动渲染动画组件，← → 按钮控制步进。
+
+---
+
+### 添加 MemoryBox 动画（4 步）
+
+适合展示内存布局、变量分配、数据结构存储等场景。
+
+**Step 1 — 创建 Scenario 文件**
+
+在 `src/data/animations/scenarios/` 下新建文件，例如 `arrayStorage.ts`，按 `variableStorage.ts` 模板填写：
+
+```ts
+import type { MemoryBoxScenario } from '@/types';
+
+export const arrayStorageScenario: MemoryBoxScenario = {
+  id: 'array-storage',
+  title: '数组内存布局',
+  cellsPerRow: 8,        // 每行格子数
+  totalRows: 5,          // 总行数（cellsPerRow × totalRows = 总地址数）
+  totalSteps: 4,         // 步数 = steps 数组长度
+  steps: [
+    {
+      label: '初始状态',
+      allocations: [],
+      showAddresses: false,
+      annotation: '内存初始为空',
+    },
+    {
+      label: 'int arr[3]',
+      allocations: [
+        { name: 'arr[0]', type: 'int', typeSize: 4, value: '10', color: '#4a9eff' },
+        { name: 'arr[1]', type: 'int', typeSize: 4, value: '20', color: '#2ed573' },
+        { name: 'arr[2]', type: 'int', typeSize: 4, value: '30', color: '#ff9f43' },
+      ],
+      showAddresses: false,
+      annotation: '连续分配 3 个 int，占 12 字节',
+    },
+    // ... 更多步骤
+  ],
+};
+```
+
+`VarAlloc` 字段：`name`（变量名）、`type`（类型，仅标签显示）、`typeSize`（字节数，决定格子宽度）、`value`（显示值）、`color`（hex 颜色，填充格子和标签）。
+
+**Step 2 — 注册到 Registry**
+
+```ts
+import { arrayStorageScenario } from './scenarios/arrayStorage';
+// MemoryBox 已 import，复用即可
+
+'array-storage': {
+  scenario: arrayStorageScenario,
+  Component: MemoryBox as ComponentType<{ scenario: AnimScenario; step: number }>,
+},
+```
+
+**Step 3 — 在节点中插入动画卡**
+
+```ts
+{ cardType: 'animation', content: { animationId: 'array-storage' } }
+```
+
+**Step 4 — 不改任何组件代码。** 组件复用 `MemoryBox.tsx`，不需要新建。
+
+---
+
+### 添加全新动画类型（如 SpriteSheet、流程图）
+
+当 MemoryBox 和 Lottie 都不满足需求时，自定义新的动画类型。
+
+1. **在 `src/types/index.ts`** 定义新场景类型（~5 行）：
+   ```ts
+   export interface SpriteScenario extends AnimScenario {
+     frames: string[];     // PNG 资源 require 路径
+     frameRate?: number;   // 可选，帧率控制
+   }
+   ```
+
+2. **在 `src/components/animations/`** 创建新组件，满足接口契约：
+   ```tsx
+   interface Props { scenario: SpriteScenario; step: number; }
+   export default function SpritePlayer({ scenario, step }: Props) {
+     // 根据 step 渲染对应帧
+     return <Image source={scenario.frames[step]} />;
+   }
+   ```
+
+3. **Registry 注册一行**（和 Lottie/MemoryBox 完全一样）。
+
+4. **不改 renderCard.tsx、NodeScreen.tsx、animationRegistry 结构。**
 
 ## Content authoring — no source changes needed
 
@@ -450,8 +608,9 @@ Examples: `cpp-01-start-c1`, `cpp-01-basics-var-c1`
 // practice (fill)
 { cardType: 'practice', content: { question: '...', questionType: 'fill', answer: 'main', explanation: '...' } }
 
-// animation
+// animation (Lottie / MemoryBox 都用同一格式，animationId 对应 registry key)
 { cardType: 'animation', content: { animationId: 'variable-storage' } }
+// 插入位置 = 在 cards[] 中放到你想出现的位置即可，支持任意穿插
 ```
 
 # Auth & Sync Interface（认证/同步接口层）
@@ -483,12 +642,15 @@ User {
 initialize()          // 启动时恢复 session（App.tsx 调用）
 logout()              // 登出
 setDisplayId(v:string)// 修改 displayId（设置页头像区域调用）
+updateAvatar(url: string) // 更新头像 URL（设置页头像编辑调用）
 
 // === Action（仅 LoginScreen 调用，现有代码不调用）===
 loginByPhone(phone)   → { error? }
 verifyOtp(phone,token) → { error? }
 loginByWechat()       → { error? }
 ```
+
+> **`updateAvatar` 尚未在代码中实现。** 需要时在 `authStore.ts` 的 `create` 里加一个 no-op action（和 `setDisplayId` 并列），将来替换实现即可。不改任何其他文件。
 
 ### `src/store/syncEngine.ts` — 同步模块（纯函数）
 

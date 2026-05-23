@@ -41,7 +41,7 @@ export const ioNode: PathNode = {
         title: 'cin 读取多种类型',
         code: '#include <iostream>\n#include <string>\n\nint main() {\n  std::string name;\n  int age;\n  double height;\n\n  std::cout << "输入姓名: ";\n  std::cin >> name;\n  std::cout << "输入年龄: ";\n  std::cin >> age;\n  std::cout << "输入身高(m): ";\n  std::cin >> height;\n\n  std::cout << name << " 今年 " << age\n            << " 岁，身高 " << height << "m\\n";\n  return 0;\n}',
         language: 'cpp',
-        highlights: [0, 1, 4, 5, 6, 8, 10, 12, 14, 15],
+        highlights: [0, 1, 4, 5, 6, 8, 10, 12, 15],
       },
     },
     {

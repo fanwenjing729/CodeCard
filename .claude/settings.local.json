@@ -7,7 +7,20 @@
       "Bash(npm install *)",
       "Bash(node -e \"const z = require\\('zustand/middleware'\\); console.log\\(Object.keys\\(z\\).filter\\(k => k.includes\\('ersist'\\) || k.includes\\('JSON'\\) || k.includes\\('torage'\\)\\).join\\(', '\\)\\)\")",
       "Bash(node -e \"const pkg = require\\('zustand/package.json'\\); console.log\\(pkg.version\\)\")",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npx expo-doctor *)",
+      "Bash(xargs wc -l)",
+      "Bash(git config *)",
+      "WebSearch",
+      "WebFetch(domain:supabase.com)",
+      "Bash(2>&1 npx *)",
+      "Bash(cd /d \"G:\\\\CodeCard\")",
+      "Bash(grep -rohP '#[0-9a-fA-F]{3,6}' src/ --include='*.tsx' --include='*.ts')",
+      "Bash(grep -rn \"'#[0-9a-fA-F]\\\\{3,6\\\\}'\" src/ --include='*.tsx')",
+      "Bash(grep -rn \"'#[0-9a-fA-F]\\\\{3,6\\\\}'\\\\|=\\\\\"#[0-9a-fA-F]\\\\{3,6\\\\}\\\\\"\" src/ --include='*.tsx')",
+      "Bash(grep -rn '=\"#[0-9a-fA-F]\\\\{3,6\\\\}\"' src/ --include='*.tsx')",
+      "Bash(git commit *)"
     ]
   }
 }

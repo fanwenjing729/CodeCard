@@ -35,17 +35,17 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c5',
+      id: 'cpp-01-basics-var-c4',
       cardType: 'code',
       content: {
         title: 'sizeof 查看类型大小',
-        code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "int: " << sizeof(int) << endl;\n  cout << "double: " << sizeof(double) << endl;\n  cout << "char: " << sizeof(char) << endl;\n  cout << "bool: " << sizeof(bool) << endl;\n  cout << "short: " << sizeof(short) << endl;\n  cout << "long long: " << sizeof(long long) << endl;\n  return 0;\n}',
+        code: '#include <iostream>\n\nint main() {\n  std::cout << "int: " << sizeof(int) << "\\n";\n  std::cout << "double: " << sizeof(double) << "\\n";\n  std::cout << "char: " << sizeof(char) << "\\n";\n  std::cout << "bool: " << sizeof(bool) << "\\n";\n  std::cout << "short: " << sizeof(short) << "\\n";\n  std::cout << "long long: " << sizeof(long long) << "\\n";\n  return 0;\n}',
         language: 'cpp',
-        highlights: [0, 3, 4, 5, 6, 7, 8, 9, 10],
+        highlights: [0, 2, 3, 4, 5, 6, 7, 8, 9],
       },
     },
     {
-      id: 'cpp-01-basics-var-c4',
+      id: 'cpp-01-basics-var-c5',
       cardType: 'practice',
       content: {
         question: '在大多数平台上，sizeof(int) 的典型返回值是？',
