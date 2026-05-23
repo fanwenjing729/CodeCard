@@ -35,7 +35,7 @@ do {
     {
       label: '条件检查',
       whileLines: [1],
-      doWhileLines: [1],
+      doWhileLines: [4],
       whileIteration: 0,
       doWhileIteration: 0,
       whileEntered: false,

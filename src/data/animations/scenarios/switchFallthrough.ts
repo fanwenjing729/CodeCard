@@ -26,7 +26,7 @@ switch (x) {
     {
       label: '匹配并穿透',
       highlightLines: [2],
-      takenLines: [6, 7, 8, 9],
+      takenLines: [5, 6, 7, 8, 9],
       skippedLines: [3, 4],
       annotation: 'x=2，跳过 case 1，匹配 case 2 → 输出"B"。但 case 2 后没有 break！程序穿透到 case 3 → 又输出"C"，直到 break 才停。最终输出"BC"。',
     },

@@ -9,7 +9,7 @@ interface Props {
 
 export default function LoopPlayer({ scenario, step }: Props) {
   const s = scenario.steps[step];
-  const lines = scenario.sourceCode.split('\n');
+  const lines = scenario.sourceCode.split(/\r?\n/);
 
   return (
     <View style={styles.wrap}>
@@ -92,11 +92,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   iterEnter: {
-    backgroundColor: 'rgba(46,213,115,0.15)',
+    backgroundColor: Colors.animBadgeSuccess,
     color: Colors.success,
   },
   iterExit: {
-    backgroundColor: 'rgba(153,153,153,0.12)',
+    backgroundColor: Colors.animBadgeMuted,
     color: Colors.textMuted,
   },
   codeBox: {
@@ -129,13 +129,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   codeLineCondition: {
-    backgroundColor: 'rgba(74,158,255,0.20)',
+    backgroundColor: Colors.animCodeConditionBg,
   },
   codeLineActive: {
-    backgroundColor: 'rgba(46,213,115,0.18)',
+    backgroundColor: Colors.animCodeActiveBg,
   },
   codeLineSkipped: {
-    backgroundColor: 'rgba(153,153,153,0.10)',
+    backgroundColor: Colors.animCodeSkippedBg,
   },
   codeText: {
     color: Colors.codeText,

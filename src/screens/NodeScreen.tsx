@@ -1,23 +1,17 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Colors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
 import { courses } from '@/data/courses';
-import { getAnimScenario } from '@/data/animations';
 import renderCard from '@/components/cards/renderCard';
-import type { PracticeState } from '@/components/cards/PracticeCard';
-import { useProgressStore, XP_PER_CARD, XP_PER_PRACTICE } from '@/store/useProgressStore';
+import { useProgressStore } from '@/store/useProgressStore';
+import { useNodeScreen } from './useNodeScreen';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Node'>;
 
 export default function NodeScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
-  const rewardCard = useProgressStore((s) => s.rewardCard);
-  const setNodePosition = useProgressStore((s) => s.setNodePosition);
-  const addWrongCard = useProgressStore((s) => s.addWrongCard);
-  const removeWrongCard = useProgressStore((s) => s.removeWrongCard);
   const savedIndex = useProgressStore(
     (s) => s.courses[courseId]?.nodePositions[nodeId] ?? 0,
   );
@@ -26,126 +20,24 @@ export default function NodeScreen({ route, navigation }: Props) {
   const node = course?.nodes.find((n) => n.id === nodeId);
   const cards = node?.cards ?? [];
 
-  const [index, setIndex] = useState(savedIndex);
-  const [done, setDone] = useState(false);
-  const [animStep, setAnimStep] = useState(0);
+  const {
+    card,
+    index,
+    animStep,
+    isLast,
+    advance,
+    previous,
+    handlePracticeComplete,
+    handlePracticeNext,
+    handlePracticeStateChange,
+    practiceStates,
+    getAnimTotalSteps,
+  } = useNodeScreen({ courseId, nodeId, cards, savedIndex, navigation });
 
-  const indexRef = useRef(index);
-  indexRef.current = index;
-  const doneRef = useRef(done);
-  doneRef.current = done;
-  const cardRef = useRef(cards[index]);
-  cardRef.current = cards[index];
-
-  const practiceStates = useRef<Map<string, PracticeState>>(new Map());
-
-  const handlePracticeStateChange = useCallback((cardId: string, state: PracticeState) => {
-    practiceStates.current.set(cardId, state);
-  }, []);
-
-  const card = cards[index];
-  const isLast = index === cards.length - 1;
-
-  useEffect(() => {
-    setAnimStep(0);
-  }, [card?.id]);
-
-  // 退出时用 ref 读最新值，避免陈旧闭包
-  useEffect(() => {
-    return () => {
-      if (!doneRef.current) {
-        setNodePosition(courseId, nodeId, indexRef.current);
-      }
-    };
-  }, [courseId, nodeId, setNodePosition]);
-
-  const savePosition = useCallback(
-    (i: number) => {
-      setNodePosition(courseId, nodeId, i);
-    },
-    [courseId, nodeId, setNodePosition],
-  );
-
-  const getAnimTotalSteps = (): number => {
-    if (!card || card.cardType !== 'animation') return 1;
-    const scenario = getAnimScenario(card.content.animationId);
-    return scenario?.totalSteps ?? 1;
-  };
-
-  const advance = () => {
-    if (!card) return;
-    if (card.cardType === 'animation') {
-      const totalSteps = getAnimTotalSteps();
-      if (animStep < totalSteps - 1) {
-        setAnimStep((s) => s + 1);
-        return;
-      }
-    }
-    rewardCard(courseId, card.id, XP_PER_CARD);
-    if (isLast) {
-      savePosition(index);
-      setDone(true);
-    } else {
-      const nextIndex = index + 1;
-      setIndex(nextIndex);
-      savePosition(nextIndex);
-    }
-  };
-
-  const previous = () => {
-    if (index > 0) {
-      const prevIndex = index - 1;
-      setIndex(prevIndex);
-      savePosition(prevIndex);
-    }
-  };
-
-  const handlePracticeComplete = useCallback(
-    (correct: boolean) => {
-      const c = cardRef.current;
-      if (!c) return;
-      if (correct) {
-        rewardCard(courseId, c.id, XP_PER_PRACTICE);
-        removeWrongCard(courseId, c.id);
-      } else {
-        addWrongCard(courseId, c.id);
-      }
-    },
-    [courseId, rewardCard, addWrongCard, removeWrongCard],
-  );
-
-  const handlePracticeNext = useCallback(() => {
-    if (isLast) {
-      savePosition(index);
-      setDone(true);
-    } else {
-      const nextIndex = index + 1;
-      setIndex(nextIndex);
-      savePosition(nextIndex);
-    }
-  }, [isLast, index, savePosition]);
-
-  if (!card && !done) {
+  if (!card) {
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyText}>暂无卡片</Text>
-      </View>
-    );
-  }
-
-  if (done) {
-    return (
-      <View style={styles.resultWrap}>
-        <Text style={styles.resultIcon}>🎉</Text>
-        <Text style={styles.resultTitle}>学习完成</Text>
-        <Text style={styles.resultSubtitle}>{node?.title}</Text>
-        <TouchableOpacity
-          style={styles.resultBtn}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.resultBtnText}>返回课程</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -268,38 +160,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: Colors.textMuted,
-  },
-  resultWrap: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-  },
-  resultIcon: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  resultTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.success,
-    marginBottom: 8,
-  },
-  resultSubtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    marginBottom: 32,
-  },
-  resultBtn: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 48,
-    paddingVertical: 14,
-    borderRadius: 10,
-  },
-  resultBtnText: {
-    color: Colors.textInverse,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

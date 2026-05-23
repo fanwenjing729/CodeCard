@@ -83,11 +83,12 @@ export default function QuizScreen({ route, navigation }: Props) {
   scoreRef.current = score;
   const doneRef = useRef(done);
   doneRef.current = done;
+  const hasSubmittedRef = useRef(false);
 
-  // 退出时保存测验分数（中途返回也存）
+  // 退出时保存测验分数（仅已提交过答案时保存，防止空退出覆盖历史成绩）
   useEffect(() => {
     return () => {
-      if (!doneRef.current) {
+      if (!doneRef.current && hasSubmittedRef.current) {
         saveQuizScore(courseId, nodeId, scoreRef.current);
       }
     };
@@ -99,6 +100,7 @@ export default function QuizScreen({ route, navigation }: Props) {
     const rawAnswer = content.questionType === 'choice' ? selected : fillAnswer.trim();
     if (!rawAnswer) return;
 
+    hasSubmittedRef.current = true;
     dispatch({ type: 'SUBMIT' });
     if (isCorrectAnswer(rawAnswer, content.answer)) {
       dispatch({ type: 'SCORE' });

@@ -48,6 +48,12 @@ export const Colors = {
   // 动画
   gridEmpty: '#2a2a3e',
   gridEmptyStroke: '#3a3a4e',
+  animCodeConditionBg: 'rgba(74,158,255,0.20)',
+  animCodeActiveBg: 'rgba(46,213,115,0.18)',
+  animCodeSkippedBg: 'rgba(153,153,153,0.10)',
+  animBadgeSuccess: 'rgba(46,213,115,0.12)',
+  animBadgeMuted: 'rgba(153,153,153,0.12)',
+  textInverseSecondary: 'rgba(255,255,255,0.8)',
 } as const;
 
 // ===== 字号 =====

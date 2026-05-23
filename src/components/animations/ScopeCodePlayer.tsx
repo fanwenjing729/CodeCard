@@ -9,7 +9,7 @@ interface Props {
 
 export default function ScopeCodePlayer({ scenario, step }: Props) {
   const s = scenario.steps[step];
-  const lines = scenario.sourceCode.split('\n');
+  const lines = scenario.sourceCode.split(/\r?\n/);
 
   return (
     <View style={styles.wrap}>
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   codeLineActive: {
-    backgroundColor: 'rgba(74,158,255,0.25)',
+    backgroundColor: Colors.animCodeConditionBg,
   },
   codeText: {
     color: Colors.codeText,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   codeTextActive: {
-    color: '#fff',
+    color: Colors.textInverse,
   },
   arrow: {
     color: Colors.primary,
@@ -145,12 +145,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   cellName: {
-    color: '#fff',
+    color: Colors.textInverse,
     fontSize: 12,
     fontWeight: '700',
   },
   cellVal: {
-    color: 'rgba(255,255,255,0.8)',
+    color: Colors.textInverseSecondary,
     fontSize: 10,
   },
   annotationBox: {

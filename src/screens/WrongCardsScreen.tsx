@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Colors } from '@/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useProgressStore } from '@/store/useProgressStore';
 import { courses } from '@/data/courses';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -44,7 +43,6 @@ function collectWrongCards(coursesState: Record<string, { wrongCards?: Record<st
 }
 
 export default function WrongCardsScreen({ route, navigation }: Props) {
-  const insets = useSafeAreaInsets();
   const coursesState = useProgressStore((s) => s.courses);
   const courseId = route.params?.courseId;
 
@@ -67,7 +65,7 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
     }
 
     return (
-      <View style={[styles.container, { paddingTop: Math.max(0, insets.top - 20) }]}>
+      <View style={styles.container}>
         <ScreenHeader onBack={() => navigation.goBack()} backLabel="返回" title="错题集" variant="default" />
 
         {courseSummaries.length === 0 ? (
@@ -106,7 +104,7 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
   const course = courses.find((c) => c.id === courseId);
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(0, insets.top - 20) }]}>
+    <View style={styles.container}>
       <ScreenHeader
         onBack={() => navigation.goBack()}
         backLabel="错题集"

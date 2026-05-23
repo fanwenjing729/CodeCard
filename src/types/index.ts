@@ -156,3 +156,39 @@ export interface LottieScenario extends AnimScenario {
   lottieFile: string;
 }
 
+// ===== BreakContinue 动画专用 =====
+export interface BreakContinueStep {
+  label: string;
+  breakLines: number[];
+  continueLines: number[];
+  breakIteration: number;
+  continueIteration: number;
+  breakEntered: boolean;
+  continueEntered: boolean;
+  annotation: string;
+}
+
+export interface BreakContinueScenario extends AnimScenario {
+  breakCode: string;
+  continueCode: string;
+  steps: BreakContinueStep[];
+}
+
+// ===== WhileDoWhile 动画专用 =====
+export interface WhileDoWhileStep {
+  label: string;
+  whileLines: number[];
+  doWhileLines: number[];
+  whileIteration: number;
+  doWhileIteration: number;
+  whileEntered: boolean;
+  doWhileEntered: boolean;
+  annotation: string;
+}
+
+export interface WhileDoWhileScenario extends AnimScenario {
+  whileCode: string;
+  doWhileCode: string;
+  steps: WhileDoWhileStep[];
+}
+

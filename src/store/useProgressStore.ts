@@ -89,14 +89,13 @@ export const XP_PER_CARD = 5;
 export const XP_PER_PRACTICE = 10;
 
 interface ProgressStore extends PersistedData {
+  hydrated: boolean;
   addXP: (courseId: string, amount: number) => void;
-  completeCard: (courseId: string, cardId: string) => boolean;
   rewardCard: (courseId: string, cardId: string, xpAmount: number) => boolean;
   saveQuizScore: (courseId: string, nodeId: string, score: number) => void;
   setNodePosition: (courseId: string, nodeId: string, cardIndex: number) => void;
   addWrongCard: (courseId: string, cardId: string) => void;
   removeWrongCard: (courseId: string, cardId: string) => void;
-  uncompleteCard: (courseId: string, cardId: string) => void;
   hydrate: () => Promise<void>;
   flush: () => Promise<void>;
   resetCourse: (courseId: string) => void;
@@ -126,6 +125,7 @@ const save = async (data: PersistedData) => {
 
 export const useProgressStore = create<ProgressStore>()((set, get) => ({
   ...initialState,
+  hydrated: false,
 
   addXP: (courseId, amount) => {
     set((s) => {
@@ -145,31 +145,12 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
     });
   },
 
-  completeCard: (courseId, cardId) => {
-    const { courses } = get();
-    const course = getOrCreateCourse(courses, courseId);
-    if (cardId in course.completedCards) return false;
-    set((s) => {
-      const c = getOrCreateCourse(s.courses, courseId);
-      return {
-        courses: {
-          ...s.courses,
-          [courseId]: {
-            ...c,
-            completedCards: { ...c.completedCards, [cardId]: true },
-          },
-        },
-      };
-    });
-    return true;
-  },
-
   rewardCard: (courseId, cardId, xpAmount) => {
-    const { courses } = get();
-    const course = getOrCreateCourse(courses, courseId);
-    if (cardId in course.completedCards) return false;
+    let isNew = false;
     set((s) => {
       const c = getOrCreateCourse(s.courses, courseId);
+      if (cardId in c.completedCards) return s;
+      isNew = true;
       const newTotalXP = s.global.totalXP + xpAmount;
       return {
         global: {
@@ -187,7 +168,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
         },
       };
     });
-    return true;
+    return isNew;
   },
 
   saveQuizScore: (courseId, nodeId, score) => {
@@ -247,20 +228,6 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
     });
   },
 
-  uncompleteCard: (courseId, cardId) => {
-    set((s) => {
-      const c = getOrCreateCourse(s.courses, courseId);
-      if (!(cardId in c.completedCards)) return s;
-      const { [cardId]: _, ...rest } = c.completedCards;
-      return {
-        courses: {
-          ...s.courses,
-          [courseId]: { ...c, completedCards: rest },
-        },
-      };
-    });
-  },
-
   hydrate: async () => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -269,6 +236,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
       if (!data || typeof data !== 'object') return;
       const migrated = migrate(data);
       set({
+        hydrated: true,
         global: migrated.global,
         courses: migrated.courses,
       });
@@ -287,7 +255,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
       return {
         global: {
           ...s.global,
-          totalXP: s.global.totalXP - course.xp,
+          totalXP: Math.max(0, s.global.totalXP - course.xp),
           level: calcLevel(Math.max(0, s.global.totalXP - course.xp)),
         },
         courses: {

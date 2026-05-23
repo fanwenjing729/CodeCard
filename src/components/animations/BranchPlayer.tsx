@@ -9,7 +9,7 @@ interface Props {
 
 export default function BranchPlayer({ scenario, step }: Props) {
   const s = scenario.steps[step];
-  const lines = scenario.sourceCode.split('\n');
+  const lines = scenario.sourceCode.split(/\r?\n/);
   const hasTaken = s.takenLines.length > 0;
 
   return (
@@ -87,13 +87,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   codeLineCondition: {
-    backgroundColor: 'rgba(74,158,255,0.20)',
+    backgroundColor: Colors.animCodeConditionBg,
   },
   codeLineTaken: {
-    backgroundColor: 'rgba(46,213,115,0.18)',
+    backgroundColor: Colors.animCodeActiveBg,
   },
   codeLineSkipped: {
-    backgroundColor: 'rgba(153,153,153,0.10)',
+    backgroundColor: Colors.animCodeSkippedBg,
   },
   codeText: {
     color: Colors.codeText,
