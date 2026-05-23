@@ -1040,9 +1040,209 @@ setEntitlements(nodes: string[]): void;
 
 **和不改代码的关系：** 权限 store 是纯增量，和 authStore 一样先抽接口。但和 authStore 不同的是——没有任何现有屏幕引用它（不像 SettingsScreen 引用了 authStore），所以现在不抽，等上线付费时再抽。到时候按这个文档改，AI 不需要读源码。
 
+### 5. 社交/社区/评论
+
+**现状：** 无社交功能。App 是纯单人学习工具。
+
+**触发条件（满足任一条即启动）：**
+- 需要用户评论/讨论卡片内容
+- 需要学习社区（排行榜、学习群组）
+- 需要用户间互动（点赞、分享学习进度）
+
+**怎么改——全增量，不改核心：**
+
+```
+当前架构                    + 社交层
+─────────                  ─────────
+types/index.ts             不变
+store/useProgressStore.ts  不变
+screens/NodeScreen.tsx     不变
+components/cards/*         不变
+
+新建：
+  src/store/socialStore.ts     ← 评论/点赞/动态状态
+  src/store/notificationStore.ts ← 推送通知状态
+  src/screens/CommunityScreen.tsx ← 社区主页（新 Tab）
+  src/screens/CommentsScreen.tsx  ← 单卡评论区
+  src/api/social.ts           ← 评论/点赞 API
+  src/api/notification.ts     ← 推送注册/消息 API
+```
+
+**改什么（增量，不改现有文件）：**
+
+| 文件 | 加什么 | 说明 |
+|------|--------|------|
+| `types/index.ts` | Comment / Post 等新类型 | 和 Card 类型正交，不相干 |
+| `authStore.ts` | 替换 no-op → 真实登录 | **设计如此**，接口不变 |
+| `AppNavigator.tsx` | 加路由 + 可能加第四个 Tab | 路由注册，不影响现有 |
+| `components/cards/renderCard.tsx` | 卡片底部加评论入口（可选） | 可以是独立组件插进去 |
+
+**不改什么：**
+- 所有卡片数据（Card / PathNode / Course）——评论通过 cardId 关联，卡片不感知
+- useProgressStore ——学习和社交完全正交
+- 所有 Screen ——只是新增社交页面，旧页面零改动
+- 主题系统 ——社交 UI 用现有 token 即可
+
+**关键约束：**
+- 评论/帖子通过 `cardId` / `nodeId` / `courseId` 关联内容，不走 Card 接口
+- 社交 store 独立，不 import 进度 store
+- **本质是同一个架构上加速增层，不是重构**
+
 ---
 
-## Key conventions
+### 6. 视频/音频课程
+
+**现状：** 卡片类型只有 concept / code / animation / practice 四种，不支持媒体播放。
+
+**触发条件（满足任一条即启动）：**
+- 需要嵌入视频讲解（非动画，是真人/录屏视频）
+- 需要音频课程/播客模式
+
+**怎么改——和加 AnimationContent 完全一样的模式：**
+
+**Step 1 — 在 `types/index.ts` 加新类型（~10 行）：**
+
+```ts
+// 加在 AnimationContent 旁边
+export interface VideoContent {
+  videoUrl: string;         // 远程 URL 或本地 asset
+  thumbnailUrl?: string;    // 封面图
+  duration?: number;        // 秒
+  subtitles?: Subtitle[];   // 字幕
+}
+
+export interface AudioContent {
+  audioUrl: string;
+  duration?: number;
+  transcript?: string;      // 文字稿
+}
+
+// Card 联合类型加两行
+export type Card = ... | AnimationCardData | VideoCardData | AudioCardData;
+```
+
+**Step 2 — 在 `components/cards/` 新建播放器组件：**
+
+```tsx
+// VideoCard.tsx — 视频播放器
+interface Props { content: VideoContent }
+// 用 expo-av 的 Video 组件
+
+// AudioCard.tsx — 音频播放器
+interface Props { content: AudioContent }
+// 用 expo-av 的 Audio 组件
+```
+
+**Step 3 — `renderCard.tsx` 加两行：**
+
+```tsx
+case 'video':  return <VideoCard content={content} />;
+case 'audio':  return <AudioCard content={content} />;
+```
+
+**Step 4 — 建设基础设施（这是真正的工作量）：**
+
+```
+src/lib/
+├── mediaCache.ts    ← 下载管理 + 离线缓存
+├── mediaPlayer.ts   ← expo-av 封装（播放/暂停/seek/进度）
+└── downloadManager.ts ← 后台下载 + 队列
+```
+
+**不改什么：**
+- renderCard 的 switch 结构不变（加分支即可）
+- NodeScreen / QuizScreen 的卡片遍历逻辑不变
+- useProgressStore 不变（完成记录和媒体无关）
+- 所有现有卡片组件不变
+- 主题系统不变
+
+**关键约束：**
+- 视频/音频只是 Card 联合类型的新 variant，和 concept / code / animation 平级
+- 卡片模型天生支持这种扩展——`AnimationContent` 就是这个模式的成功先例
+- 真正的挑战不在架构，在媒体基础设施：下载、缓存、流媒体适配、存储空间管理
+
+---
+
+### 7. 多语言
+
+**现状：** 所有课程内容（title/body/question/explanation）和 UI 文案都是中文硬编码在 TS 文件中。
+
+**触发条件（满足任一条即启动）：**
+- 计划出海 / 上架非中文应用商店
+- 课程内容需要支持多语种
+- 有非中文用户群体
+
+**怎么改——分两层，互不干扰：**
+
+**第一层：UI 文案（按钮/标签/导航）**
+
+```
+当前 → t('key') 模式
+"选择学科" → i18n.t('home.chooseCourse')
+
+改什么：
+  1. 装 react-i18next
+  2. 新建 src/i18n/locales/{zh,en,ja,...}.json
+  3. 每个 Screen 的硬编码中文 → t('key')
+  4. 不改组件结构、不改样式、不改逻辑
+```
+
+| 文件 | 改动量 | 说明 |
+|------|--------|------|
+| `src/i18n/*` | 新建 | 翻译 JSON 文件 |
+| 所有 Screen | 文字替换 | `"选择学科"` → `t('home.title')` |
+| 所有组件 | 文字替换 | 同上 |
+| store / types / navigation | **零改动** | 不关心语言 |
+
+**第二层：课程内容（卡片正文）**
+
+有两种做法，取决于第一层什么时候启动：
+
+**方案 A — 启动时还没做 CDN 远程内容：**
+
+```ts
+// 在 Card 内容字段中存多语版本
+{
+  title: {
+    zh: '第一个程序',
+    en: 'Hello World',
+  },
+  body: {
+    zh: '每个 C++ 程序都从 main 开始...',
+    en: 'Every C++ program starts with main...',
+  },
+}
+```
+
+加载时根据当前 locale 取 `content.title[locale]`。Card 接口的字段从 `string` 变为 `Record<Locale, string>`。
+
+**方案 B — 启动时 CDN 远程内容已上线（推荐）：**
+
+```
+CDN 上每个语种存一份独立的 JSON
+  cdn.codecard.com/content/zh/cpp.json
+  cdn.codecard.com/content/en/cpp.json
+  cdn.codecard.com/content/ja/cpp.json
+
+加载器根据 locale 拉对应 URL
+  → Card 接口完全不变（字段还是 string）
+  → 所有组件零改动
+```
+
+**推荐方案 B**。方案 A 会让 Card 类型膨胀（每个字段变成多语对象），方案 B 把多语言问题推给数据层，类型系统不动。
+
+**不改什么（方案 B）：**
+- `Card` / `PathNode` / `Course` 的所有 TypeScript 接口
+- 所有卡片渲染组件（ConceptCard / CodeCard / QuestionRenderer）
+- useProgressStore（进度只记 cardId，不存文字内容）
+- 所有 Screen 的结构和逻辑
+- 主题系统
+- 动画系统
+
+**关键约束：**
+- 多语言是数据层问题，不是架构层问题
+- 最佳时机是 CDN 远程内容上线之后——改加载器 URL + 一份翻译，不改任何接口
+- CDN 之前做 = 改 Card 类型 → 所有组件要适配 → 工作量翻倍
 
 - All card content uses `\n` for line breaks (not `\r\n`)
 - Answer comparison is case-insensitive via `normalize()` = `trim().toLowerCase()`

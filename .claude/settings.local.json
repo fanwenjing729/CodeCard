@@ -20,7 +20,9 @@
       "Bash(grep -rn \"'#[0-9a-fA-F]\\\\{3,6\\\\}'\" src/ --include='*.tsx')",
       "Bash(grep -rn \"'#[0-9a-fA-F]\\\\{3,6\\\\}'\\\\|=\\\\\"#[0-9a-fA-F]\\\\{3,6\\\\}\\\\\"\" src/ --include='*.tsx')",
       "Bash(grep -rn '=\"#[0-9a-fA-F]\\\\{3,6\\\\}\"' src/ --include='*.tsx')",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git remote *)",
+      "Bash(git push *)"
     ]
   }
 }
