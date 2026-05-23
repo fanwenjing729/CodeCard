@@ -22,7 +22,10 @@
       "Bash(grep -rn '=\"#[0-9a-fA-F]\\\\{3,6\\\\}\"' src/ --include='*.tsx')",
       "Bash(git commit *)",
       "Bash(git remote *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(GIT_SEQUENCE_EDITOR=\"sed -i '1s/^pick 9891bca/pick 9891bca/; 2s/^pick f9dce79/fixup f9dce79/; 3s/^pick a60c3f3/pick a60c3f3/; 4s/^pick fd1b14d/fixup fd1b14d/; 5s/^pick de5f67f/pick de5f67f/; 6s/^pick 816554b/fixup 816554b/; 7s/^pick a33719d/fixup a33719d/'\" git rebase -i 6ff9771)",
+      "Bash(git stash *)",
+      "Bash(GIT_SEQUENCE_EDITOR=\"sed -i '2s/pick/fixup/; 4s/pick/fixup/; 6s/pick/fixup/; 7s/pick/fixup/'\" git rebase -i 6ff9771)"
     ]
   }
 }

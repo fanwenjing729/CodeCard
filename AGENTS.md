@@ -1304,6 +1304,66 @@ CDN 上每个语种存一份独立的 JSON
 - 最佳时机是 CDN 远程内容上线之后——改加载器 URL + 一份翻译，不改任何接口
 - CDN 之前做 = 改 Card 类型 → 所有组件要适配 → 工作量翻倍
 
+---
+
+### 8. 协作与 Git 工作流
+
+**现状：** solo 开发，直接在 master 上 commit + force push。
+
+**触发条件：** 有第二个人开始提交代码时启动。
+
+**核心原则：**
+
+```
+solo 期：  master ← 直接 commit，可 force push
+协作期：  master ← PR squash merge ← feature 分支（可随意 rebase/squash）
+```
+
+**具体操作（有人加入后）：**
+
+1. **所有改动走 feature 分支** — 不在 master 上直接 commit
+   ```
+   git checkout -b feature/xxx
+   # 写代码，随便 commit，随便 rebase
+   git push -u origin feature/xxx
+   ```
+
+2. **提 PR 到 master** — GitHub 上创建 Pull Request
+
+3. **用 "Squash and merge" 合并** — GitHub 会把分支上所有 commit 压成一个干净的 commit 追加到 master。代码效果完全一样，历史保持干净。
+
+4. **禁止 force push 到 master** — 一旦有人基于 master 开了分支，force push 会导致他们的分支基础丢失。
+
+**Squash merge 不会"乱来"：**
+
+- 它只是把 N 个 commit 的 diff 总和成一个新 commit
+- 最终文件内容和逐个 apply 完全一致
+- 如果分支和 master 有冲突，GitHub 会拒绝合并，要求先在分支上 `git merge master` 解决冲突
+- 压缩的是 commit 历史，不是代码
+
+**冲突处理：**
+
+```
+# 在 feature 分支上
+git merge master        # 把 master 最新代码合进来
+# 解决冲突 → commit
+git push                # 更新 PR
+# PR 页面自动刷新，冲突消失，可以 squash merge
+```
+
+**不该做的事（红线）：**
+
+| 操作 | solo 期 | 协作期 |
+|------|:---:|:---:|
+| `git push --force` 到 master | ✅ | ❌ |
+| `git rebase -i` 整理 master 历史 | ✅ | ❌ |
+| `git push --force` 到自己的 feature 分支 | ✅ | ✅ |
+| `git rebase -i` 整理自己的 feature 分支 | ✅ | ✅ |
+
+---
+
+## Conventions
+
 - All card content uses `\n` for line breaks (not `\r\n`)
 - Answer comparison is case-insensitive via `normalize()` = `trim().toLowerCase()`
 - Card keys use `card.id` for React reconciliation
