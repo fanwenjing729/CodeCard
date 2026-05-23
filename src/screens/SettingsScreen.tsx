@@ -11,14 +11,12 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import { Colors, Spacing } from '@/theme';
+import { Colors, Spacing, Radius } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useProgressStore } from '@/store/useProgressStore';
 import { useAuthStore } from '@/store/authStore';
 import { manualSync } from '@/store/syncEngine';
-import { courses } from '@/data/courses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Constants from 'expo-constants';
@@ -28,9 +26,6 @@ const version = Constants.expoConfig?.version ?? '1.0.0';
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const coursesState = useProgressStore((s) => s.courses);
-  const resetCourse = useProgressStore((s) => s.resetCourse);
-  const flush = useProgressStore((s) => s.flush);
 
   const user = useAuthStore((s) => s.user);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
@@ -40,42 +35,6 @@ export default function SettingsScreen() {
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingDisplayId, setEditingDisplayId] = useState('');
-
-  const handleResetCourse = (courseId: string, title: string) => {
-    Alert.alert(
-      `重置 ${title}`,
-      `确定要清除 ${title} 的所有学习进度吗？此操作不可撤销。`,
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '重置',
-          style: 'destructive',
-          onPress: () => {
-            resetCourse(courseId);
-            flush();
-          },
-        },
-      ],
-    );
-  };
-
-  const handleClearAll = () => {
-    Alert.alert(
-      '清空全部数据',
-      '确定要清除所有学科的全部学习进度吗？此操作不可撤销。',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '全部清除',
-          style: 'destructive',
-          onPress: () => {
-            courses.forEach((c) => resetCourse(c.id));
-            flush();
-          },
-        },
-      ],
-    );
-  };
 
   const handleLogout = () => {
     Alert.alert('退出登录', '退出后学习数据保留在本地，不会丢失。', [
@@ -108,11 +67,6 @@ export default function SettingsScreen() {
     setDisplayId(editingDisplayId.trim());
     setEditModalVisible(false);
   };
-
-  const hasProgress = courses.some((c) => {
-    const p = coursesState[c.id];
-    return p && p.completedCards.length > 0;
-  });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
@@ -214,55 +168,17 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      {/* 重置课程进度 */}
+      {/* 数据管理 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>重置课程进度</Text>
-
-        {courses.map((c, i) => {
-          const progress = coursesState[c.id];
-          const completed = progress?.completedCards?.length ?? 0;
-          const isLast = i === courses.length - 1;
-          return (
-            <TouchableOpacity
-              key={c.id}
-              style={[styles.row, isLast && styles.rowLast]}
-              onPress={() => handleResetCourse(c.id, c.title)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.rowIconBox, { backgroundColor: c.color }]}>
-                {c.icon ? (
-                  <MaterialCommunityIcons name={c.icon as any} size={18} color={Colors.textInverse} />
-                ) : (
-                  <Text style={styles.rowIconText}>{c.title[0]}</Text>
-                )}
-              </View>
-              <Text style={styles.rowText}>
-                {c.title}
-                {completed > 0 ? `（${completed} 张已完成）` : ''}
-              </Text>
-              <Text style={styles.arrow}>›</Text>
-            </TouchableOpacity>
-          );
-        })}
+        <TouchableOpacity
+          style={styles.entryRow}
+          onPress={() => navigation.navigate('Data')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.entryText}>数据管理</Text>
+          <Text style={styles.entryArrow}>›</Text>
+        </TouchableOpacity>
       </View>
-
-      {/* 危险操作 */}
-      {hasProgress ? (
-        <View style={styles.dangerSection}>
-          <Text style={[styles.sectionTitle, styles.dangerTitle]}>危险操作</Text>
-          <TouchableOpacity
-            style={[styles.row, styles.dangerRow]}
-            onPress={handleClearAll}
-            activeOpacity={0.7}
-          >
-            <View style={styles.dangerRowLeft}>
-              <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.danger} />
-              <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
-            </View>
-            <Text style={[styles.arrow, styles.dangerArrow]}>›</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
 
       {/* 关于 */}
       <View style={styles.section}>
@@ -292,17 +208,9 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: Colors.bg,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     marginBottom: Spacing.lg,
-  },
-  dangerSection: {
-    backgroundColor: Colors.bg,
-    borderRadius: 12,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.dangerBorder,
   },
   sectionTitle: {
     fontSize: 13,
@@ -310,31 +218,10 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginBottom: Spacing.md,
   },
-  dangerTitle: {
-    color: Colors.danger,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-  },
-  rowLast: {
-    borderBottomWidth: 0,
-  },
-  rowIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  rowIconText: {
-    color: Colors.textInverse,
-    fontSize: 16,
-    fontWeight: '700',
   },
   rowText: {
     fontSize: 16,
@@ -345,25 +232,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textMuted,
   },
-  arrow: {
-    fontSize: 18,
-    color: Colors.arrow,
-  },
-  dangerRow: {
-    borderLeftWidth: 0,
-  },
-  dangerRowLeft: {
+  entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: 4,
   },
-  dangerArrow: {
-    fontSize: 18,
-    color: Colors.danger,
+  entryText: {
+    fontSize: 16,
+    color: Colors.text,
   },
-  dangerText: {
-    color: Colors.danger,
+  entryArrow: {
+    fontSize: 22,
+    color: Colors.arrow,
   },
 
   // 头像区域
@@ -415,7 +296,7 @@ const styles = StyleSheet.create({
   actionButton: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.xl,
-    borderRadius: 8,
+    borderRadius: Radius.sm,
     backgroundColor: Colors.primary,
   },
   actionButtonText: {
@@ -442,7 +323,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.base,
     paddingVertical: 10,
     paddingHorizontal: 28,
-    borderRadius: 8,
+    borderRadius: Radius.sm,
     backgroundColor: Colors.primary,
   },
   loginButtonText: {
@@ -474,7 +355,7 @@ const styles = StyleSheet.create({
   modalInput: {
     borderWidth: 1,
     borderColor: Colors.inputBorder,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     paddingHorizontal: Spacing.base,
     paddingVertical: 10,
     fontSize: 16,
@@ -488,7 +369,7 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: Radius.md,
     alignItems: 'center',
   },
   modalButtonConfirm: {

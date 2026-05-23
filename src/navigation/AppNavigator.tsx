@@ -15,6 +15,7 @@ import ProgressScreen from '@/screens/ProgressScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import WrongCardsScreen from '@/screens/WrongCardsScreen';
+import DataScreen from '@/screens/DataScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -24,6 +25,7 @@ export type RootStackParamList = {
   Quiz: { courseId: string; nodeId: string };
   Login: undefined;
   WrongCards: { courseId?: string } | undefined;
+  Data: undefined;
 };
 
 const Tab = createBottomTabNavigator();
@@ -91,6 +93,7 @@ export default function AppNavigator() {
           <RootStack.Screen name="Quiz" component={QuizScreen} />
           <RootStack.Screen name="Login" component={LoginScreen} />
           <RootStack.Screen name="WrongCards" component={WrongCardsScreen} />
+          <RootStack.Screen name="Data" component={DataScreen} />
         </RootStack.Navigator>
       </NavigationContainer>
     </ErrorBoundary>
