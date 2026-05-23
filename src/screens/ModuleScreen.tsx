@@ -17,7 +17,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
   const themeColor = course?.color ?? Colors.primary;
 
   const completedCards = useMemo(() => {
-    return coursesProgress[courseId]?.completedCards ?? [];
+    return coursesProgress[courseId]?.completedCards ?? {};
   }, [coursesProgress, courseId]);
 
   const nodes = useMemo(() => {
@@ -39,7 +39,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
       <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 36 }]}>
         {nodes.map((node) => {
           const total = node.cards.length;
-          const done = node.cards.filter((c) => completedCards.includes(c.id)).length;
+          const done = node.cards.filter((c) => c.id in completedCards).length;
           const isDone = total > 0 && done === total;
           const isStarted = done > 0 && !isDone;
 

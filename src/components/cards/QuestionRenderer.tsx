@@ -49,7 +49,7 @@ export default function QuestionRenderer({
         content.options?.map((opt) => {
           let bg: string = Colors.optionBg;
           if (submitted && isCorrectAnswer(opt, content.answer)) bg = Colors.correctBg;
-          if (submitted && opt === selected && opt !== content.answer) bg = Colors.wrongBg;
+          if (submitted && opt === selected && !isCorrectAnswer(opt, content.answer)) bg = Colors.wrongBg;
           if (!submitted && opt === selected) bg = Colors.optionSelectedBg;
 
           return (

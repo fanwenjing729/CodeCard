@@ -41,12 +41,20 @@ export const helloWorldNode: PathNode = {
       id: 'cpp-01-start-c4',
       cardType: 'concept',
       content: {
-        title: 'main 函数与返回值',
-        body: 'int main() 的完整含义：\n\n• int — 函数返回值的类型是整数\n• main — 函数名，这是 C++ 标准规定的入口\n• () — 参数列表，当前为空\n• { } — 函数体，所有执行代码写在这对大括号内\n\nreturn 0; 表示程序正常结束。操作系统收到 0 就知道"一切正常"。如果返回非 0 值，通常表示程序异常退出。每个语句以 ;（分号）结尾——这是 C++ 的语法要求，初学者最常见的错误就是忘写分号。',
+        title: 'main 函数结构',
+        body: 'int main() { ... return 0; } 各部分含义：\n\n• int — 返回值类型是整数\n• main — 函数名，C++ 标准规定的入口\n• () — 参数列表，当前为空\n• { } — 函数体，所有代码写在这对大括号内\n• return 0; — 返回 0 给操作系统，表示"正常结束"',
       },
     },
     {
       id: 'cpp-01-start-c5',
+      cardType: 'concept',
+      content: {
+        title: '初学者最常见的三种编译错误',
+        body: '1. 忘写分号\nC++ 每个语句必须以 ; 结尾。\n\n// 错误\nint x = 10\nstd::cout << x\n\n编译器报 "expected \';\' before ..."\n\n2. 花括号不匹配\n每个 { 必须有对应的 }。IDE 的高亮可以帮你检查配对。\n\n3. 中文输入法下的符号（最常见！）\n代码里所有符号必须在英文输入法下打。中文输入法的 ；" " （ ） 和英文的 ; " " ( ) 长得像但不是同一个字符，编译器不认识。\n\n// 编译错误！\nint x = 10；  // ← 这个是中文分号\ncout << "Hello"；  // ← 中文引号 + 中文分号\n\n养成习惯：写代码时切换到英文输入法。',
+      },
+    },
+    {
+      id: 'cpp-01-start-c6',
       cardType: 'code',
       content: {
         title: 'using namespace std',
@@ -56,7 +64,7 @@ export const helloWorldNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-start-c6',
+      id: 'cpp-01-start-c7',
       cardType: 'concept',
       content: {
         title: '注释',
@@ -64,7 +72,7 @@ export const helloWorldNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-start-c7',
+      id: 'cpp-01-start-c8',
       cardType: 'practice',
       content: {
         question: 'C++ 中单行注释的写法是？',
@@ -72,6 +80,28 @@ export const helloWorldNode: PathNode = {
         options: ['# 这是注释', '// 这是注释', '/* 这是注释 */', '<!-- 这是注释 -->'],
         answer: '// 这是注释',
         explanation: '// 是 C++ 的单行注释符号，从 // 开始到行末都被编译器忽略。# 是预处理指令（如 #include），/* */ 是多行注释，<!-- --> 是 HTML 注释。',
+      },
+    },
+    {
+      id: 'cpp-01-start-c9',
+      cardType: 'practice',
+      content: {
+        question: '以下代码有什么问题？\n\nint main() {\n  int x = 10\n  return 0;\n}',
+        questionType: 'choice',
+        options: ['缺少 #include', '缺少分号', '变量名 x 不合法', '没有错误'],
+        answer: '缺少分号',
+        explanation: 'int x = 10 后面缺少分号。C++ 每个语句必须以 ; 结尾。编译器会报 expected \';\' 错误——这是初学者最常见的编译错误。',
+      },
+    },
+    {
+      id: 'cpp-01-start-c10',
+      cardType: 'practice',
+      content: {
+        question: '以下代码为什么编译失败？\n\nint main() {\n  int x = 10；\n  return 0;\n}',
+        questionType: 'choice',
+        options: ['缺少 #include', '分号是中文输入法打的', '变量名 x 不合法', 'main 函数写错了'],
+        answer: '分号是中文输入法打的',
+        explanation: '第 2 行的 ；是中文分号（全角），不是英文分号 ;（半角）。编译器只认识英文符号。中文输入法下的 ；""（）和英文的 ;""() 虽然长得像但字符编码不同。写代码时一定要切换到英文输入法。',
       },
     },
   ],

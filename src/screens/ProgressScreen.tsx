@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Colors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -75,24 +76,33 @@ export default function ProgressScreen() {
   const global = useProgressStore((s) => s.global);
   const coursesProgress = useProgressStore((s) => s.courses);
 
-  const totalWrongCards = Object.values(coursesProgress).reduce(
-    (sum, c) => sum + (c.wrongCards?.length ?? 0),
-    0,
+  const totalWrongCards = useMemo(
+    () =>
+      Object.values(coursesProgress).reduce(
+        (sum, c) => sum + Object.keys(c.wrongCards ?? {}).length,
+        0,
+      ),
+    [coursesProgress],
   );
 
-  // 按课程统计错题数
-  const courseWrongCounts: { courseId: string; title: string; color: string; count: number }[] = [];
-  for (const course of courses) {
-    const count = coursesProgress[course.id]?.wrongCards?.length ?? 0;
-    if (count > 0) {
-      courseWrongCounts.push({ courseId: course.id, title: course.title, color: course.color, count });
+  const courseWrongCounts = useMemo(() => {
+    const counts: { courseId: string; title: string; color: string; count: number }[] = [];
+    for (const course of courses) {
+      const count = Object.keys(coursesProgress[course.id]?.wrongCards ?? {}).length;
+      if (count > 0) {
+        counts.push({ courseId: course.id, title: course.title, color: course.color, count });
+      }
     }
-  }
+    return counts;
+  }, [coursesProgress]);
 
-  const currentLevelStart = xpForLevelStart(global.level);
+  const currentLevelStart = useMemo(() => xpForLevelStart(global.level), [global.level]);
   const nextLevelXP = global.level * 100;
   const xpIntoLevel = global.totalXP - currentLevelStart;
-  const xpPercent = Math.min((xpIntoLevel / nextLevelXP) * 100, 100);
+  const xpPercent = useMemo(
+    () => Math.min((xpIntoLevel / nextLevelXP) * 100, 100),
+    [xpIntoLevel, nextLevelXP],
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
@@ -142,7 +152,7 @@ export default function ProgressScreen() {
         <Text style={styles.sectionTitle}>学科进度</Text>
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
-          const done = progress?.completedCards?.length ?? 0;
+          const done = Object.keys(progress?.completedCards ?? {}).length;
           const total = c.nodes.reduce((s, n) => s + n.cards.length, 0);
           const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 

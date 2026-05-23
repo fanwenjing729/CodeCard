@@ -34,7 +34,7 @@ export default function DataScreen() {
 
   const hasProgress = courses.some((c) => {
     const p = coursesState[c.id];
-    return p && p.completedCards.length > 0;
+    return p && Object.keys(p.completedCards).length > 0;
   });
 
   const handleResetCourse = (courseId: string, title: string) => {
@@ -68,7 +68,7 @@ export default function DataScreen() {
         <View style={styles.section}>
           {courses.map((c, i) => {
             const progress = coursesState[c.id];
-            const completed = progress?.completedCards?.length ?? 0;
+            const completed = Object.keys(progress?.completedCards ?? {}).length;
             return (
               <Fragment key={c.id}>
                 {i > 0 && <View style={styles.separator} />}

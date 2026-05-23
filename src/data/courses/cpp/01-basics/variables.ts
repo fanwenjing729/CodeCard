@@ -21,7 +21,7 @@ export const variablesNode: PathNode = {
       cardType: 'code',
       content: {
         title: '变量声明示例',
-        code: 'int age = 25;\ndouble price = 9.99;\nchar grade = \'A\';\nbool isPassed = true;\n\n// const 常量不可修改\nconst double PI = 3.14159;',
+        code: 'int age = 25;\ndouble price = 9.99;\nchar grade = \'A\';\nbool isPassed = true;\n\n// 值不变的量可以用大写命名，提醒自己不要修改\ndouble PI = 3.14159;',
         language: 'cpp',
         highlights: [0, 1, 2, 3, 6],
       },
@@ -30,12 +30,20 @@ export const variablesNode: PathNode = {
       id: 'cpp-01-basics-var-c3',
       cardType: 'concept',
       content: {
-        title: '类型全家福',
-        body: 'C++ 基本类型占用的字节数（典型值）：\n\nint — 4 字节（整数）\nfloat — 4 字节（单精度浮点）\ndouble — 8 字节（双精度浮点）\nchar — 1 字节（字符）\nbool — 1 字节（布尔值）\n\n扩展类型：\nshort — 2 字节（短整数）\nlong — 4 或 8 字节（长整数，平台相关）\nunsigned — 无符号版，值域翻倍但不存负数\n\n用 sizeof(type) 可以获取当前平台的实际字节数。',
+        title: '基本类型',
+        body: 'C++ 四种最常用的基本类型：\n\nint — 整数，4 字节\n  例：int age = 25;\n\ndouble — 浮点数，8 字节\n  例：double price = 9.99;\n\nchar — 字符，1 字节\n  例：char grade = \'A\';\n\nbool — 布尔值，1 字节\n  例：bool isPassed = true;\n\n用 sizeof(type) 可以查看类型的实际字节数。',
       },
     },
     {
       id: 'cpp-01-basics-var-c4',
+      cardType: 'concept',
+      content: {
+        title: '扩展整数类型',
+        body: '除了 int，C++ 还提供不同范围的整数类型：\n\nshort — 2 字节（短整数，值域较小）\nlong — 4 或 8 字节（长整数，平台相关）\nlong long — 8 字节（超长整数）\n\n无符号类型：\nunsigned int — 不存负数，值域翻倍（0 ~ 42 亿）\nunsigned short / unsigned long 同理\n\n选择建议：一般情况用 int 就够了。需要更大范围用 long long，不需要负数用 unsigned。',
+      },
+    },
+    {
+      id: 'cpp-01-basics-var-c5',
       cardType: 'code',
       content: {
         title: 'sizeof 查看类型大小',
@@ -45,7 +53,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c5',
+      id: 'cpp-01-basics-var-c6',
       cardType: 'practice',
       content: {
         question: '在大多数平台上，sizeof(int) 的典型返回值是？',
@@ -56,7 +64,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c6',
+      id: 'cpp-01-basics-var-c7',
       cardType: 'concept',
       content: {
         title: '初始化与赋值',
@@ -64,7 +72,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c7',
+      id: 'cpp-01-basics-var-c8',
       cardType: 'practice',
       content: {
         question: '以下代码输出什么结果？\n\nint x;\ncout << x;',
@@ -75,7 +83,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c8',
+      id: 'cpp-01-basics-var-c9',
       cardType: 'practice',
       content: {
         question: '请补全声明一个双精度浮点数 price，值为 19.99 的语句：\n\n_____ price = 19.99;',
@@ -85,7 +93,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c9',
+      id: 'cpp-01-basics-var-c10',
       cardType: 'concept',
       content: {
         title: '标识符命名规则',
@@ -93,7 +101,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c10',
+      id: 'cpp-01-basics-var-c11',
       cardType: 'practice',
       content: {
         question: '以下哪个是合法的 C++ 变量名？',

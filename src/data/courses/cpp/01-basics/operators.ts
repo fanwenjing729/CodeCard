@@ -13,7 +13,7 @@ export const operatorsNode: PathNode = {
       cardType: 'concept',
       content: {
         title: '算术运算符',
-        body: 'C++ 提供五种基本算术运算符：\n\n+  加法    a + b\n-  减法    a - b\n*  乘法    a * b\n/  除法    a / b\n%  取模（取余）  a % b\n\n注意事项：\n1. 整数除法会截断小数部分：5 / 2 结果是 2（不是 2.5）\n2. 要做小数除法，至少一个操作数是浮点：5.0 / 2 结果是 2.5\n3. % 只能用于整数，结果是余数：7 % 3 结果是 1\n4. 乘除优先于加减，括号 () 可以改变优先级',
+        body: 'C++ 提供五种基本算术运算符：\n\n+  加法    a + b\n-  减法    a - b\n*  乘法    a * b\n/  除法    a / b\n%  取余（求余数）  a % b\n\n注意事项：\n1. 整数除法会截断小数部分：5 / 2 结果是 2（不是 2.5）\n2. 要做小数除法，至少一个操作数是浮点：5.0 / 2 结果是 2.5\n3. % 只能用于整数，结果是余数：7 % 3 结果是 1\n4. 乘除优先于加减，括号 () 可以改变优先级',
       },
     },
     {
@@ -83,6 +83,17 @@ export const operatorsNode: PathNode = {
         options: ['5', '6', '编译错误', '不确定'],
         answer: '5',
         explanation: 'a++ 是后缀自增，先把 a 的当前值 5 赋给 b，然后 a 才加 1 变成 6。如果是 ++a（前缀），则 a 先变成 6，b 也得到 6。',
+      },
+    },
+    {
+      id: 'cpp-01-basics-op-c9',
+      cardType: 'practice',
+      content: {
+        question: '10 % 3 的结果是多少？',
+        questionType: 'choice',
+        options: ['3', '1', '0', '10'],
+        answer: '1',
+        explanation: '% 是取余运算符，求 10 除以 3 的余数。10 ÷ 3 = 3 余 1，所以结果是 1。% 只能用于整数。常见用途：判断奇偶（n % 2 == 0 则是偶数）。',
       },
     },
   ],

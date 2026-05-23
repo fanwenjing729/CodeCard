@@ -20,14 +20,14 @@ interface WrongEntry {
   content: PracticeContent;
 }
 
-function collectWrongCards(coursesState: Record<string, { wrongCards?: string[] }>): WrongEntry[] {
+function collectWrongCards(coursesState: Record<string, { wrongCards?: Record<string, true> }>): WrongEntry[] {
   const entries: WrongEntry[] = [];
   for (const course of courses) {
     const progress = coursesState[course.id];
-    if (!progress?.wrongCards?.length) continue;
+    if (!progress?.wrongCards || Object.keys(progress.wrongCards).length === 0) continue;
     for (const node of course.nodes) {
       for (const card of node.cards) {
-        if (card.cardType === 'practice' && progress.wrongCards.includes(card.id)) {
+        if (card.cardType === 'practice' && card.id in progress.wrongCards) {
           entries.push({
             courseId: course.id,
             courseTitle: course.title,

@@ -27,32 +27,31 @@
 
 ### completeCard
 ```
-- 同一张卡调两次 → 第二次返回 false，completedCards 不重复
+- 同一张卡调两次 → 第二次返回 false，completedCards 不重复（O(1) 去重 via `cardId in completedCards`）
 - 新课第一次调 → 自动创建 CourseProgress，不会崩
 - completeCard 不改 XP，不改 level
 ```
 
 ### uncompleteCard
 ```
-- 从 completedCards 移除 cardId，不扣 XP
+- 从 completedCards 移除 cardId（destructure rest），不扣 XP
 - 不存在的 cardId → 静默忽略，不报错
-- 和 addWrongCard 配合使用：答错 → addWrongCard + uncompleteCard
-- 答对 → rewardCard（已在 completedCards 时返回 false，XP 不重复加）
+- 当前仅保留 action 定义，NodeScreen / QuizScreen 答错不再调用（答错不取消完成状态）
 ```
 
 ### rewardCard
 ```
 - = completeCard + addXP 的合体效果
-- 同一张卡调两次 → 第二次返回 false，XP 不加
+- 同一张卡调两次 → 第二次返回 false，XP 不加（O(1) 去重）
 - XP 和 completedCards 要么一起生效，要么一起不生效（原子性）
 ```
 
 ### wrongCards
 ```
-- addWrongCard：同一张卡推两次 → 不重复
+- addWrongCard：同一张卡推两次 → 不重复（O(1) 去重 via `cardId in wrongCards`）
 - removeWrongCard：不存在的 cardId → 静默忽略
-- wrongCards 只存 cardId，不存答案内容
-- resetCourse → wrongCards: [] 一并清空
+- wrongCards 只存 cardId，不存答案内容（类型：`Record<string, true>`）
+- resetCourse → wrongCards: {} 一并清空
 ```
 
 ### resetCourse
@@ -81,27 +80,9 @@
 - level N 需要累计 N*(N-1)*50 XP，等价于每级需要 level*100
 ```
 
-### completeCard
-```
-- 同一张卡调两次 → 第二次返回 false，completedCards 不重复
-- 新课第一次调 → 自动创建 CourseProgress，不会崩
-- completeCard 不改 XP，不改 level
-```
-
-### rewardCard
-```
-- = completeCard + addXP 的合体效果
-- 同一张卡调两次 → 第二次返回 false，XP 不加
-- XP 和 completedCards 要么一起生效，要么一起不生效（原子性）
-```
-
-### resetCourse
-```
-- 扣掉的 XP = 该课程的 course.xp
-- global.totalXP 不会变成负数（Math.max(0, ...)）
-- level 根据扣除后的 XP 重新计算
-- 该课程的数据回到初始状态
-```
+### completeCard (重复段，同前)
+### rewardCard (重复段，同前)
+### resetCourse (重复段，同前)
 
 ### hydrate + migrate
 ```

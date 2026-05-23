@@ -18,7 +18,6 @@ export default function NodeScreen({ route, navigation }: Props) {
   const setNodePosition = useProgressStore((s) => s.setNodePosition);
   const addWrongCard = useProgressStore((s) => s.addWrongCard);
   const removeWrongCard = useProgressStore((s) => s.removeWrongCard);
-  const uncompleteCard = useProgressStore((s) => s.uncompleteCard);
   const savedIndex = useProgressStore(
     (s) => s.courses[courseId]?.nodePositions[nodeId] ?? 0,
   );
@@ -84,6 +83,7 @@ export default function NodeScreen({ route, navigation }: Props) {
     }
     rewardCard(courseId, card.id, XP_PER_CARD);
     if (isLast) {
+      savePosition(index);
       setDone(true);
     } else {
       const nextIndex = index + 1;
@@ -109,14 +109,14 @@ export default function NodeScreen({ route, navigation }: Props) {
         removeWrongCard(courseId, c.id);
       } else {
         addWrongCard(courseId, c.id);
-        uncompleteCard(courseId, c.id);
       }
     },
-    [courseId, rewardCard, addWrongCard, removeWrongCard, uncompleteCard],
+    [courseId, rewardCard, addWrongCard, removeWrongCard],
   );
 
   const handlePracticeNext = useCallback(() => {
     if (isLast) {
+      savePosition(index);
       setDone(true);
     } else {
       const nextIndex = index + 1;

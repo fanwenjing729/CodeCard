@@ -54,8 +54,6 @@ export default function QuizScreen({ route, navigation }: Props) {
   const saveQuizScore = useProgressStore((s) => s.saveQuizScore);
   const addWrongCard = useProgressStore((s) => s.addWrongCard);
   const removeWrongCard = useProgressStore((s) => s.removeWrongCard);
-  const uncompleteCard = useProgressStore((s) => s.uncompleteCard);
-
   const course = courses.find((c) => c.id === courseId);
   const node = course?.nodes.find((n) => n.id === nodeId);
 
@@ -108,7 +106,6 @@ export default function QuizScreen({ route, navigation }: Props) {
       removeWrongCard(courseId, card.id);
     } else {
       addWrongCard(courseId, card.id);
-      uncompleteCard(courseId, card.id);
     }
   };
 

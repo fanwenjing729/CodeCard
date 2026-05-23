@@ -39,9 +39,9 @@ export const ioNode: PathNode = {
       cardType: 'code',
       content: {
         title: 'cin 读取多种类型',
-        code: '#include <iostream>\n#include <string>\n\nint main() {\n  std::string name;\n  int age;\n  double height;\n\n  std::cout << "输入姓名: ";\n  std::cin >> name;\n  std::cout << "输入年龄: ";\n  std::cin >> age;\n  std::cout << "输入身高(m): ";\n  std::cin >> height;\n\n  std::cout << name << " 今年 " << age\n            << " 岁，身高 " << height << "m\\n";\n  return 0;\n}',
+        code: '#include <iostream>\n\nint main() {\n  int age;\n  double height;\n\n  std::cout << "输入年龄: ";\n  std::cin >> age;\n  std::cout << "输入身高(m): ";\n  std::cin >> height;\n\n  std::cout << "年龄 " << age\n            << "，身高 " << height << "m\\n";\n  return 0;\n}',
         language: 'cpp',
-        highlights: [0, 1, 4, 5, 6, 8, 10, 12, 15],
+        highlights: [0, 3, 4, 6, 8, 11],
       },
     },
     {
@@ -88,9 +88,9 @@ export const ioNode: PathNode = {
       cardType: 'code',
       content: {
         title: '常用转义字符',
-        code: '// 以下是 C++ 源码中常见的转义序列\n\ncout << "Hello\\nWorld";   // \\n → 换行\ncout << "A\\tB";           // \\t → Tab\ncout << "He said: \\"Hi\\""; // \\" → 字符串里的双引号\ncout << "C:\\\\Users";      // \\\\ → 反斜杠本身\ncout << \'\\\'\';              // \\\' → 字符常量里的单引号',
+        code: '#include <iostream>\n\nint main() {\n  std::cout << "Hello\\nWorld" << \'\\n\';   // \\n → 换行\n  std::cout << "A\\tB" << \'\\n\';           // \\t → Tab\n  std::cout << "He said: \\"Hi\\"" << \'\\n\'; // \\" → 双引号\n  std::cout << "C:\\\\Users" << \'\\n\';      // \\\\ → 反斜杠\n  std::cout << \'\\\'\' << \'\\n\';              // \\\' → 单引号\n  return 0;\n}',
         language: 'cpp',
-        highlights: [2, 3, 4, 5, 6],
+        highlights: [0, 3, 4, 5, 6, 7, 8],
       },
     },
     {
@@ -113,6 +113,17 @@ export const ioNode: PathNode = {
         options: ['"C:\\Users"', '"C:\\\\Users"', '"C://Users"', '"C:\\Users\\"'],
         answer: '"C:\\\\Users"',
         explanation: '第一个 \\ 把第二个 \\ 转义成普通反斜杠字面值。如果只写一个 \\，编译器会尝试把 \\U 当成转义序列，导致错误或非预期结果。注意：\\ 不是注释，注释是 //（两个正斜杠）。',
+      },
+    },
+    {
+      id: 'cpp-01-basics-io-c12',
+      cardType: 'practice',
+      content: {
+        question: 'std::endl 和 \\n 有什么区别？',
+        questionType: 'choice',
+        options: ['完全一样，没有区别', '\\n 换行，endl 换行+刷新缓冲区', 'endl 换行，\\n 换行+刷新缓冲区', 'endl 只在 Windows 上有效'],
+        answer: '\\n 换行，endl 换行+刷新缓冲区',
+        explanation: '两者都产生换行效果。区别是 std::endl 额外调用 flush() 刷新输出缓冲区，保证内容立即显示。频繁刷新会降低性能，所以一般用 \\n 就够了，需要立即显示时才用 endl。',
       },
     },
   ],

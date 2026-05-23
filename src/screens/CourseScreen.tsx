@@ -29,7 +29,7 @@ export default function CourseScreen({ route, navigation }: Props) {
   }, [course]);
 
   const completedCards = useMemo(() => {
-    return coursesProgress[courseId]?.completedCards ?? [];
+    return coursesProgress[courseId]?.completedCards ?? {};
   }, [coursesProgress, courseId]);
 
   return (
@@ -46,7 +46,7 @@ export default function CourseScreen({ route, navigation }: Props) {
           const moduleName = nodes[0]?.module ?? moduleId;
           const allCardIds = nodes.flatMap((n) => n.cards.map((c) => c.id));
           const total = allCardIds.length;
-          const done = allCardIds.filter((id) => completedCards.includes(id)).length;
+          const done = allCardIds.filter((id) => id in completedCards).length;
           const isDone = total > 0 && done === total;
           const isStarted = done > 0 && !isDone;
 

@@ -1,0 +1,57 @@
+import type { PathNode } from '@/types';
+
+export const constantsNode: PathNode = {
+  id: 'cpp-01-basics-const',
+  courseId: 'cpp',
+  type: 'knowledge',
+  moduleId: 'basics',
+  module: '基础',
+  title: '常量',
+  cards: [
+    {
+      id: 'cpp-01-basics-const-c1',
+      cardType: 'concept',
+      content: {
+        title: '为什么用常量',
+        body: '有些值在程序中不应该被改变——圆周率、最大人数、税率。如果靠自觉不修改，迟早会写出 bug。\n\nconst 关键字把"不能改"写进代码，让编译器帮你检查：\n\nconst double PI = 3.14159;\nPI = 3.14;  // 编译错误！const 变量不可修改\n\n使用 const 的好处：\n1. 防止意外修改 — 编译器帮你挡\n2. 代码意图清晰 — 看到 const 就知道这个值不会变\n3. 比"全大写命名约定"更强 — 命名只是建议，const 是强制',
+      },
+    },
+    {
+      id: 'cpp-01-basics-const-c2',
+      cardType: 'code',
+      content: {
+        title: 'const 声明示例',
+        code: '#include <iostream>\n\nint main() {\n  const int MAX = 100;\n  const double PI = 3.14159;\n  const char NEWLINE = \'\\n\';\n\n  std::cout << "MAX = " << MAX << NEWLINE;\n  std::cout << "PI = " << PI << NEWLINE;\n\n  // MAX = 200;  // 编译错误！不能修改 const\n  return 0;\n}',
+        language: 'cpp',
+        highlights: [3, 4, 5, 7, 8, 10],
+      },
+    },
+    {
+      id: 'cpp-01-basics-const-c3',
+      cardType: 'concept',
+      content: {
+        title: '编译期 vs 运行期',
+        body: 'const 和 constexpr 的核心区别在于：值是什么时候确定的。\n\n---\n\n编译期 = 编译器在翻译你的 .cpp 文件，还没生成 .exe。\n运行期 = .exe 已经生成，用户双击运行。\n\n判断标准：编译器翻译到这一行代码时，能不能直接算出这个值？\n\n---\n\n例子 1 — 值在源码里写死了，编译时就知道：\n\nconstexpr int MAX = 100;  // OK：100 就写在源码里，编译时直接确定\nconst int MAX2 = 100;     // 也 OK：const 当然也接受\n\n---\n\n例子 2 — 值依赖用户输入，必须运行后才知道：\n\nint x;\nstd::cin >> x;\n\nconst int y = x;       // OK：const 不要求编译时知道值\n                        //    它只保证初始化之后 y 不能再改\n\nconstexpr int z = x;   // 编译错误！\n                        //    编译器翻译到这里时 x 还是未知数\n                        //    （程序还没运行，用户还没输入）\n                        //    无法确定 z 的值 → 拒绝编译\n\n---\n\n关键区别一句话：\n\nconst     → "这个值初始化后不能改"（不管什么时候初始化的）\nconstexpr → "这个值编译时就必须算出来"（源码里直接看得到）\n\n---\n\n为什么不直接用 const 而要 constexpr？\n\nconstexpr 的值因为编译时就确定了，可以用在要求"编译期常量"的地方——比如数组大小。现阶段先记住区别，后面自然会遇到。',
+      },
+    },
+    {
+      id: 'cpp-01-basics-const-c4',
+      cardType: 'concept',
+      content: {
+        title: '#define — 预处理宏',
+        body: '#define 是 C 语言时代定义常量的方式，原理是纯文本替换——在编译之前，先把所有 MAX 替换成 100，然后再编译。\n\n#define MAX 100\nint score = MAX;   // 预处理后变成 int score = 100;\n\nconst 和 #define 的区别：\n\n1. 类型\n   const int MAX = 100;   // 编译器知道 MAX 是 int\n   #define MAX 100        // 没有类型，纯文本\n\n2. 作用域\n   const 跟普通变量一样，只在声明它的 {} 里有效。\n   #define 从这一行往下全局生效，可能意外影响其他代码。\n\n3. 调试\n   const 变量可以在调试器中查看。\n   #define 在编译前就被替换成文本了，调试器看不到。\n\n最典型的坑：\n\n#define SIZE 100\nint SIZE = 200;   // 被替换成 int 100 = 200; 编译错误！\n                  // 但报错信息显示的是 int 100 = 200\n                  // 新手根本看不懂错在哪里\n\n如果用 const 就不会有这种问题——编译器会直接告诉你 SIZE 重复定义。\n\n规则：C++ 里定义常量一律用 const，别用 #define。',
+      },
+    },
+    {
+      id: 'cpp-01-basics-const-c5',
+      cardType: 'practice',
+      content: {
+        question: '以下代码有什么问题？\n\nconst int x = 10;\nx = 20;',
+        questionType: 'choice',
+        options: ['没有问题，x 变成 20', 'const 变量不能重新赋值', '缺少分号', '变量名 x 不合法'],
+        answer: 'const 变量不能重新赋值',
+        explanation: '声明为 const 的变量在初始化后就不能再修改。第 2 行试图给 x 重新赋值 20，编译器会报错。如果 x 的值确实需要改变，就不要用 const 声明。',
+      },
+    },
+  ],
+};

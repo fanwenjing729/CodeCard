@@ -24,7 +24,7 @@ export default function HomeScreen() {
       <View style={styles.list}>
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
-          const done = progress?.completedCards?.length ?? 0;
+          const done = Object.keys(progress?.completedCards ?? {}).length;
           const { total, moduleCount } = c.nodes.reduce(
             (acc, n) => {
               acc.total += n.cards.length;

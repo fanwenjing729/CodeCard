@@ -227,7 +227,8 @@ VarAlloc {
 {
   global: { totalXP: number; level: number }
   courses: Record<string, {
-    completedCards: string[];  // card IDs
+    completedCards: Record<string, true>;  // O(1) lookup via `cardId in completedCards`
+    wrongCards: Record<string, true>;      // same lookup
     xp: number;                // per-course XP
     quizScores: Record<string, number>;
     nodePositions: Record<string, number>;  // nodeId → last card index
@@ -246,7 +247,7 @@ flush()                           // immediately writes to AsyncStorage
 ```
 
 ### Persistence
-- `subscribe()` debounced 500ms auto-save
+- `subscribe()` debounced 500ms auto-save，`saveIfDirty()` 对比 JSON 跳过未变更写入
 - `AppState.addEventListener('change')` flush on background/exit
 - Manual `JSON.parse/stringify`, no zustand middleware (avoids Fabric compat issue)
 - Persistent data is versioned (`CURRENT_VERSION` constant) — every save writes the version number
@@ -261,18 +262,22 @@ flush()                           // immediately writes to AsyncStorage
 2. 在 `MIGRATIONS` 表里加一个迁移函数：
 
 ```ts
-// CURRENT_VERSION 原来是 1，改成 2
-const CURRENT_VERSION = 2;
+// CURRENT_VERSION 原来是 2，改成 3
+const CURRENT_VERSION = 3;
 
 const MIGRATIONS: Record<number, (data: any) => any> = {
-  // key = 旧版本号，value = 从该版本迁到下一版的函数
-  1: (data) => ({
+  // v2→v3: 将 string[] 转为 Record<string, true>
+  2: (data) => ({
     ...data,
-    version: 2,
+    version: 3,
     courses: Object.fromEntries(
       Object.entries(data.courses).map(([id, c]: [string, any]) => [
         id,
-        { ...c, newField: defaultValue },  // ← 你的新字段
+        {
+          ...c,
+          completedCards: arrayToRecord(c.completedCards ?? []),
+          wrongCards: arrayToRecord(c.wrongCards ?? []),
+        },
       ])
     ),
   }),
@@ -726,8 +731,9 @@ function mergeCourses(
     const l = local[id];
     const r = remote[id];
     merged[id] = {
-      completedCards: [...new Set([...(l?.completedCards ?? []), ...(r?.completedCards ?? [])])],
-      xp: Math.max(l?.xp ?? 0, r?.xp ?? 0),
+      completedCards: { ...(r?.completedCards ?? {}), ...(l?.completedCards ?? {}) },
+      wrongCards: { ...(r?.wrongCards ?? {}), ...(l?.wrongCards ?? {}) },
+      xp: Math.max(l?.xp ?? 0, r?.xp ?? 0, Object.keys({ ...(r?.completedCards ?? {}), ...(l?.completedCards ?? {}) }).length * 5),
       quizScores: { ...(r?.quizScores ?? {}), ...(l?.quizScores ?? {}) },
       nodePositions: { ...(r?.nodePositions ?? {}), ...(l?.nodePositions ?? {}) },
     };
@@ -738,7 +744,7 @@ function mergeCourses(
 
 **三条规则：**
 - `completedCards` → 并集（两边完成的都算）
-- `xp / totalXP` → 取最大值（XP 只增不减，同步不会让数字变小）
+- `xp / totalXP` → 取 max(本地, 远程, 并集卡片数×5)（5 是单张卡最低 XP。实际实现时建议跟踪每张卡的 XP 来源，避免不同设备完成不同卡片时 XP 少算）
 - `quizScores / nodePositions` → 本地覆盖远程（本地是最新操作）
 
 ### 3. 后端数据库
@@ -891,17 +897,17 @@ ProgressScreen                    WrongCardsScreen               WrongCardsScree
 ### 数据流
 
 ```
-NodeScreen / QuizScreen 答错 → addWrongCard(courseId, cardId) → CourseProgress.wrongCards[]
-NodeScreen / QuizScreen 答对 → removeWrongCard(courseId, cardId) → 从 wrongCards[] 移除
+NodeScreen / QuizScreen 答错 → addWrongCard(courseId, cardId) → CourseProgress.wrongCards
+NodeScreen / QuizScreen 答对 → removeWrongCard(courseId, cardId) → 从 wrongCards 移除
 
 WrongCardsScreen 读取：
-  wrongCards[] (仅存 cardId) → 遍历 courses 数据匹配 → 获取最新题目/答案/解析
+  wrongCards (仅存 cardId, Record<string, true>) → 遍历 courses 数据匹配 → 获取最新题目/答案/解析
 ```
 
 - 只存 `cardId`，不存题目内容。改了解析文案 → 错题集自动显示最新版
 - 新增课程/模块/练习卡 → 自动出现在错题集，无需改任何 UI 代码
-- 重置课程 → `wrongCards: []` 一并清空
-- 数据迁移 v1→v2 自动补 `wrongCards: []`
+- 重置课程 → `wrongCards: {}` 一并清空
+- 数据迁移 v1→v2 自动补 `wrongCards: []`，v2→v3 转为 `Record<string, true>`
 
 ### ProgressScreen 错题入口
 

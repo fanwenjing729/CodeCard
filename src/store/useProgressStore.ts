@@ -3,18 +3,18 @@ import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface CourseProgress {
-  completedCards: string[];
+  completedCards: Record<string, true>;
   xp: number;
   quizScores: Record<string, number>;
   nodePositions: Record<string, number>;
-  wrongCards: string[];
+  wrongCards: Record<string, true>;
 }
 
 function getOrCreateCourse(
   courses: Record<string, CourseProgress>,
   courseId: string,
 ): CourseProgress {
-  return courses[courseId] ?? { completedCards: [], xp: 0, quizScores: {}, nodePositions: {}, wrongCards: [] };
+  return courses[courseId] ?? { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} };
 }
 
 function calcLevel(totalXP: number): number {
@@ -30,7 +30,7 @@ function calcLevel(totalXP: number): number {
 }
 
 const STORAGE_KEY = 'codecard-progress';
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 interface PersistedData {
   version: number;
@@ -39,6 +39,12 @@ interface PersistedData {
     level: number;
   };
   courses: Record<string, CourseProgress>;
+}
+
+function arrayToRecord(arr: string[]): Record<string, true> {
+  const rec: Record<string, true> = {};
+  for (const item of arr) rec[item] = true;
+  return rec;
 }
 
 // 迁移链：每个 key 是"从该版本迁到下一版"的函数
@@ -50,6 +56,20 @@ const MIGRATIONS: Record<number, (data: any) => any> = {
       Object.entries(data.courses).map(([id, c]: [string, any]) => [
         id,
         { ...c, wrongCards: [] },
+      ]),
+    ),
+  }),
+  2: (data) => ({
+    ...data,
+    version: 3,
+    courses: Object.fromEntries(
+      Object.entries(data.courses).map(([id, c]: [string, any]) => [
+        id,
+        {
+          ...c,
+          completedCards: arrayToRecord(c.completedCards ?? []),
+          wrongCards: arrayToRecord(c.wrongCards ?? []),
+        },
       ]),
     ),
   }),
@@ -128,7 +148,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
   completeCard: (courseId, cardId) => {
     const { courses } = get();
     const course = getOrCreateCourse(courses, courseId);
-    if (course.completedCards.includes(cardId)) return false;
+    if (cardId in course.completedCards) return false;
     set((s) => {
       const c = getOrCreateCourse(s.courses, courseId);
       return {
@@ -136,7 +156,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
           ...s.courses,
           [courseId]: {
             ...c,
-            completedCards: [...c.completedCards, cardId],
+            completedCards: { ...c.completedCards, [cardId]: true },
           },
         },
       };
@@ -147,7 +167,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
   rewardCard: (courseId, cardId, xpAmount) => {
     const { courses } = get();
     const course = getOrCreateCourse(courses, courseId);
-    if (course.completedCards.includes(cardId)) return false;
+    if (cardId in course.completedCards) return false;
     set((s) => {
       const c = getOrCreateCourse(s.courses, courseId);
       const newTotalXP = s.global.totalXP + xpAmount;
@@ -161,7 +181,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
           ...s.courses,
           [courseId]: {
             ...c,
-            completedCards: [...c.completedCards, cardId],
+            completedCards: { ...c.completedCards, [cardId]: true },
             xp: c.xp + xpAmount,
           },
         },
@@ -203,11 +223,11 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
   addWrongCard: (courseId, cardId) => {
     set((s) => {
       const c = getOrCreateCourse(s.courses, courseId);
-      if (c.wrongCards.includes(cardId)) return s;
+      if (cardId in c.wrongCards) return s;
       return {
         courses: {
           ...s.courses,
-          [courseId]: { ...c, wrongCards: [...c.wrongCards, cardId] },
+          [courseId]: { ...c, wrongCards: { ...c.wrongCards, [cardId]: true } },
         },
       };
     });
@@ -216,11 +236,12 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
   removeWrongCard: (courseId, cardId) => {
     set((s) => {
       const c = getOrCreateCourse(s.courses, courseId);
-      if (!c.wrongCards.includes(cardId)) return s;
+      if (!(cardId in c.wrongCards)) return s;
+      const { [cardId]: _, ...rest } = c.wrongCards;
       return {
         courses: {
           ...s.courses,
-          [courseId]: { ...c, wrongCards: c.wrongCards.filter((id) => id !== cardId) },
+          [courseId]: { ...c, wrongCards: rest },
         },
       };
     });
@@ -229,11 +250,12 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
   uncompleteCard: (courseId, cardId) => {
     set((s) => {
       const c = getOrCreateCourse(s.courses, courseId);
-      if (!c.completedCards.includes(cardId)) return s;
+      if (!(cardId in c.completedCards)) return s;
+      const { [cardId]: _, ...rest } = c.completedCards;
       return {
         courses: {
           ...s.courses,
-          [courseId]: { ...c, completedCards: c.completedCards.filter((id) => id !== cardId) },
+          [courseId]: { ...c, completedCards: rest },
         },
       };
     });
@@ -270,23 +292,33 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
         },
         courses: {
           ...s.courses,
-          [courseId]: { completedCards: [], xp: 0, quizScores: {}, nodePositions: {}, wrongCards: [] },
+          [courseId]: { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} },
         },
       };
     });
   },
 }));
 
-// 持久化：状态变化时防抖写入
+// 持久化：状态变化时防抖写入，数据未变则跳过
+let lastSavedJSON: string | null = null;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function saveIfDirty(data: PersistedData) {
+  const json = JSON.stringify(data);
+  if (json !== lastSavedJSON) {
+    lastSavedJSON = json;
+    save(data);
+  }
+}
+
 useProgressStore.subscribe((state) => {
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => save(pickData(state)), 500);
+  saveTimer = setTimeout(() => saveIfDirty(pickData(state)), 500);
 });
 
 // App 进后台或退出时立即 flush
 AppState.addEventListener('change', (nextState) => {
   if (nextState === 'inactive' || nextState === 'background') {
-    save(pickData(useProgressStore.getState()));
+    saveIfDirty(pickData(useProgressStore.getState()));
   }
 });
