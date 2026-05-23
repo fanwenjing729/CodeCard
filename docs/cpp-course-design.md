@@ -4,14 +4,14 @@
 
 | # | 模块 | 状态 | 节点 | 卡片 |
 |---|------|------|------|------|
-| 01 | 基础 | 🟢 进行中 | 8 / 12 | 69 / ~74 |
+| 01 | 基础 | 🟢 进行中 | 10 / 12 | 85 / ~90 |
 | 02 | 进阶 | ⬜ 未开始 | 0 / 5 | 0 / ~24 |
 | 03 | 面向对象 | ⬜ 未开始 | 0 / 5 | 0 / ~28 |
 | 04 | STL | ⬜ 未开始 | 0 / 5 | 0 / ~27 |
 | 05 | 泛型 | ⬜ 未开始 | 0 / 4 | 0 / ~18 |
 | 06 | 现代 C++ | ⬜ 未开始 | 0 / 5 | 0 / ~21 |
 
-> 最后更新：2026-05-23 — 完成基础模块 8 个节点，1.8 条件分支（含 BranchPlayer 分支动画组件）
+> 最后更新：2026-05-23 — 完成基础模块 10 个节点，1.10 while 循环（含 WhileDoWhilePlayer 对比动画）
 
 ---
 
@@ -27,15 +27,15 @@
 | 6 | 作用域 | `scope.ts` | 4 卡 | 块作用域、嵌套 {}、动画 `scope-lifecycle`（5 步可视化）、练习 |
 | 7 | 比较与逻辑运算符 | `comparison-logic.ts` | 8 卡 | 六个比较运算符(> < >= <= == !=)、&&/||/! 真值表、= vs == 陷阱 |
 | 8 | 条件分支 | `conditionals.ts` | 9 卡 | if/else、动画 `if-else-if-ladder`、switch、动画 `switch-fallthrough`、三目运算符 |
+| 9 | for 循环 | `for-loop.ts` | 11 卡 | for 三段式、动画 `for-loop`、范围 for、嵌套循环、break/continue + 动画 `break-continue` |
+| 10 | while 循环 | `while-loop.ts` | 6 卡 | while vs for 选用、动画 `while-vs-dowhile`（WhileDoWhilePlayer）、do-while |
 
-**已覆盖的设计节点：** 1.1 第一个程序 ✅ | 1.2 变量与类型 ✅ | 1.3 注释命名（合并到 1.1+1.2）✅ | 1.4 输入与运算 ✅ | 1.5 常量 ✅ | 1.6 作用域 ✅ | 1.7 比较与逻辑运算符 ✅ | 1.8 条件分支 ✅
+**已覆盖的设计节点：** 1.1 第一个程序 ✅ | 1.2 变量与类型 ✅ | 1.3 注释命名（合并到 1.1+1.2）✅ | 1.4 输入与运算 ✅ | 1.5 常量 ✅ | 1.6 作用域 ✅ | 1.7 比较与逻辑运算符 ✅ | 1.8 条件分支 ✅ | 1.9 for 循环 ✅ | 1.10 while 循环 ✅
 
 ### 01 基础 — 待实现
 
 | 节点 | 卡片 | 说明 |
 |------|------|------|
-| for 循环 | ~5 | 三段式、范围 for、嵌套循环 |
-| while 循环 | ~4 | while/do-while、break/continue |
 | 数组 | ~4 | 连续内存 + 动画、越界陷阱 |
 | 函数入门 | ~7 | 声明/定义、参数传递、返回值、static 局部变量（离开函数后还活着，打破作用域规则的例外） |
 
@@ -45,7 +45,7 @@
 
 | # | 模块 | 节点数 | 内容 |
 |---|------|--------|------|
-| 01 | 基础 | 8/12 | 69/~74 卡 | ✅ 程序结构 / 变量类型 / 注释命名 / 输入运算 / 常量 / 作用域 / 比较与逻辑 / 条件分支 · ⬜ for循环 / while循环 / 数组 / 函数入门(含 static) |
+| 01 | 基础 | 10/12 | 85/~90 卡 | ✅ 程序结构 / 变量类型 / 注释命名 / 输入运算 / 常量 / 作用域 / 比较与逻辑 / 条件分支 / for循环 / while循环 · ⬜ 数组 / 函数入门(含 static) |
 | 02 | 进阶 | 5 | ~24 卡 | 指针 / 引用 / 动态内存 / 函数重载 / 文件IO |
 | 03 | 面向对象 | 5 | ~30 卡 | 类与对象 / 构造析构 / 继承 / 多态 / 运算符重载（含 static 类成员） |
 | 04 | STL | 5 | ~27 卡 | vector / string(精讲:C串对比+构造+长度+索引+比较+substr+find) / map / algorithm / iterator |
@@ -175,15 +175,21 @@
 | c8 | practice | switch 穿透陷阱 | `case 2: cout<<"B";` 后面没 break → 穿透到 case 3 输出"C" → 答案：BC |
 | c9 | practice | `if (score = 60)` 有什么问题？ | choice: 缺分号 / = 是赋值永远为真 / 没初始化 / if 后不该有空格 → = 是赋值永远为真 |
 
-### 1.9 for 循环
+### 1.9 for 循环 ✅ 已实现 (11 卡)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
-| c1 | concept | for 三段式 | `for(init; cond; update)` 执行顺序：init(1次) → cond → body → update → cond → ... |
-| c2 | code | 1-100 累加 + 平方表 | `for(int i=1; i<=100; i++) sum += i;` 和 `cout << i*i` |
-| c3 | code | 范围 for | `for(int v : arr)` 遍历数组每个元素，不用手动管理索引；现代 C++ 推荐 `for(auto v : arr)` |
-| c4 | concept | 嵌套循环 | 外层走一步，内层走一圈；九九乘法表示例：`for(i) { for(j) { cout << i*j; } }` |
-| c5 | practice | `for(int i=0; i<5; i++)` 循环体执行几次？ | fill: 5 |
+| c1 | concept | for 循环 — 重复执行 | 三段式执行顺序、判别标准"条件现在还成立吗？"、对照例子 |
+| c2 | code | 1-100 累加 | `for (int i=1; i<=100; i++) sum += i` |
+| c3 | **animation** | **for-loop** | LoopPlayer：5 步展示初始化→第1/2/3 轮→跳出 |
+| c4 | concept | 范围 for | vs 手动索引、auto、底层原理、一句话 |
+| c5 | code | 范围 for 示例 | 遍历 scores 数组求总分和均分 |
+| c6 | concept | 嵌套循环 | 外层走一步内层走一圈、九九乘法表 |
+| c7 | concept | break 与 continue | break="不干了"、continue="这轮跳过"、对照例子 |
+| c8 | **animation** | **break-continue** | BreakContinuePlayer：上下双栏同步对比。上栏 break 在 i=3 跳出结束；下栏 continue 在 i=3 跳过、i=4,5 继续 |
+| c9 | practice | continue 跳过输出 | `i=3 continue` → 输出 1 2 4 5 |
+| c10 | practice | for 循环执行几次？ | choice: 4/5/6/取决于内容 → 5 次 |
+| c11 | practice | 嵌套循环输出几个 A？ | choice: 3/5/6/9 → 6 个（3×2） |
 
 ### 1.10 while 循环
 

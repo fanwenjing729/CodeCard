@@ -7,6 +7,8 @@ import { constantsNode } from './constants';
 import { scopeNode } from './scope';
 import { comparisonLogicNode } from './comparison-logic';
 import { conditionalsNode } from './conditionals';
+import { forLoopNode } from './for-loop';
+import { whileLoopNode } from './while-loop';
 
 const nodes: PathNode[] = [
   helloWorldNode,
@@ -17,6 +19,8 @@ const nodes: PathNode[] = [
   scopeNode,
   comparisonLogicNode,
   conditionalsNode,
+  forLoopNode,
+  whileLoopNode,
 ];
 
 export const basicsModule: CourseModule = { moduleId: 'basics', nodes };

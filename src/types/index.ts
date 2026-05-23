@@ -122,6 +122,21 @@ export interface ScopeCodeScenario extends AnimScenario {
   steps: ScopeCodeStep[];
 }
 
+// ===== Loop 动画专用 =====
+export interface LoopStep {
+  label: string;
+  highlightLines: number[];  // for 行
+  bodyLines: number[];       // 循环体行
+  iteration: number;         // 0=init, 1..n=第N轮, -1=跳出
+  entered: boolean;          // 本轮是否进入循环体
+  annotation: string;
+}
+
+export interface LoopScenario extends AnimScenario {
+  sourceCode: string;
+  steps: LoopStep[];
+}
+
 // ===== Branch 动画专用 =====
 export interface BranchStep {
   label: string;

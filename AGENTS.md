@@ -397,6 +397,8 @@ getAnimComponent(animId): ComponentType<...> | null
 | MemoryBox | `MemoryBoxScenario` | `MemoryBox.tsx` | `scenarios/variableStorage.ts` | 是 | 可用 |
 | ScopeCode | `ScopeCodeScenario` | `ScopeCodePlayer.tsx` | `scenarios/scopeLifecycle.ts` | 是 | 可用 |
 | Branch | `BranchScenario` | `BranchPlayer.tsx` | `scenarios/ifElseBranch.ts` | 是 | 可用 |
+| Loop | `LoopScenario` | `LoopPlayer.tsx` | `scenarios/forLoop.ts` | 是 | 可用 |
+| WhileDoWhile | `WhileDoWhileScenario` | `WhileDoWhilePlayer.tsx` | `scenarios/whileDoWhile.ts` | 是 | 可用 |
 | Lottie | `LottieScenario` | `LottiePlayer.tsx` | `scenarios/lottieLoopFlow.ts` | 是 | 骨架（需装 `lottie-react-native` + 取消注释） |
 
 ---
@@ -509,6 +511,63 @@ import BranchPlayer from '@/components/animations/BranchPlayer';
 ```
 
 **Step 4 — 不改任何组件代码。** 组件复用 `BranchPlayer.tsx`。
+
+---
+
+### 添加 Loop 动画（4 步）
+
+适合展示"循环重复执行"的场景——代码区高亮 for 行和循环体，上方显示当前迭代轮次和是否进入循环体。
+
+**Step 1 — 创建 Scenario 文件**
+
+在 `src/data/animations/scenarios/` 下新建文件：
+
+```ts
+import type { LoopScenario } from '@/types';
+
+export const myLoopScenario: LoopScenario = {
+  id: 'my-loop',
+  title: '标题',
+  totalSteps: 4,
+  sourceCode: 'int sum = 0;\n\nfor (int i = 0; i < 3; i++) {\n    sum += i;\n}',
+  steps: [
+    {
+      label: '步骤名',
+      highlightLines: [2],       // for 行（0-indexed）
+      bodyLines: [3],            // 循环体行号
+      iteration: 1,              // 0=init, 1..n=第N轮, -1=跳出
+      entered: true,             // 是否进入循环体
+      annotation: '底部注释',
+    },
+    // ... 更多步骤
+  ],
+};
+```
+
+`iteration` / `entered` 字段：
+- `iteration: 0, entered: false` — 初始化阶段
+- `iteration: 1, entered: true` — 第 1 轮，进入循环体（bodyLines 绿色高亮）
+- `iteration: -1, entered: false` — 条件为假，跳出循环（bodyLines 灰色）
+
+**Step 2 — 注册到 Registry**
+
+```ts
+import { myLoopScenario } from './scenarios/myLoop';
+import LoopPlayer from '@/components/animations/LoopPlayer';
+
+'my-loop': {
+  scenario: myLoopScenario,
+  Component: LoopPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+},
+```
+
+**Step 3 — 在节点中插入动画卡**
+
+```ts
+{ cardType: 'animation', content: { animationId: 'my-loop' } }
+```
+
+**Step 4 — 不改任何组件代码。** 组件复用 `LoopPlayer.tsx`。
 
 ---
 
@@ -870,6 +929,17 @@ CREATE TABLE user_progress (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 ```
+
+**必须开 RLS（Row Level Security）**——否则 anon key 暴露后任何人可读写全库：
+
+```sql
+ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "读写自己的进度" ON user_progress
+  FOR ALL USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+```
+
+三层 SQL 封住权限，App 代码不用改。详细见 `docs/supabase-auth-plan.md`。
 
 后端只做存取不做业务逻辑。合并判断在客户端 `syncEngine` 里完成，换 BaaS、换自建后端、换协议，都不影响合并逻辑。
 

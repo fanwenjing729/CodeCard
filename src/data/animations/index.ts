@@ -5,9 +5,15 @@ import { scopeLifecycleScenario } from './scenarios/scopeLifecycle';
 import { ifElseBranchScenario } from './scenarios/ifElseBranch';
 import { ifElseIfLadderScenario } from './scenarios/ifElseIfLadder';
 import { switchFallthroughScenario } from './scenarios/switchFallthrough';
+import { forLoopScenario } from './scenarios/forLoop';
+import { breakContinueScenario } from './scenarios/breakContinue';
+import { whileDoWhileScenario } from './scenarios/whileDoWhile';
 import MemoryBox from '@/components/animations/MemoryBox';
 import ScopeCodePlayer from '@/components/animations/ScopeCodePlayer';
 import BranchPlayer from '@/components/animations/BranchPlayer';
+import LoopPlayer from '@/components/animations/LoopPlayer';
+import BreakContinuePlayer from '@/components/animations/BreakContinuePlayer';
+import WhileDoWhilePlayer from '@/components/animations/WhileDoWhilePlayer';
 // Lottie 示例（取消注释并放入 lottie JSON 文件后即可用）:
 // import { lottieLoopFlow } from './scenarios/lottieLoopFlow';
 // import LottiePlayer from '@/components/animations/LottiePlayer';
@@ -37,6 +43,18 @@ export const animationRegistry: Record<string, AnimationEntry> = {
   'switch-fallthrough': {
     scenario: switchFallthroughScenario,
     Component: BranchPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'for-loop': {
+    scenario: forLoopScenario,
+    Component: LoopPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'break-continue': {
+    scenario: breakContinueScenario,
+    Component: BreakContinuePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'while-vs-dowhile': {
+    scenario: whileDoWhileScenario,
+    Component: WhileDoWhilePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
   },
   // Lottie 注册示例:
   // 'loop-flow': {

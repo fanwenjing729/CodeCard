@@ -151,6 +151,28 @@ create table if not exists user_progress (
 );
 ```
 
+### RLS 安全策略
+
+必须开启 RLS（Row Level Security），否则任何人拿到 anon key 就能读写所有用户数据。
+
+```sql
+-- 开启 RLS
+ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
+
+-- 用户只能读自己的数据
+CREATE POLICY "读取自己的进度" ON user_progress
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- 用户只能写自己的数据
+CREATE POLICY "写入自己的进度" ON user_progress
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+```
+
+RLS 在数据库层自动拦截，App 代码一行不改。`auth.uid()` 是 Supabase 内置函数，从 JWT 中提取当前用户 ID。其他安全因素（HTTPS、JWT 签名、密码哈希）Supabase 自身已处理，不用管。
+
 **同步策略（最重要）**
 
 当前 CodeCard 进度数据极简单——`PersistedData` 只包含 `completedCards[]`、`xp`、`quizScores`、`nodePositions`。冲突可能性低。策略：
@@ -222,6 +244,29 @@ async function syncOnLogin(userId: string) {
   await uploadProgress(userId);
 }
 ```
+
+---
+
+## 数据分层：什么进数据库、什么留文件
+
+| 数据 | 存储位置 | 原因 |
+|------|---------|------|
+| 课程内容（卡片、代码、题目） | TS 文件 / CDN | 所有用户相同，无网也能学 |
+| 学习进度（完成记录、XP、错题） | Supabase `user_progress` | 每人不同，需跨设备同步 |
+
+**课程内容永远不进数据库。** 以后想热更新内容走 CDN JSON（见 AGENTS.md "远程可更新内容"），不跟用户进度混在一张表里。
+
+---
+
+## 规模与成本
+
+| 阶段 | 用户量 | 方案 | 月费 |
+|------|------|------|:--:|
+| 免费额度内 | 0–5 万月活 | Supabase Free | ¥0 |
+| 付费升级 | 5 万+ | Supabase Pro | $25（~¥180） |
+| 自建后端 | 特殊需求 | 迁到自建 PostgreSQL | 服务器 ~¥50/月起 |
+
+换方案只改 `syncEngine.ts` 和 `authStore.ts` 的实现，不改接口签名。所有 Screen 不感知后端变化。
 
 ---
 
