@@ -6,6 +6,7 @@ import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
 import { courses } from '@/data/courses';
 import { useProgressStore } from '@/store/useProgressStore';
+import { countCards } from '@/lib/courseProgress';
 import ListItem from '@/components/shared/ListItem';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Module'>;
@@ -38,8 +39,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
 
       <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 36 }]}>
         {nodes.map((node) => {
-          const total = node.cards.length;
-          const done = node.cards.filter((c) => c.id in completedCards).length;
+          const { total, done } = countCards(node.cards, completedCards);
           const isDone = total > 0 && done === total;
           const isStarted = done > 0 && !isDone;
 

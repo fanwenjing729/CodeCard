@@ -8,6 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle } from 'react-native-svg';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useProgressStore } from '@/store/useProgressStore';
+import { countNodeCards } from '@/lib/courseProgress';
 import { xpForLevelStart, xpForNextLevel } from '@/lib/xp';
 import { courses } from '@/data/courses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
@@ -150,10 +151,7 @@ export default function ProgressScreen() {
         <Text style={styles.sectionTitle}>学科进度</Text>
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
-          const allCardIds = c.nodes.flatMap((n) => n.cards.map((card) => card.id));
-          const done = allCardIds.filter((id) => id in (progress?.completedCards ?? {})).length;
-          const total = allCardIds.length;
-          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          const { total, done, pct } = countNodeCards(c.nodes, progress?.completedCards ?? {});
 
           return (
             <View key={c.id} style={styles.courseRow}>

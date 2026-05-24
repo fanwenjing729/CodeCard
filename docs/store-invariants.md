@@ -10,7 +10,7 @@
 
 | 常量 | 位置 | 当前值 | 作用 |
 |------|------|--------|------|
-| `XP_PER_LEVEL` | `src/lib/xp.ts:1` | `50` | **唯一源头**，改这一个数字，整个升级曲线跟着变 |
+| `XP_PER_LEVEL` | `src/lib/xp.ts:1` | `100` | **唯一源头**，改这一个数字，整个升级曲线跟着变 |
 
 ### 三个导出函数（全在 `src/lib/xp.ts`）
 
@@ -35,26 +35,26 @@ store 和 Screen 没有任何 import 依赖关系，各自独立引用 xp.ts。
 ### 关系
 
 ```
-xpForLevelStart(3) = XP_PER_LEVEL/2 * 2 * 3 = 25 * 6 = 150
-xpForNextLevel(3)  = 3 * 50 = 150
+xpForLevelStart(3) = XP_PER_LEVEL/2 * 2 * 3 = 50 * 6 = 300
+xpForNextLevel(3)  = 3 * 100 = 300
 ```
 
 - `xpForLevelStart(level) + xpForNextLevel(level) = xpForLevelStart(level + 1)`
 - `xpForLevelStart` 是 `calcLevel` 的逆运算求和公式
 
-### 调参效果（XP_PER_LEVEL = 50）
+### 调参效果（XP_PER_LEVEL = 100）
 
 | 等级 | 累计需要 | 本级到下级需要 |
 |------|----------|:--:|
-| Lv.1 | 0 | 50 |
-| Lv.2 | 50 | 100 |
-| Lv.3 | 150 | 150 |
-| Lv.4 | 300 | 200 |
-| Lv.5 | 500 | 250 |
-| Lv.10 | 2,250 | 500 |
-| Lv.20 | 9,500 | 1,000 |
+| Lv.1 | 0 | 100 |
+| Lv.2 | 100 | 200 |
+| Lv.3 | 300 | 300 |
+| Lv.4 | 600 | 400 |
+| Lv.5 | 1,000 | 500 |
+| Lv.10 | 4,500 | 1,000 |
+| Lv.20 | 19,000 | 2,000 |
 
-调成 `XP_PER_LEVEL = 100` 就是翻倍，调成 `30` 就是打六折，曲线形状不变。
+调成 `XP_PER_LEVEL = 200` 升级慢一倍，调成 `50` 升级快一倍，曲线形状不变。
 
 ---
 
@@ -62,10 +62,10 @@ xpForNextLevel(3)  = 3 * 50 = 150
 
 ```
 calcLevel(0)   = 1     ← 零 XP 就是 1 级
-calcLevel(49)  = 1     ← 不到 50 XP 都是 Lv.1
-calcLevel(50)  = 2     ← 刚好升级
-calcLevel(149) = 2     ← Lv.2→3 需要 100，累计 150 才升
-calcLevel(150) = 3
+calcLevel(99)  = 1     ← 不到 100 XP 都是 Lv.1
+calcLevel(100) = 2     ← 刚好升级
+calcLevel(299) = 2     ← Lv.2→3 需要 200，累计 300 才升
+calcLevel(300) = 3
 ```
 
 ---

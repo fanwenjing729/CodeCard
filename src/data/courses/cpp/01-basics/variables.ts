@@ -54,6 +54,35 @@ export const variablesNode: PathNode = {
       id: 'cpp-01-basics-var-c4',
       cardType: 'concept',
       content: {
+        title: '字面量 — 把值直接写在代码里',
+        body: [
+          '字面量 (Literal) 就是直接写在源码里的值。每个类型有对应的字面量写法：',
+          '',
+          'int 字面量 — 直接写数字：',
+          '  int x = 42;        // 42 是 int 字面量',
+          '  int y = -10;       // 负数前面加 -',
+          '',
+          'double 字面量 — 带小数点：',
+          '  double pi = 3.14;  // 3.14 是 double 字面量',
+          '  double e = 2.5e3;  // 科学计数法 = 2500.0',
+          '',
+          'char 字面量 — 单引号括一个字符：',
+          '  char c = \'A\';      // \'A\' 是 char 字面量',
+          '  char nl = \'\\n\';    // 转义字符也是字面量',
+          '',
+          'bool 字面量 — 只有两个值：',
+          '  bool ok = true;     // true 是 bool 字面量',
+          '  bool err = false;   // false 是 bool 字面量',
+          '',
+          '32 和 32.0 的区别：32 是 int 字面量，32.0 是 double 字面量。',
+          '编译器靠写法判断类型，不是靠"看起来像什么"。',
+        ].join('\n'),
+      },
+    },
+    {
+      id: 'cpp-01-basics-var-c5',
+      cardType: 'concept',
+      content: {
         title: '扩展整数类型',
         body: [
           '除了 int，C++ 还提供不同范围的整数类型：',
@@ -71,7 +100,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c5',
+      id: 'cpp-01-basics-var-c6',
       cardType: 'code',
       content: {
         title: 'sizeof 查看类型大小',
@@ -93,7 +122,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c6',
+      id: 'cpp-01-basics-var-c7',
       cardType: 'practice',
       content: {
         question: '在大多数平台上，sizeof(int) 的典型返回值是？',
@@ -104,7 +133,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c7',
+      id: 'cpp-01-basics-var-c8',
       cardType: 'concept',
       content: {
         title: '初始化与赋值',
@@ -126,7 +155,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c8',
+      id: 'cpp-01-basics-var-c9',
       cardType: 'practice',
       content: {
         question: '以下代码输出什么结果？\n\nint x;\ncout << x;',
@@ -137,7 +166,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c9',
+      id: 'cpp-01-basics-var-c10',
       cardType: 'practice',
       content: {
         question: '请补全声明一个双精度浮点数 price，值为 19.99 的语句：\n\n_____ price = 19.99;',
@@ -147,7 +176,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c10',
+      id: 'cpp-01-basics-var-c11',
       cardType: 'concept',
       content: {
         title: '标识符命名规则',
@@ -170,7 +199,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c11',
+      id: 'cpp-01-basics-var-c12',
       cardType: 'concept',
       content: {
         title: '常见 C++ 关键字',
@@ -194,7 +223,7 @@ export const variablesNode: PathNode = {
       },
     },
     {
-      id: 'cpp-01-basics-var-c12',
+      id: 'cpp-01-basics-var-c13',
       cardType: 'practice',
       content: {
         question: '以下哪个是合法的 C++ 变量名？',

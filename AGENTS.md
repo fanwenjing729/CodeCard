@@ -263,7 +263,7 @@ Two-level navigation: `WrongCards` (course list) → `WrongCards { courseId }` (
 - `\n` for line breaks, not `\r\n`
 - Answer comparison: `trim().toLowerCase()`
 - React keys: `card.id`
-- XP: level N needs N×50 XP（由 `src/lib/xp.ts` 的 `XP_PER_LEVEL` 控制，当前值 50），level 1 starts at 0
+- XP: level N needs N×100 XP（由 `src/lib/xp.ts` 的 `XP_PER_LEVEL` 控制，当前值 100），level 1 starts at 0
 - All imports use `@/` path alias
 - Colors: `import { Colors } from '@/theme'`, never hardcoded hex
 - `theme.ts` is single source of truth — change a token, entire app updates
