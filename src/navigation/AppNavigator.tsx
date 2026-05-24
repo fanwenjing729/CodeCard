@@ -24,7 +24,7 @@ export type RootStackParamList = {
   Node: { courseId: string; nodeId: string };
   Quiz: { courseId: string; nodeId: string };
   Login: undefined;
-  WrongCards: { courseId?: string } | undefined;
+  WrongCards: { courseId?: string; moduleId?: string } | undefined;
   Data: undefined;
 };
 

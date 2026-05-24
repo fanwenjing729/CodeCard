@@ -3,7 +3,6 @@ import { Colors } from '@/theme';
 import { useProgressStore } from '@/store/useProgressStore';
 import { courses } from '@/data/courses';
 import ScreenHeader from '@/components/shared/ScreenHeader';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import type { PracticeContent } from '@/types';
@@ -12,8 +11,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'WrongCards'>;
 
 interface WrongEntry {
   courseId: string;
-  courseTitle: string;
-  courseColor: string;
+  moduleId: string;
   module: string;
   cardId: string;
   content: PracticeContent;
@@ -29,8 +27,7 @@ function collectWrongCards(coursesState: Record<string, { wrongCards?: Record<st
         if (card.cardType === 'practice' && card.id in progress.wrongCards) {
           entries.push({
             courseId: course.id,
-            courseTitle: course.title,
-            courseColor: course.color,
+            moduleId: node.moduleId,
             module: node.module,
             cardId: card.id,
             content: card.content as PracticeContent,
@@ -42,99 +39,188 @@ function collectWrongCards(coursesState: Record<string, { wrongCards?: Record<st
   return entries;
 }
 
+// ===== Level 1: 课程列表 =====
+function CourseList({
+  entries,
+  onPress,
+}: {
+  entries: WrongEntry[];
+  onPress: (course: { id: string; title: string; color: string }) => void;
+}) {
+  type Summary = { id: string; title: string; color: string; count: number };
+  const map = new Map<string, Summary>();
+  for (const e of entries) {
+    const s = map.get(e.courseId);
+    if (s) { s.count++; } else {
+      const c = courses.find((c) => c.id === e.courseId);
+      map.set(e.courseId, { id: e.courseId, title: c?.title ?? '', color: c?.color ?? Colors.primary, count: 1 });
+    }
+  }
+  const summaries = [...map.values()];
+
+  return (
+    <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+      {summaries.map((c) => (
+        <TouchableOpacity
+          key={c.id}
+          style={styles.row}
+          onPress={() => onPress({ id: c.id, title: c.title, color: c.color })}
+          activeOpacity={0.7}
+        >
+          <View style={styles.rowLeft}>
+            <View style={[styles.dot, { backgroundColor: c.color }]} />
+            <Text style={styles.rowTitle}>{c.title}</Text>
+          </View>
+          <View style={styles.rowRight}>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{c.count}</Text>
+            </View>
+            <Text style={styles.arrow}>›</Text>
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+}
+
+// ===== Level 2: 模块列表 =====
+function ModuleList({
+  entries,
+  onPress,
+}: {
+  entries: WrongEntry[];
+  onPress: (moduleId: string, moduleName: string) => void;
+}) {
+  type Summary = { moduleId: string; module: string; count: number };
+  const map = new Map<string, Summary>();
+  for (const e of entries) {
+    const s = map.get(e.moduleId);
+    if (s) { s.count++; } else {
+      map.set(e.moduleId, { moduleId: e.moduleId, module: e.module, count: 1 });
+    }
+  }
+  const summaries = [...map.values()];
+
+  return (
+    <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+      {summaries.map((m) => (
+        <TouchableOpacity
+          key={m.moduleId}
+          style={styles.row}
+          onPress={() => onPress(m.moduleId, m.module)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.rowLeft}>
+            <Text style={styles.moduleIcon}>📦</Text>
+            <Text style={styles.rowTitle}>{m.module}</Text>
+          </View>
+          <View style={styles.rowRight}>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{m.count}</Text>
+            </View>
+            <Text style={styles.arrow}>›</Text>
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+}
+
+// ===== Level 3: 错题详情 =====
+function CardList({ entries }: { entries: WrongEntry[] }) {
+  return (
+    <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+      {entries.map((entry) => (
+        <View key={entry.cardId} style={styles.card}>
+          <Text style={styles.question}>{entry.content.question}</Text>
+          <View style={styles.answerRow}>
+            <Text style={styles.answerLabel}>答案 </Text>
+            <Text style={styles.answerText}>{entry.content.answer}</Text>
+          </View>
+          <Text style={styles.explanation}>{entry.content.explanation}</Text>
+        </View>
+      ))}
+      <Text style={styles.footer}>共 {entries.length} 道错题 · 答对后自动移除</Text>
+    </ScrollView>
+  );
+}
+
+// ===== Screen =====
 export default function WrongCardsScreen({ route, navigation }: Props) {
   const coursesState = useProgressStore((s) => s.courses);
-  const courseId = route.params?.courseId;
+  const { courseId, moduleId } = route.params ?? {};
 
   const allEntries = collectWrongCards(coursesState);
-  const filtered = courseId ? allEntries.filter((e) => e.courseId === courseId) : allEntries;
 
-  // 课程列表视图（无 courseId 时）
+  // Level 1 — 课程列表
   if (!courseId) {
-    const courseSummaries: { courseId: string; title: string; color: string; count: number; firstQ: string }[] = [];
-    for (const course of courses) {
-      const entries = allEntries.filter((e) => e.courseId === course.id);
-      if (entries.length === 0) continue;
-      courseSummaries.push({
-        courseId: course.id,
-        title: course.title,
-        color: course.color,
-        count: entries.length,
-        firstQ: entries[0].content.question,
-      });
-    }
-
     return (
       <View style={styles.container}>
         <ScreenHeader onBack={() => navigation.goBack()} backLabel="返回" title="错题集" variant="default" />
-
-        {courseSummaries.length === 0 ? (
+        {allEntries.length === 0 ? (
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyIcon}>🎯</Text>
             <Text style={styles.emptyTitle}>暂无错题</Text>
             <Text style={styles.emptySubtitle}>答题时选错会自动收录到这里</Text>
           </View>
         ) : (
-          <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-            {courseSummaries.map((c) => (
-              <TouchableOpacity
-                key={c.courseId}
-                style={styles.courseCard}
-                onPress={() => navigation.push('WrongCards', { courseId: c.courseId })}
-                activeOpacity={0.7}
-              >
-                <View style={styles.courseCardHeader}>
-                  <View style={[styles.courseDot, { backgroundColor: c.color }]} />
-                  <Text style={styles.courseCardTitle}>{c.title}</Text>
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countBadgeText}>{c.count}</Text>
-                  </View>
-                  <MaterialCommunityIcons name="chevron-right" size={16} color={Colors.arrow} style={styles.courseArrow} />
-                </View>
-                <Text style={styles.coursePreview} numberOfLines={1}>{c.firstQ}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <CourseList
+            entries={allEntries}
+            onPress={(course) => navigation.push('WrongCards', { courseId: course.id })}
+          />
         )}
       </View>
     );
   }
 
-  // 详情视图（有 courseId 时）
+  // Level 2 — 模块列表
+  const courseEntries = allEntries.filter((e) => e.courseId === courseId);
   const course = courses.find((c) => c.id === courseId);
+
+  if (!moduleId) {
+    return (
+      <View style={styles.container}>
+        <ScreenHeader
+          onBack={() => navigation.goBack()}
+          backLabel="错题集"
+          title={course?.title ?? ''}
+          variant="default"
+        />
+        {courseEntries.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <Text style={styles.emptyIcon}>✅</Text>
+            <Text style={styles.emptyTitle}>全部掌握</Text>
+            <Text style={styles.emptySubtitle}>这门课的错题都已消灭</Text>
+          </View>
+        ) : (
+          <ModuleList
+            entries={courseEntries}
+            onPress={(mid, mname) => navigation.push('WrongCards', { courseId, moduleId: mid })}
+          />
+        )}
+      </View>
+    );
+  }
+
+  // Level 3 — 错题详情
+  const moduleEntries = courseEntries.filter((e) => e.moduleId === moduleId);
 
   return (
     <View style={styles.container}>
       <ScreenHeader
         onBack={() => navigation.goBack()}
-        backLabel="错题集"
-        title={course?.title ?? ''}
+        backLabel={course?.title ?? '返回'}
+        title={moduleEntries[0]?.module ?? moduleId}
         variant="default"
       />
-
-      {filtered.length === 0 ? (
+      {moduleEntries.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyIcon}>✅</Text>
           <Text style={styles.emptyTitle}>全部掌握</Text>
-          <Text style={styles.emptySubtitle}>这门课的错题都已消灭</Text>
+          <Text style={styles.emptySubtitle}>此模块的错题都已消灭</Text>
         </View>
       ) : (
-        <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-          {filtered.map((entry) => (
-            <View key={entry.cardId} style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.moduleTag}>{entry.module}</Text>
-              </View>
-              <Text style={styles.question}>{entry.content.question}</Text>
-              <View style={styles.answerRow}>
-                <Text style={styles.answerLabel}>答案 </Text>
-                <Text style={styles.answerText}>{entry.content.answer}</Text>
-              </View>
-              <Text style={styles.explanation}>{entry.content.explanation}</Text>
-            </View>
-          ))}
-          <Text style={styles.footer}>共 {filtered.length} 道错题 · 答对后自动移除</Text>
-        </ScrollView>
+        <CardList entries={moduleEntries} />
       )}
     </View>
   );
@@ -173,29 +259,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 48,
   },
-  // ---- 课程列表 ----
-  courseCard: {
+  // ---- Level 1 & 2: 列表行 ----
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: Colors.bg,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
   },
-  courseCardHeader: {
+  rowLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    flex: 1,
   },
-  courseDot: {
+  dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 8,
+    marginRight: 10,
   },
-  courseCardTitle: {
+  moduleIcon: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  rowTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: Colors.text,
-    flex: 1,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   countBadge: {
     backgroundColor: Colors.warning,
@@ -205,34 +301,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 5,
+    marginRight: 8,
   },
   countBadgeText: {
     fontSize: 11,
     fontWeight: '700',
     color: Colors.bg,
   },
-  courseArrow: {
-    marginLeft: 8,
+  arrow: {
+    fontSize: 22,
+    color: Colors.arrow,
+    fontWeight: '300',
   },
-  coursePreview: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  // ---- 卡片详情 ----
+  // ---- Level 3: 卡片详情 ----
   card: {
     backgroundColor: Colors.bg,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  moduleTag: {
-    fontSize: 13,
-    color: Colors.textMuted,
   },
   question: {
     fontSize: 16,
