@@ -1,4 +1,4 @@
-export const XP_PER_LEVEL = 50;
+export const XP_PER_LEVEL = 100;
 
 export function calcLevel(totalXP: number): number {
   let level = 1;

@@ -68,7 +68,8 @@ export default function DataScreen() {
         <View style={styles.section}>
           {courses.map((c, i) => {
             const progress = coursesState[c.id];
-            const completed = Object.keys(progress?.completedCards ?? {}).length;
+            const completed = c.nodes.flatMap((n) => n.cards.map((card) => card.id))
+              .filter((id) => id in (progress?.completedCards ?? {})).length;
             return (
               <Fragment key={c.id}>
                 {i > 0 && <View style={styles.separator} />}

@@ -30,7 +30,8 @@ interface PersistedData {
   courses: Record<string, CourseProgress>;
 }
 
-function arrayToRecord(arr: string[]): Record<string, true> {
+function arrayToRecord(arr: string[] | Record<string, true>): Record<string, true> {
+  if (!Array.isArray(arr)) return arr as Record<string, true>;
   const rec: Record<string, true> = {};
   for (const item of arr) rec[item] = true;
   return rec;
@@ -103,7 +104,7 @@ const initialState: PersistedData = {
 function pickData(s: ProgressStore): PersistedData {
   return {
     version: CURRENT_VERSION,
-    global: { totalXP: s.global.totalXP, level: 1 },
+    global: { totalXP: s.global.totalXP, level: s.global.level },
     courses: s.courses,
   };
 }
@@ -224,9 +225,9 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
   hydrate: async () => {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) { set({ hydrated: true }); return; }
       const data = JSON.parse(raw);
-      if (!data || typeof data !== 'object') return;
+      if (!data || typeof data !== 'object') { set({ hydrated: true }); return; }
       const migrated = migrate(data);
       set({
         hydrated: true,
@@ -276,14 +277,18 @@ function saveIfDirty(data: PersistedData) {
   }
 }
 
-useProgressStore.subscribe((state) => {
+useProgressStore.subscribe(() => {
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => saveIfDirty(pickData(state)), 500);
+  saveTimer = setTimeout(() => saveIfDirty(pickData(useProgressStore.getState())), 500);
 });
 
 // App 进后台或退出时立即 flush
-AppState.addEventListener('change', (nextState) => {
-  if (nextState === 'inactive' || nextState === 'background') {
-    saveIfDirty(pickData(useProgressStore.getState()));
-  }
-});
+let _appStateRegistered = false;
+if (!_appStateRegistered) {
+  _appStateRegistered = true;
+  AppState.addEventListener('change', (nextState) => {
+    if (nextState === 'inactive' || nextState === 'background') {
+      saveIfDirty(pickData(useProgressStore.getState()));
+    }
+  });
+}

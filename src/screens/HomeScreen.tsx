@@ -25,8 +25,9 @@ export default function HomeScreen() {
       <View style={styles.list}>
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
-          const done = Object.keys(progress?.completedCards ?? {}).length;
-          const total = c.nodes.reduce((sum, n) => sum + n.cards.length, 0);
+          const allCardIds = c.nodes.flatMap((n) => n.cards.map((card) => card.id));
+          const done = allCardIds.filter((id) => id in (progress?.completedCards ?? {})).length;
+          const total = allCardIds.length;
           const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
           return (
