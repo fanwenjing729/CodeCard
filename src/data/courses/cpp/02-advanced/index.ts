@@ -1,4 +1,4 @@
 import type { CourseModule } from '@/types';
+import { pointerNode } from './pointer';
 
-// 进阶模块
-export const advancedModule: CourseModule = { moduleId: 'advanced', module: '进阶', nodes: [] };
+export const advancedModule: CourseModule = { moduleId: 'advanced', module: '进阶', nodes: [pointerNode] };
