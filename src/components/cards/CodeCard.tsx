@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   highlightedLine: {
-    backgroundColor: '#ffffff18',
+    backgroundColor: Colors.codeHighlightBg,
     marginHorizontal: -16,
     paddingHorizontal: 16,
     borderLeftWidth: 3,

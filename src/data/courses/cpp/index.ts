@@ -1,4 +1,4 @@
-import type { Course, CourseModule } from '@/types';
+import type { Course, CourseModule, ModuleMeta } from '@/types';
 import { basicsModule } from './01-basics';
 import { advancedModule } from './02-advanced';
 import { oopModule } from './03-oop';
@@ -15,11 +15,17 @@ const modules: CourseModule[] = [
   modernModule,
 ];
 
+const modulesMeta: ModuleMeta[] = modules.map(m => ({
+  moduleId: m.moduleId,
+  module: m.module,
+}));
+
 export const cppCourse: Course = {
   id: 'cpp',
   title: 'C++',
   icon: 'language-cpp',
   color: '#4a9eff',
   nodes: modules.flatMap(m => m.nodes),
-  moduleCount: modules.filter(m => m.nodes.length > 0).length,
+  moduleCount: modules.length,
+  modulesMeta,
 };

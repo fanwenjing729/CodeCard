@@ -18,6 +18,7 @@
 | `AAAAui-reference.md` | 所有页面/组件的 UI 参数速查（字号、间距、颜色取值、圆角） | 调整 UI 样式时对照参考 |
 | `store-invariants.md` | useProgressStore 改动的回归清单 & 核心不变量 | 改 store 逻辑前必读，改完对着清单自检 |
 | `architecture-timing-guide.md` | 架构问题分级：每个问题的触发条件、改造方案、改动量 | 考虑"什么时候做某个架构改进"时对照决策 |
+| `architecture-trigger-guide.md` | 3 项短期架构改进的精确实施指南（测试/原子写入/崩溃上报） | 触发条件满足时直接照做，不用再分析 |
 | `branch-path-design.md` | 练习卡答对/答错导向不同结尾的分支路径设计 | 实现分支学习路径时参考 |
 | `cpp-course-design.md` | C++ 课程内容设计（模块规划、卡片分布） | 给 C++ 课程加内容时参考结构 |
 | `content-writing-guide.md` | 课程内容创作指南 — 抽象概念教学原则 + 卡片设计自检清单 | **写新节点前必读** |
@@ -37,4 +38,4 @@
 3. **写新课程内容** → `docs/content-writing-guide.md` → `docs/cpp-course-design.md`
 4. **改 UI** → `AGENTS.md` + `docs/AAAAui-reference.md`
 5. **改 store** → `docs/store-invariants.md`
-6. **规划长期改进** → `docs/architecture-timing-guide.md` → `docs/future-features.md`
+6. **规划长期改进** → `docs/architecture-timing-guide.md` → `docs/architecture-trigger-guide.md` → `docs/future-features.md`

@@ -200,6 +200,8 @@ QuizScreen uses QuestionRenderer directly.
 
 ### Module IDs
 
+`ModuleId = string`（`src/types/index.ts:18`），每门课自定义。以 C++ 为例：
+
 | Folder | moduleId | module |
 |--------|----------|--------|
 | 01-basics | `basics` | 基础 |
@@ -209,7 +211,9 @@ QuizScreen uses QuestionRenderer directly.
 | 05-generics | `generics` | 泛型 |
 | 06-modern | `modern` | 现代 C++ |
 
-### Card ID: `{courseId}-{moduleNum}-{topic}-c{seq}`
+其他课程用各自的 moduleId 体系（如数据结构用 `linear`/`tree`/`graph`/`search`/`sort`/`advanced`），新增课程自由定义。
+
+### Card ID: `{courseId}-{moduleId}-{topic}-c{seq}`
 
 ### Card templates
 
@@ -259,7 +263,7 @@ Two-level navigation: `WrongCards` (course list) → `WrongCards { courseId }` (
 - `\n` for line breaks, not `\r\n`
 - Answer comparison: `trim().toLowerCase()`
 - React keys: `card.id`
-- XP: level N needs N×100 XP, level 1 starts at 0
+- XP: level N needs N×50 XP（由 `src/lib/xp.ts` 的 `XP_PER_LEVEL` 控制，当前值 50），level 1 starts at 0
 - All imports use `@/` path alias
 - Colors: `import { Colors } from '@/theme'`, never hardcoded hex
 - `theme.ts` is single source of truth — change a token, entire app updates

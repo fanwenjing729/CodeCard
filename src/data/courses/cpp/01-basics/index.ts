@@ -10,6 +10,9 @@ import { conditionalsNode } from './conditionals';
 import { forLoopNode } from './for-loop';
 import { whileLoopNode } from './while-loop';
 import { breakContinueNode } from './break-continue';
+import { arrayNode } from './array';
+import { array2dNode } from './array-2d';
+import { functionNode } from './function';
 
 const nodes: PathNode[] = [
   helloWorldNode,
@@ -23,6 +26,9 @@ const nodes: PathNode[] = [
   forLoopNode,
   whileLoopNode,
   breakContinueNode,
+  arrayNode,
+  array2dNode,
+  functionNode,
 ];
 
-export const basicsModule: CourseModule = { moduleId: 'basics', nodes };
+export const basicsModule: CourseModule = { moduleId: 'basics', module: '基础', nodes };

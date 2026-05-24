@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import type { DimensionValue } from 'react-native';
 import { Colors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -164,7 +165,7 @@ export default function ProgressScreen() {
                   <View
                     style={[
                       styles.courseBarFill,
-                      { width: `${pct}%` as any, backgroundColor: c.color },
+                      { width: `${pct}%` as DimensionValue, backgroundColor: c.color },
                     ]}
                   />
                 </View>

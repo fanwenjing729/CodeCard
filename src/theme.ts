@@ -26,6 +26,7 @@ export const Colors = {
   codeBg: '#1e1e1e',
   codeText: '#d4d4d4',
   codeLineNum: '#888',
+  codeHighlightBg: '#ffffff18',
   correctBg: '#d4edda',
   wrongBg: '#f8d7da',
   progressBarBg: '#e8edf2',

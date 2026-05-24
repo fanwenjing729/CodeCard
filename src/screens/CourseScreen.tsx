@@ -25,7 +25,12 @@ export default function CourseScreen({ route, navigation }: Props) {
   const themeColor = course?.color ?? Colors.primary;
 
   const modules = useMemo(() => {
-    return course ? groupByModule(course.nodes) : [];
+    if (!course) return [];
+    const nodeMap = Object.fromEntries(groupByModule(course.nodes));
+    return course.modulesMeta.map(m => ({
+      ...m,
+      nodes: nodeMap[m.moduleId] ?? [],
+    }));
   }, [course]);
 
   const completedCards = useMemo(() => {
@@ -42,8 +47,7 @@ export default function CourseScreen({ route, navigation }: Props) {
       />
 
       <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 32 }]}>
-        {modules.map(([moduleId, nodes]) => {
-          const moduleName = nodes[0]?.module ?? moduleId;
+        {modules.map(({ moduleId, module: moduleName, nodes }) => {
           const allCardIds = nodes.flatMap((n) => n.cards.map((c) => c.id));
           const total = allCardIds.length;
           const done = allCardIds.filter((id) => id in completedCards).length;
@@ -64,7 +68,7 @@ export default function CourseScreen({ route, navigation }: Props) {
               subtitle={subtitle}
               status={isDone ? 'done' : isStarted ? 'started' : 'pending'}
               themeColor={themeColor}
-              onPress={() => navigation.navigate('Module', { courseId, moduleId })}
+              onPress={nodes.length > 0 ? () => navigation.navigate('Module', { courseId, moduleId }) : undefined}
             />
           );
         })}

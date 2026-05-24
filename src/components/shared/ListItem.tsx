@@ -6,7 +6,7 @@ interface Props {
   subtitle: string;
   status: 'pending' | 'started' | 'done';
   themeColor: string;
-  onPress: () => void;
+  onPress?: () => void;
 }
 
 export default function ListItem({ title, subtitle, status, themeColor, onPress }: Props) {
@@ -20,7 +20,8 @@ export default function ListItem({ title, subtitle, status, themeColor, onPress 
         isDone && { borderColor: themeColor + '40', backgroundColor: themeColor + '08' },
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={onPress ? 0.7 : 1}
+      disabled={!onPress}
     >
       <View style={styles.left}>
         <View

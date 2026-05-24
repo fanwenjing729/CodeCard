@@ -3,7 +3,7 @@ import { Colors } from '@/theme';
 import type { PracticeContent } from '@/types';
 
 export function normalize(s: string): string {
-  return s.trim().toLowerCase();
+  return s.trim().toLowerCase().replace(/\s+/g, '');
 }
 
 export function isCorrectAnswer(

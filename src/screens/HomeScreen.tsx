@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import type { DimensionValue } from 'react-native';
 import { Colors, FontSize, Radius, Spacing } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,7 +38,7 @@ export default function HomeScreen() {
             >
               <View style={[styles.iconBox, { backgroundColor: c.color }]}>
                 {c.icon ? (
-                  <MaterialCommunityIcons name={c.icon as any} size={26} color={Colors.textInverse} />
+                  <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={26} color={Colors.textInverse} />
                 ) : (
                   <Text style={styles.iconText}>{c.title[0]}</Text>
                 )}
@@ -52,7 +53,7 @@ export default function HomeScreen() {
                 {total > 0 && (
                   <View style={styles.progressRow}>
                     <View style={styles.miniBar}>
-                      <View style={[styles.miniBarFill, { width: `${pct}%` as any, backgroundColor: c.color }]} />
+                      <View style={[styles.miniBarFill, { width: `${pct}%` as DimensionValue, backgroundColor: c.color }]} />
                     </View>
                     <Text style={styles.pct}>{pct}%</Text>
                   </View>

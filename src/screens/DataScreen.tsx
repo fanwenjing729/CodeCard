@@ -79,7 +79,7 @@ export default function DataScreen() {
                 >
                   <View style={[styles.rowIconBox, { backgroundColor: c.color }]}>
                     {c.icon ? (
-                      <MaterialCommunityIcons name={c.icon as any} size={18} color={Colors.textInverse} />
+                      <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={18} color={Colors.textInverse} />
                     ) : (
                       <Text style={styles.rowIconText}>{c.title[0]}</Text>
                     )}

@@ -1,0 +1,85 @@
+import type { ScopeCodeScenario } from '@/types';
+
+export const arrayMemoryScenario: ScopeCodeScenario = {
+  id: 'array-memory',
+  title: '数组内存布局',
+  totalSteps: 5,
+  sourceCode: [
+    '// 1. 声明：连续分配 5 个 int',
+    'int arr[5] = {1, 2, 3, 4, 5};',
+    '',
+    '// 2. 索引访问：arr[0]',
+    'std::cout << arr[0];',
+    '',
+    '// 3. 索引访问：arr[2]',
+    'std::cout << arr[2];',
+    '',
+    '// 4. 越界访问：arr[5]',
+    'std::cout << arr[5];  // 危险！',
+  ].join('\n'),
+  cellsPerRow: 10,
+  totalRows: 3,
+  steps: [
+    {
+      label: '声明数组',
+      highlightLines: [1],
+      allocations: [
+        { name: 'arr[0]', type: 'int', typeSize: 4, value: '1', color: '#4a9eff' },
+        { name: 'arr[1]', type: 'int', typeSize: 4, value: '2', color: '#4a9eff' },
+        { name: 'arr[2]', type: 'int', typeSize: 4, value: '3', color: '#4a9eff' },
+        { name: 'arr[3]', type: 'int', typeSize: 4, value: '4', color: '#4a9eff' },
+        { name: 'arr[4]', type: 'int', typeSize: 4, value: '5', color: '#4a9eff' },
+      ],
+      annotation: '5 个 int 在内存中连续排列，共 5×4=20 字节。索引从 0 开始。',
+    },
+    {
+      label: '访问 arr[0]',
+      highlightLines: [4],
+      allocations: [
+        { name: 'arr[0]', type: 'int', typeSize: 4, value: '1', color: '#2ed573' },
+        { name: 'arr[1]', type: 'int', typeSize: 4, value: '2', color: '#4a9eff' },
+        { name: 'arr[2]', type: 'int', typeSize: 4, value: '3', color: '#4a9eff' },
+        { name: 'arr[3]', type: 'int', typeSize: 4, value: '4', color: '#4a9eff' },
+        { name: 'arr[4]', type: 'int', typeSize: 4, value: '5', color: '#4a9eff' },
+      ],
+      annotation: 'arr[0] = 起始地址 + 0×4，即第一个元素',
+    },
+    {
+      label: '访问 arr[2]',
+      highlightLines: [7],
+      allocations: [
+        { name: 'arr[0]', type: 'int', typeSize: 4, value: '1', color: '#4a9eff' },
+        { name: 'arr[1]', type: 'int', typeSize: 4, value: '2', color: '#4a9eff' },
+        { name: 'arr[2]', type: 'int', typeSize: 4, value: '3', color: '#2ed573' },
+        { name: 'arr[3]', type: 'int', typeSize: 4, value: '4', color: '#4a9eff' },
+        { name: 'arr[4]', type: 'int', typeSize: 4, value: '5', color: '#4a9eff' },
+      ],
+      annotation: 'arr[2] = 起始地址 + 2×4，跳过前两个元素（8 字节）',
+    },
+    {
+      label: '连续内存：无空隙',
+      highlightLines: [1],
+      allocations: [
+        { name: 'arr[0]', type: 'int', typeSize: 4, value: '1', color: '#4a9eff' },
+        { name: 'arr[1]', type: 'int', typeSize: 4, value: '2', color: '#4a9eff' },
+        { name: 'arr[2]', type: 'int', typeSize: 4, value: '3', color: '#4a9eff' },
+        { name: 'arr[3]', type: 'int', typeSize: 4, value: '4', color: '#4a9eff' },
+        { name: 'arr[4]', type: 'int', typeSize: 4, value: '5', color: '#4a9eff' },
+      ],
+      annotation: '5 个 int × 4 字节 = 20 字节连续空间。元素之间没有空隙，地址一个紧挨一个。',
+    },
+    {
+      label: '越界访问 arr[5]',
+      highlightLines: [10],
+      allocations: [
+        { name: 'arr[0]', type: 'int', typeSize: 4, value: '1', color: '#4a9eff' },
+        { name: 'arr[1]', type: 'int', typeSize: 4, value: '2', color: '#4a9eff' },
+        { name: 'arr[2]', type: 'int', typeSize: 4, value: '3', color: '#4a9eff' },
+        { name: 'arr[3]', type: 'int', typeSize: 4, value: '4', color: '#4a9eff' },
+        { name: 'arr[4]', type: 'int', typeSize: 4, value: '5', color: '#4a9eff' },
+        { name: '???', type: '???', typeSize: 4, value: '???', color: '#ff4757' },
+      ],
+      annotation: 'arr[5] 超出数组边界！访问到未知内存 → 未定义行为',
+    },
+  ],
+};

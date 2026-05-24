@@ -1,7 +1,13 @@
 // ===== 学科层 =====
 export interface CourseModule {
   moduleId: string;
+  module: string;
   nodes: PathNode[];
+}
+
+export interface ModuleMeta {
+  moduleId: string;
+  module: string;
 }
 
 export interface Course {
@@ -11,6 +17,7 @@ export interface Course {
   color: string;
   nodes: PathNode[];
   moduleCount: number;
+  modulesMeta: ModuleMeta[];
   prerequisites?: string[];
 }
 

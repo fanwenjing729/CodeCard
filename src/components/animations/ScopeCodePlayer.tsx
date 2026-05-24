@@ -46,7 +46,7 @@ export default function ScopeCodePlayer({ scenario, step }: Props) {
                 styles.cell,
                 {
                   backgroundColor: alloc.color,
-                  width: alloc.typeSize * 14,
+                  width: alloc.typeSize * 12,
                 },
               ]}
             >
@@ -136,22 +136,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   cell: {
-    height: 40,
-    borderRadius: 6,
-    marginHorizontal: 2,
+    height: 38,
+    borderRadius: 5,
+    marginHorizontal: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 28,
-    paddingHorizontal: 4,
+    minWidth: 26,
+    paddingHorizontal: 3,
   },
   cellName: {
     color: Colors.textInverse,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   cellVal: {
     color: Colors.textInverseSecondary,
-    fontSize: 10,
+    fontSize: 9,
   },
   annotationBox: {
     backgroundColor: Colors.bgTertiary,

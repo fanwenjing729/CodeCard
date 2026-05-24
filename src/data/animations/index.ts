@@ -8,6 +8,8 @@ import { switchFallthroughScenario } from './scenarios/switchFallthrough';
 import { forLoopScenario } from './scenarios/forLoop';
 import { breakContinueScenario } from './scenarios/breakContinue';
 import { whileDoWhileScenario } from './scenarios/whileDoWhile';
+import { arrayMemoryScenario } from './scenarios/arrayMemory';
+import { array2dMemoryScenario } from './scenarios/array2dMemory';
 import MemoryBox from '@/components/animations/MemoryBox';
 import ScopeCodePlayer from '@/components/animations/ScopeCodePlayer';
 import BranchPlayer from '@/components/animations/BranchPlayer';
@@ -55,6 +57,14 @@ export const animationRegistry: Record<string, AnimationEntry> = {
   'while-vs-dowhile': {
     scenario: whileDoWhileScenario,
     Component: WhileDoWhilePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'array-memory': {
+    scenario: arrayMemoryScenario,
+    Component: ScopeCodePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'array-2d-memory': {
+    scenario: array2dMemoryScenario,
+    Component: ScopeCodePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
   },
   // Lottie 注册示例:
   // 'loop-flow': {
