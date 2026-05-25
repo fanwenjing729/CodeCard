@@ -46,7 +46,10 @@
       "Bash(echo \"邮箱: $\\(git config --global user.email 2>/dev/null || echo '未设置'\\)\")",
       "Bash(where python *)",
       "Read(//usr/**)",
-      "Read(//c/Users/**)"
+      "Read(//c/Users/**)",
+      "Bash(sed -i \"s/courses\\\\.find\\(\\(c\\) => c\\\\.id === view\\\\.courseId\\)/getCourse\\(view.courseId\\)/g\" src/screens/DataScreen.tsx)",
+      "Bash(sed -i \"s/courses\\\\.find\\(\\(c\\) => c\\\\.id === courseId\\)/getCourse\\(courseId\\)/g\" src/screens/DataScreen.tsx)",
+      "Bash(sed -i \"s/courses\\\\.find\\(\\(c\\) => c\\\\.id === v\\\\.courseId\\)/getCourse\\(v.courseId\\)/g\" src/screens/DataScreen.tsx)"
     ]
   }
 }

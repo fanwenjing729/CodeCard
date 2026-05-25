@@ -31,9 +31,15 @@ export default function renderCard({
       return <CodeCard key={card.id} content={card.content} />;
     case 'animation': {
       const scenario = getAnimScenario(card.content.animationId);
-      if (!scenario) return null;
+      if (!scenario) {
+        console.warn(`[renderCard] 动画场景未注册: animationId="${card.content.animationId}"`);
+        return null;
+      }
       const AnimComponent = getAnimComponent(card.content.animationId);
-      if (!AnimComponent) return null;
+      if (!AnimComponent) {
+        console.warn(`[renderCard] 动画组件未注册: animationId="${card.content.animationId}"`);
+        return null;
+      }
       return React.createElement(AnimComponent, { key: card.id, scenario, step: animStep });
     }
     case 'practice':

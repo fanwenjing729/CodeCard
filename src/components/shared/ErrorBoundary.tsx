@@ -20,7 +20,11 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error) {
     console.error('[CodeCard] ErrorBoundary caught:', error);
-    useProgressStore.getState().flush();
+    try {
+      useProgressStore.getState().flush();
+    } catch (flushError) {
+      console.error('[CodeCard] ErrorBoundary flush failed:', flushError);
+    }
   }
 
   handleRetry = () => {

@@ -6,9 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { courses } from '@/data/courses';
 import { useProgressStore } from '@/store/useProgressStore';
 import { countNodeCards } from '@/lib/courseProgress';
+import { useCourses } from '@/lib/useCourses';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -16,6 +16,7 @@ export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const coursesProgress = useProgressStore((s) => s.courses);
+  const courses = useCourses();
 
   return (
     <View style={styles.container}>

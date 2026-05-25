@@ -1,4 +1,10 @@
 import type { CourseModule } from '@/types';
+import { classIntroNode } from './class-intro';
 
-// 面向对象模块
-export const oopModule: CourseModule = { moduleId: 'oop', module: '面向对象', nodes: [] };
+export const oopModule: CourseModule = {
+  moduleId: 'oop',
+  module: '面向对象',
+  nodes: [
+    classIntroNode,
+  ],
+};

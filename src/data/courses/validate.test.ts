@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { courses } from './index';
-import type { Card, Course, PathNode } from '@/types';
+import type { Card, Course, PathNode, PracticeContent } from '@/types';
 
 // ─── helper ────────────────────────────────────────────────
 function allCards(): { courseId: string; nodeId: string; card: Card }[] {
@@ -114,16 +114,17 @@ describe('card fields', () => {
   it('concept cards have title and body', () => {
     const cards = allCards().filter((c) => c.card.cardType === 'concept');
     for (const { card } of cards) {
-      expect(typeof card.content.title).toBe('string');
-      expect(card.content.title.length).toBeGreaterThan(0);
-      expect(typeof (card.content as any).body).toBe('string');
+      const c = card.content as { title: string; body: string };
+      expect(typeof c.title).toBe('string');
+      expect(c.title.length).toBeGreaterThan(0);
+      expect(typeof c.body).toBe('string');
     }
   });
 
   it('code cards have title, code, language, highlights', () => {
     const cards = allCards().filter((c) => c.card.cardType === 'code');
     for (const { card } of cards) {
-      const c = card.content as any;
+      const c = card.content as { title: string; code: string; language: string; highlights: number[] };
       expect(typeof c.title).toBe('string');
       expect(typeof c.code).toBe('string');
       expect(typeof c.language).toBe('string');
@@ -134,15 +135,16 @@ describe('card fields', () => {
   it('animation cards have animationId', () => {
     const cards = allCards().filter((c) => c.card.cardType === 'animation');
     for (const { card } of cards) {
-      expect(typeof card.content.animationId).toBe('string');
-      expect(card.content.animationId.length).toBeGreaterThan(0);
+      const c = card.content as { animationId: string };
+      expect(typeof c.animationId).toBe('string');
+      expect(c.animationId.length).toBeGreaterThan(0);
     }
   });
 
   it('practice cards have question, answer, explanation', () => {
     const cards = allCards().filter((c) => c.card.cardType === 'practice');
     for (const { card } of cards) {
-      const c = card.content as any;
+      const c = card.content as PracticeContent;
       expect(typeof c.question).toBe('string');
       expect(typeof c.answer).toBe('string');
       expect(typeof c.explanation).toBe('string');
@@ -152,20 +154,22 @@ describe('card fields', () => {
 
   it('choice practice cards have options array with at least 2 items', () => {
     const cards = allCards().filter(
-      (c) => c.card.cardType === 'practice' && c.card.content.questionType === 'choice',
+      (c) => c.card.cardType === 'practice' && (c.card.content as PracticeContent).questionType === 'choice',
     );
     for (const { card } of cards) {
-      expect(Array.isArray(card.content.options)).toBe(true);
-      expect(card.content.options!.length).toBeGreaterThanOrEqual(2);
+      const c = card.content as PracticeContent;
+      expect(Array.isArray(c.options)).toBe(true);
+      expect(c.options!.length).toBeGreaterThanOrEqual(2);
     }
   });
 
-  it('fill practice cards have no options or empty options', () => {
+  it('fill practice cards have no options', () => {
     const cards = allCards().filter(
-      (c) => c.card.cardType === 'practice' && c.card.content.questionType === 'fill',
+      (c) => c.card.cardType === 'practice' && (c.card.content as PracticeContent).questionType === 'fill',
     );
     for (const { card } of cards) {
-      const hasOpts = card.content.options != null && card.content.options.length > 0;
+      const c = card.content as PracticeContent;
+      const hasOpts = !!(c.options && c.options.length > 0);
       expect(hasOpts).toBe(false);
     }
   });

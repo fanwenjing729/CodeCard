@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { Colors } from '@/theme';
 import { useProgressStore } from '@/store/useProgressStore';
-import { courses } from '@/data/courses';
+import { getCourse, getCourses, useCourse } from '@/lib/useCourses';
 import ScreenHeader from '@/components/shared/ScreenHeader';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
@@ -19,7 +19,7 @@ interface WrongEntry {
 
 function collectWrongCards(coursesState: Record<string, { wrongCards?: Record<string, true> }>): WrongEntry[] {
   const entries: WrongEntry[] = [];
-  for (const course of courses) {
+  for (const course of getCourses()) {
     const progress = coursesState[course.id];
     if (!progress?.wrongCards || Object.keys(progress.wrongCards).length === 0) continue;
     for (const node of course.nodes) {
@@ -52,7 +52,7 @@ function CourseList({
   for (const e of entries) {
     const s = map.get(e.courseId);
     if (s) { s.count++; } else {
-      const c = courses.find((c) => c.id === e.courseId);
+      const c = getCourse(e.courseId);
       map.set(e.courseId, { id: e.courseId, title: c?.title ?? '', color: c?.color ?? Colors.primary, count: 1 });
     }
   }
@@ -175,7 +175,7 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
 
   // Level 2 — 模块列表
   const courseEntries = allEntries.filter((e) => e.courseId === courseId);
-  const course = courses.find((c) => c.id === courseId);
+  const course = useCourse(courseId);
 
   if (!moduleId) {
     return (

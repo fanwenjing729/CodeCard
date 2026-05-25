@@ -31,6 +31,6 @@ export const cppCourse: Course = {
   icon: 'language-cpp',
   color: '#4a9eff',
   nodes: modules.flatMap(m => m.nodes),
-  moduleCount: modules.length,
+  moduleCount: modules.filter(m => m.nodes.length > 0).length,
   modulesMeta,
 };

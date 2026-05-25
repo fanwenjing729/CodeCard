@@ -1,4 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('react-native', () => ({
+  StyleSheet: { create: (styles: Record<string, any>) => styles },
+  Text: 'Text' as any,
+  View: 'View' as any,
+  TouchableOpacity: 'TouchableOpacity' as any,
+  TextInput: 'TextInput' as any,
+  ScrollView: 'ScrollView' as any,
+}));
+
 import { normalize, isCorrectAnswer } from './QuestionRenderer';
 
 // ─── normalize ──────────────────────────────────────────────
@@ -39,7 +49,7 @@ describe('normalize', () => {
     expect(normalize('a<b')).toBe('a<b');
   });
 
-  it('handles mixed spaces in fill answers (e.g. code snippets)', () => {
+  it('handles mixed spaces in code answers', () => {
     expect(normalize('int  main')).toBe('intmain');
     expect(normalize('std::cout')).toBe('std::cout');
   });
@@ -79,7 +89,6 @@ describe('isCorrectAnswer', () => {
   });
 
   it('handles C++ code snippet answers', () => {
-    expect(isCorrectAnswer('std::string', 'std::string')).toBe(true);
     expect(isCorrectAnswer('std::string', 'std::string')).toBe(true);
     expect(isCorrectAnswer('s.length()', 's.length()')).toBe(true);
     expect(isCorrectAnswer('\n', '\\n')).toBe(false);

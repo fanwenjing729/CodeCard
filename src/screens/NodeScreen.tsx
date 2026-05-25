@@ -3,10 +3,10 @@ import { Colors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
-import { courses } from '@/data/courses';
 import renderCard from '@/components/cards/renderCard';
 import { useProgressStore } from '@/store/useProgressStore';
 import { useNodeScreen } from './useNodeScreen';
+import { useCourse } from '@/lib/useCourses';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Node'>;
 
@@ -16,9 +16,26 @@ export default function NodeScreen({ route, navigation }: Props) {
     (s) => s.courses[courseId]?.nodePositions[nodeId] ?? 0,
   );
 
-  const course = courses.find((c) => c.id === courseId);
-  const node = course?.nodes.find((n) => n.id === nodeId);
-  const cards = node?.cards ?? [];
+  const course = useCourse(courseId);
+  if (!course) {
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyText}>课程未找到</Text>
+      </View>
+    );
+  }
+
+  const node = course.nodes.find((n) => n.id === nodeId);
+  if (!node) {
+    console.warn(`[NodeScreen] 节点未找到: nodeId="${nodeId}" courseId="${courseId}"`);
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyText}>节点未找到</Text>
+      </View>
+    );
+  }
+
+  const cards = node.cards;
 
   const {
     card,
@@ -49,7 +66,7 @@ export default function NodeScreen({ route, navigation }: Props) {
       <ScreenHeader
         onBack={() => navigation.goBack()}
         backLabel="返回"
-        center={<Text style={styles.module}>{node?.module}</Text>}
+        center={<Text style={styles.module}>{node.module}</Text>}
         right={<Text style={styles.progress}>{index + 1} / {cards.length}</Text>}
         variant="compact"
       />

@@ -4,17 +4,17 @@ import { Colors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
-import { courses } from '@/data/courses';
 import { useProgressStore } from '@/store/useProgressStore';
 import { countCards } from '@/lib/courseProgress';
 import ListItem from '@/components/shared/ListItem';
+import { useCourse } from '@/lib/useCourses';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Module'>;
 
 export default function ModuleScreen({ route, navigation }: Props) {
   const { courseId, moduleId } = route.params;
   const coursesProgress = useProgressStore((s) => s.courses);
-  const course = courses.find((c) => c.id === courseId);
+  const course = useCourse(courseId);
   const themeColor = course?.color ?? Colors.primary;
 
   const completedCards = useMemo(() => {
@@ -25,7 +25,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
     return (course?.nodes ?? []).filter((n) => n.moduleId === moduleId);
   }, [course, moduleId]);
 
-  const moduleName = nodes[0]?.module ?? moduleId;
+  const moduleName = nodes[0]?.module ?? '未知模块';
 
   return (
     <View style={styles.container}>

@@ -5,10 +5,10 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import type { PracticeContent } from '@/types';
 import ScreenHeader from '@/components/shared/ScreenHeader';
-import { courses } from '@/data/courses';
 import { useProgressStore, XP_PER_PRACTICE } from '@/store/useProgressStore';
 import QuestionRenderer, { isCorrectAnswer } from '@/components/cards/QuestionRenderer';
 import { quizReducer, type QuizState } from './quizReducer';
+import { useCourse } from '@/lib/useCourses';
 
 export type { QuizState, QuizAction } from './quizReducer';
 
@@ -20,7 +20,7 @@ export default function QuizScreen({ route, navigation }: Props) {
   const saveQuizScore = useProgressStore((s) => s.saveQuizScore);
   const addWrongCard = useProgressStore((s) => s.addWrongCard);
   const removeWrongCard = useProgressStore((s) => s.removeWrongCard);
-  const course = courses.find((c) => c.id === courseId);
+  const course = useCourse(courseId);
   const node = course?.nodes.find((n) => n.id === nodeId);
 
   const allNodeCards = node?.cards ?? [];

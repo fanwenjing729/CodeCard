@@ -10,7 +10,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useProgressStore } from '@/store/useProgressStore';
 import { countNodeCards } from '@/lib/courseProgress';
 import { xpForLevelStart, xpForNextLevel } from '@/lib/xp';
-import { courses } from '@/data/courses';
+import { useCourses } from '@/lib/useCourses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 
 // ---- 环形进度条 ----
@@ -74,6 +74,7 @@ export default function ProgressScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const global = useProgressStore((s) => s.global);
   const coursesProgress = useProgressStore((s) => s.courses);
+  const courses = useCourses();
 
   const totalWrongCards = useMemo(
     () =>

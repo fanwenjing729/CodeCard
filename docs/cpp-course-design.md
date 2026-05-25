@@ -920,3 +920,33 @@
 | 已实现节点 | 26              | 65       |
 | 已实现卡片 | 214             | ~416     |
 | 未实现节点 | 39              | —        |
+
+---
+
+## 架构约定：防止导入链单点故障
+
+### 问题
+
+所有课程节点通过 3 层静态 `import` 串联：`courses/index.ts` → `cpp/index.ts` → 模块 index.ts → 节点文件。任意一个节点文件有语法错误，整个 `courses` 数组导出失败，所有课程页崩溃。
+
+### 解决方案
+
+课程数据通过 `src/lib/useCourses.ts` 访问层暴露，不再直接 import `courses`：
+
+```
+屏幕组件 → useCourse(id) / useCourses()  ←  React hook
+工具函数 → getCourse(id) / getCourses()  ←  同步函数
+          ↓
+    src/lib/useCourses.ts（唯一访问点）
+          ↓
+    src/data/courses/index.ts（静态导出）
+```
+
+**规则**：
+- 所有消费方通过 `@/lib/useCourses` 获取课程数据，**禁止**直接 `import { courses } from '@/data/courses'`
+- 新增第二门课程时，只需改 `useCourses.ts` 内部实现——将静态 import 改为动态 `import()` + try-catch，对外 API 不变
+- `validate.test.ts` 是编译期的安全网——提交前运行即可捕获断裂的 import 链
+
+### 影响范围
+
+数据层 `courses/index.ts` 仍是静态导出。当切换到多课程动态加载时，8 个消费方屏幕不需要任何改动——只改 `useCourses.ts` 一个文件。

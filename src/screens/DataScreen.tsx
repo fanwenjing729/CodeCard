@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useProgressStore, XP_PER_CARD, XP_PER_PRACTICE } from '@/store/useProgressStore';
-import { courses } from '@/data/courses';
+import { useCourses, getCourse, getCourses } from '@/lib/useCourses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import type { CourseModule, PathNode } from '@/types';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -23,7 +23,7 @@ type DataView =
 
 function buildCardTypeMap() {
   const map = new Map<string, 'concept' | 'code' | 'animation' | 'practice'>();
-  for (const c of courses) {
+  for (const c of getCourses()) {
     for (const n of c.nodes) {
       for (const card of n.cards) {
         map.set(card.id, card.cardType);
@@ -58,6 +58,7 @@ export default function DataScreen() {
   const flush = useProgressStore((s) => s.flush);
 
   const [view, setView] = useState<DataView>({ level: 'courses' });
+  const courses = useCourses();
 
   const cardTypeMap = useMemo(() => buildCardTypeMap(), []);
 
@@ -80,7 +81,7 @@ export default function DataScreen() {
 
   const headerTitle = (() => {
     if (view.level === 'courses') return '数据管理';
-    const c = courses.find((c) => c.id === view.courseId);
+    const c = getCourse(view.courseId);
     if (view.level === 'modules') return c?.title ?? '';
     return c?.modulesMeta.find((m) => m.moduleId === view.moduleId)?.module ?? '';
   })();
@@ -88,7 +89,7 @@ export default function DataScreen() {
   const headerBackLabel = (() => {
     if (view.level === 'courses') return '设置';
     if (view.level === 'modules') return '数据管理';
-    return courses.find((c) => c.id === view.courseId)?.title ?? '';
+    return getCourse(view.courseId)?.title ?? '';
   })();
 
   // ---- reset handlers ----
@@ -101,7 +102,7 @@ export default function DataScreen() {
   };
 
   const handleResetModule = (courseId: string, moduleId: string, moduleName: string) => {
-    const course = courses.find((c) => c.id === courseId);
+    const course = getCourse(courseId);
     if (!course) return;
     const nodes = course.nodes.filter((n) => n.moduleId === moduleId);
     const cardIds = nodes.flatMap((n) => n.cards.map((card) => card.id));
@@ -219,7 +220,7 @@ export default function DataScreen() {
   };
 
   const renderModules = (v: Extract<DataView, { level: 'modules' }>) => {
-    const course = courses.find((c) => c.id === v.courseId)!;
+    const course = getCourse(v.courseId)!;
     const modules = course.modulesMeta;
 
     return modules.map((m, i) => {
@@ -260,7 +261,7 @@ export default function DataScreen() {
   };
 
   const renderNodes = (v: Extract<DataView, { level: 'nodes' }>) => {
-    const course = courses.find((c) => c.id === v.courseId)!;
+    const course = getCourse(v.courseId)!;
     const nodes = course.nodes.filter((n) => n.moduleId === v.moduleId);
 
     return nodes.map((n, i) => {
