@@ -188,53 +188,222 @@ QuizScreen uses QuestionRenderer directly.
 
 ## Content authoring
 
-### Add a course
-1. `src/data/courses/{id}/index.ts` ← Course definition
-2. Module folders under `{id}/{module}/`
-3. Add to `src/data/courses/index.ts`
+### 零代码原则
 
-### Add a node (ONE node = ONE file)
-1. `src/data/courses/{course}/{module}/{topic}.ts` ← PathNode
-2. Import + add to module `index.ts` nodes array
-3. File: kebab-case. Export: camelCase + `Node` suffix
+新课程、新模块、新节点 = 纯数据文件。以下文件**永远不用改**：
 
-### Module IDs
+| 层 | 原因 |
+|----|------|
+| `useProgressStore` | `courses: Record<string, CourseProgress>` — key 任意 |
+| `HomeScreen` / `CourseScreen` / `ModuleScreen` | 从 `courses` 数组动态渲染 |
+| `NodeScreen` / `renderCard` | 只接收 `card` 对象，不关心课程 |
+| `ProgressScreen` / `DataScreen` | 遍历 `courses` 状态动态生成列表 |
+| `AppNavigator` | 路由参数 `courseId: string`，不硬编码课程 |
+| `types/index.ts` | `Course`/`PathNode`/`Card` 接口是泛型的 |
 
-`ModuleId = string`（`src/types/index.ts:18`），每门课自定义。以 C++ 为例：
+### Add a course（3 步）
+
+以添加 `python` 课程为例：
+
+```
+1. 创建目录 src/data/courses/python/
+2. 创建模块目录 + 节点文件（按下面"Add a node"的格式）
+   python/
+   ├── 01-basics/
+   │   ├── index.ts          ← 模块注册
+   │   ├── hello-world.ts    ← 一个节点 = 一个文件
+   │   └── variables.ts
+   └── index.ts              ← 课程注册
+
+3. 在 src/data/courses/index.ts 加一行：
+   import { pythonCourse } from './python';
+   export const courses = [cppCourse, pythonCourse];
+```
+
+课程注册文件 `src/data/courses/python/index.ts` 模板：
+
+```typescript
+import type { Course, CourseModule, ModuleMeta } from '@/types';
+import { basicsModule } from './01-basics';
+// import more modules...
+
+const modules: CourseModule[] = [basicsModule];
+
+export const pythonCourse: Course = {
+  id: 'python',                     // 唯一，用于路由和存储 key
+  title: 'Python',
+  icon: 'language-python',          // MaterialCommunityIcons 名字
+  color: '#4a9eff',                 // 主题色
+  nodes: modules.flatMap(m => m.nodes),
+  moduleCount: modules.length,
+  modulesMeta: modules.map(m => ({ moduleId: m.moduleId, module: m.module })),
+};
+```
+
+### Add a module（3 步）
+
+以给 `python` 课程添加 `02-advanced` 模块为例：
+
+```
+1. 创建目录 src/data/courses/python/02-advanced/
+2. 创建节点文件 + 模块 index.ts（按下面"Add a node"的格式）
+3. 在 src/data/courses/python/index.ts 里 import 并加入 modules 数组
+```
+
+模块注册文件 `src/data/courses/python/02-advanced/index.ts` 模板：
+
+```typescript
+import type { CourseModule } from '@/types';
+import { myNode } from './my-node';
+// import more nodes...
+
+export const advancedModule: CourseModule = {
+  moduleId: 'advanced',             // 存储 key，课程内唯一
+  module: '进阶',                    // 显示名称
+  nodes: [myNode],
+};
+```
+
+### Add a node（3 步）
+
+```
+1. 创建 src/data/courses/{course}/{module}/{topic}.ts
+   文件名: kebab-case（如 hello-world.ts）
+   导出名: camelCase + Node 后缀（如 helloWorldNode）
+
+2. 在该模块的 index.ts 里 import + 加入 nodes 数组
+
+3. 节点文件模板见下方 Card templates
+```
+
+### Module IDs — 当前 C++ 课程
+
+`ModuleId = string`，每门课自定义。
 
 | Folder | moduleId | module |
 |--------|----------|--------|
 | 01-basics | `basics` | 基础 |
 | 02-advanced | `advanced` | 进阶 |
-| 03-oop | `oop` | 面向对象 |
-| 04-stl | `stl` | STL |
-| 05-generics | `generics` | 泛型 |
-| 06-modern | `modern` | 现代 C++ |
+| 03-streams | `streams` | 流与文件 |
+| 04-oop | `oop` | 面向对象 |
+| 05-stl | `stl` | STL |
+| 06-generics | `generics` | 泛型 |
+| 07-modern | `modern` | 现代 C++ |
 
-其他课程用各自的 moduleId 体系（如数据结构用 `linear`/`tree`/`graph`/`search`/`sort`/`advanced`），新增课程自由定义。
+其他课程用各自的 moduleId 体系，新增课程自由定义。
 
 ### Card ID: `{courseId}-{moduleId}-{topic}-c{seq}`
+
+示例：`cpp-02-pointer-c3` = C++ 课程 · 进阶模块 · 指针节点 · 第 3 张卡。
+
+### Node 文件模板
+
+```typescript
+import type { PathNode } from '@/types';
+
+export const helloWorldNode: PathNode = {
+  id: 'python-01-hello-world',   // {courseId}-{两位模块序号}-{topic}
+  courseId: 'python',
+  type: 'knowledge',              // 'knowledge' 或 'quiz'
+  moduleId: 'basics',
+  module: '基础',
+  title: '第一个程序',
+  cards: [
+    // 卡片数组，见下方模板
+  ],
+};
+```
 
 ### Card templates
 
 ```typescript
-// concept
-{ cardType: 'concept', content: { title: '...', body: '...' } }
+// concept — 概念讲解
+{ cardType: 'concept', content: { title: '标题', body: '正文（支持 \\n 换行）' } }
 
-// code
-{ cardType: 'code', content: { title: '...', code: '...', language: 'cpp', highlights: [0, 2] } }
+// code — 代码展示
+{ cardType: 'code', content: {
+  title: '标题', code: 'int main() { ... }', language: 'cpp',
+  highlights: [0, 2]   // 高亮行号（0-based）
+} }
 
-// practice (choice)
-{ cardType: 'practice', content: { question: '...', questionType: 'choice',
-  options: ['A','B','C','D'], answer: 'B', explanation: '...' } }
+// animation — 动画（animationId 见 src/data/animations/index.ts）
+{ cardType: 'animation', content: { animationId: 'pointer-intro' } }
 
-// practice (fill)
-{ cardType: 'practice', content: { question: '...', questionType: 'fill',
-  answer: 'main', explanation: '...' } }
+// practice (choice) — 选择题
+{ cardType: 'practice', content: {
+  question: '...', questionType: 'choice',
+  options: ['A','B','C','D'], answer: 'B', explanation: '...'
+} }
 
-// animation
-{ cardType: 'animation', content: { animationId: 'variable-storage' } }
+// practice (fill) — 填空题
+{ cardType: 'practice', content: {
+  question: '...', questionType: 'fill',
+  answer: 'main', explanation: '...'
+} }
 ```
+
+### 完整示例：python/01-basics/hello-world.ts
+
+```typescript
+import type { PathNode } from '@/types';
+
+export const helloWorldNode: PathNode = {
+  id: 'python-01-hello-world',
+  courseId: 'python',
+  type: 'knowledge',
+  moduleId: 'basics',
+  module: '基础',
+  title: '第一个程序',
+  cards: [
+    {
+      id: 'python-01-hello-world-c1',
+      cardType: 'concept',
+      content: {
+        title: 'Hello World 是什么',
+        body: [
+          'print() 是 Python 最常用的输出函数。',
+          '',
+          '  print("Hello World")  // 在屏幕上显示 Hello World',
+          '',
+          'Python 不需要 main 函数，代码从上到下直接执行。',
+        ].join('\n'),
+      },
+    },
+    {
+      id: 'python-01-hello-world-c2',
+      cardType: 'code',
+      content: {
+        title: '第一个 Python 程序',
+        code: 'print("Hello World")',
+        language: 'python',
+        highlights: [0],
+      },
+    },
+    {
+      id: 'python-01-hello-world-c3',
+      cardType: 'practice',
+      content: {
+        question: 'Python 中用于输出的函数是？',
+        questionType: 'fill',
+        answer: 'print',
+        explanation: 'print() 是 Python 的标准输出函数。',
+      },
+    },
+  ],
+};
+```
+
+### 逐个认识节点内容
+
+翻一两个已有节点文件就能掌握写法。推荐先看：
+
+| 想学的内容 | 看这个文件 |
+|-----------|-----------|
+| 概念卡（有列表、对比） | `01-basics/variables.ts` |
+| 代码卡（多行高亮） | `02-advanced/pointer.ts` c5 |
+| 练习题（选择和填空） | `01-basics/function.ts` c7-c10 |
+| 动画卡 | `02-advanced/dynamic-memory.ts` c3 |
+| 完整节点结构 | `02-advanced/memory-four-regions.ts` |
 
 ## SettingsScreen layout
 

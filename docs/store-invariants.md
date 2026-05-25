@@ -16,7 +16,7 @@
 
 | 函数 | 公式 | 作用 | 谁在用 |
 |------|------|------|--------|
-| `calcLevel(totalXP)` | while 循环累减 `level * XP_PER_LEVEL` | totalXP → 等级 | `useProgressStore`（addXP / rewardCard / resetCourse / hydrate） |
+| `calcLevel(totalXP)` | while 循环累减 `level * XP_PER_LEVEL` | totalXP → 等级 | `useProgressStore`（addXP / rewardCard / resetCourse / removeCompletedCards / hydrate） |
 | `xpForLevelStart(level)` | `(XP_PER_LEVEL/2) * (level-1) * level` | 到达某等级需要多少累计 XP | `ProgressScreen` 算 `xpIntoLevel` |
 | `xpForNextLevel(level)` | `level * XP_PER_LEVEL` | 当前等级升下一级需要多少 XP | `ProgressScreen` 进度环分母 |
 
@@ -99,7 +99,20 @@ calcLevel(300) = 3
 - 扣掉的 XP = 该课程的 course.xp
 - global.totalXP 不会变成负数（Math.max(0, ...)）
 - level 用 calcLevel 根据扣除后 XP 重新计算
-- 该课程回到初始状态
+- 该课程回到初始状态（completedCards / wrongCards / quizScores / nodePositions 全部清空）
+```
+
+### removeCompletedCards
+```
+- 删除指定 cardIds 对应的 completedCards 和 wrongCards 条目
+- 不删除的卡不受影响（白名单过滤）
+- xpToSubtract 由调用方从静态数据计算（practice=10XP, 其他=5XP）
+- course.xp -= xpToSubtract，不会变成负数
+- global.totalXP -= xpToSubtract，不会变成负数
+- global.level 用 calcLevel 重新计算
+- cardIds 为空数组 → 直接 return，不触发 set()
+- 不清理 quizScores 和 nodePositions（已知限制——残留数据不影响功能，
+  下次重做该节点时会被覆写）
 ```
 
 ---
@@ -126,3 +139,5 @@ calcLevel(300) = 3
 4. ProgressScreen → 等级/进度环和 XP 匹配
 5. 设置页重置课程 → XP 减少、等级可能下降
 6. 答错 → 错题集出现，答对 → 消失
+7. 数据管理 → 进入学科→模块→节点 → 逐层重置 → XP 和卡片数同步减少
+8. 数据管理 → 模块级重置 → 只扣该模块 XP，其他模块不受影响

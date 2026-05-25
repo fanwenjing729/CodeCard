@@ -89,6 +89,7 @@ interface ProgressStore extends PersistedData {
   hydrate: () => Promise<void>;
   flush: () => Promise<void>;
   resetCourse: (courseId: string) => void;
+  removeCompletedCards: (courseId: string, cardIds: string[], xpToSubtract: number) => void;
 }
 
 const initialState: PersistedData = {
@@ -259,6 +260,40 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
         courses: {
           ...s.courses,
           [courseId]: { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} },
+        },
+      };
+    });
+  },
+
+  removeCompletedCards: (courseId, cardIds, xpToSubtract) => {
+    if (cardIds.length === 0) return;
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      const removeSet = new Set(cardIds);
+      const nextCompleted: Record<string, true> = {};
+      for (const id of Object.keys(c.completedCards)) {
+        if (!removeSet.has(id)) nextCompleted[id] = true;
+      }
+      const nextWrong: Record<string, true> = {};
+      for (const id of Object.keys(c.wrongCards)) {
+        if (!removeSet.has(id)) nextWrong[id] = true;
+      }
+      const newXP = Math.max(0, c.xp - xpToSubtract);
+      const newTotalXP = Math.max(0, s.global.totalXP - xpToSubtract);
+      return {
+        global: {
+          ...s.global,
+          totalXP: newTotalXP,
+          level: calcLevel(newTotalXP),
+        },
+        courses: {
+          ...s.courses,
+          [courseId]: {
+            ...c,
+            completedCards: nextCompleted,
+            wrongCards: nextWrong,
+            xp: newXP,
+          },
         },
       };
     });

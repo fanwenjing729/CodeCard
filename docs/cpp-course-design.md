@@ -5,13 +5,14 @@
 | # | 模块 | 状态 | 节点 | 卡片 |
 |---|------|------|------|------|
 | 01 | 基础 | ✅ 已完成 | 17 / 17 | 144 |
-| 02 | 进阶 | 🟢 进行中 | 2 / 6 | 17 / ~38 |
-| 03 | 面向对象 | ⬜ 未开始 | 0 / 5 | 0 / ~28 |
-| 04 | STL | ⬜ 未开始 | 0 / 5 | 0 / ~27 |
-| 05 | 泛型 | ⬜ 未开始 | 0 / 4 | 0 / ~18 |
-| 06 | 现代 C++ | ⬜ 未开始 | 0 / 7 | 0 / ~32 |
+| 02 | 进阶 | ✅ 已完成 | 7 / 7 | 56 |
+| 03 | 流与文件 | 📋 已设计 | 0 / 6 | 0 / 35 |
+| 04 | 面向对象 | ⬜ 未开始 | 0 / 5 | 0 / ~28 |
+| 05 | STL | ⬜ 未开始 | 0 / 5 | 0 / ~27 |
+| 06 | 泛型 | ⬜ 未开始 | 0 / 4 | 0 / ~18 |
+| 07 | 现代 C++ | ⬜ 未开始 | 0 / 7 | 0 / ~32 |
 
-> 最后更新：2026-05-24 — 基础模块 17 节点 (144 卡) 全部完成；进阶模块 2.1 指针基础 + 2.2 指针与数组 已实现
+> 最后更新：2026-05-25 — 基础 17 节点 144 卡 ✅ · 进阶 7 节点 56 卡 ✅ · 流与文件 6 节点 35 卡 📋 · OOP 5/28 · STL 5/27 · 泛型 4/18 · 现代 C++ 7/32
 
 ---
 
@@ -50,11 +51,12 @@
 | # | 模块 | 节点数 | 内容 |
 |---|------|--------|------|
 | 01 | 基础 | 17 | 144 卡 | ✅ 全部完成 — 程序结构 / 变量类型 / 输入运算 / 常量 / 作用域 / 比较逻辑 / 条件分支 / for循环 / while循环 / break/continue / 数组 / 二维数组 / 字符串 / 函数入门 / 函数重载 / 引用 |
-| 02 | 进阶 | 6 | ~38 卡 | ✅ 2.1 指针基础 · 2.2 指针与数组 · ⬜ 2.3 动态内存 · 2.4 引用进阶 · 2.5 重载进阶 · 2.6 文件IO |
-| 03 | 面向对象 | 5 | ~30 卡 | 类与对象 / 构造析构 / 继承 / 多态 / 运算符重载（含 static 类成员） |
-| 04 | STL | 5 | ~27 卡 | vector / string(精讲:C串对比+构造+长度+索引+比较+substr+find) / map / algorithm / iterator |
-| 05 | 泛型 | 4 | ~18 卡 | 模板函数 / 模板类 / 模板特化 / 概念 (C++20) |
-| 06 | 现代 C++ | 7 | ~32 卡 | 智能指针 / lambda / 移动语义 / constexpr / Ranges / variant+optional / 结构化绑定 |
+| 02 | 进阶 | 7 | 56 卡 | ✅ 全部完成 — 内存四区 · 指针基础 · 指针与数组 · 动态内存 · 指针与函数 · 多级指针 · 智能指针入门 |
+| 03 | 流与文件 | 6 | 35 卡 | 📋 已设计 — 流抽象 · 文件输入 · 文件输出 · 字符串流 · 流状态与格式化 · 二进制与随机访问 |
+| 04 | 面向对象 | 5 | ~28 卡 | 类与对象 / 构造析构 / 继承 / 多态 / 运算符重载（含 static 类成员） |
+| 05 | STL | 5 | ~27 卡 | vector / string(精讲) / map / algorithm / iterator |
+| 06 | 泛型 | 4 | ~18 卡 | 模板函数 / 模板类 / 模板特化 / 概念 (C++20) |
+| 07 | 现代 C++ | 7 | ~32 卡 | 智能指针 / lambda / 移动语义 / constexpr / Ranges / variant+optional / 结构化绑定 |
 
 ---
 
@@ -304,9 +306,24 @@
 
 ---
 
-## 02 进阶 (6 节点 / ~38 卡片)
+## 02 进阶 (7 节点 / 56 卡片) ✅ 全部完成
 
-### 2.1 指针基础 ✅ 已实现 (9 卡)
+> 进阶模块定位为**从"会用指针"到"理解内存"**——以内存四区为地基，指针体系递进。原计划的引用进阶、重载进阶内容已分别被 01-基础(1.16/1.17)覆盖，文件 I/O 移至独立的 03-流与文件模块。
+
+### 2.1 内存四区 ✅ 已实现 (8 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 一张地图看懂程序的内存 | ASCII 四区布局图（代码区/静态区/栈区/堆区）+ 四种活法对比表（出生→死亡→谁管→大小）。栈区↓向下增长，堆区↑向上增长。一句话：四个区，四种活法 |
+| c2 | concept | 代码区与静态区——程序一生的常量 | 代码区(.text)存机器指令只读。静态区分三块：.data(已初始化全局)、.bss(未初始化全局→0)、.rodata(字符串字面量)。关键澄清：const 不管存储区，只管辖读写权限——`const int` 局部变量在栈，全局常量在 .rodata |
+| c3 | concept | 栈区——花括号背后的机器 | 栈帧压入/弹出机制，rsp 寄存器只动指针=极快(~8MB)。解释 01 基础三条规则的本质：① `{int x;}` 外面不能用→帧已弹出 ② 按值传递函数改副本→形参在 f 栈帧上与实参不在同帧 ③ 不能 `return &x`→返回的地址指向已回收的帧，这是"悬空指针"的根因 |
+| c4 | concept | 堆区——权力越大责任越大 | 三大场景：运行时确定大小/大数据/数据要比函数活得久。关键认知：`int* p = new int` — p 在栈，*p 在堆。栈 vs 堆对比表（8MB vs 剩余RAM、极快 vs 较慢、自动 vs 手动）。预告三大坑：泄漏/悬空/new[]配错 delete |
+| c5 | concept | 四区协作——三张图串起整个进阶 | 场景一：指针指向栈（栈帧弹出后一切消失，安全但不能返回）。场景二：指针指向堆（可返回但调用者负责 delete）。场景三：返回地址的三选一——栈地址✗ / 堆地址✓（需负责）/ 静态区地址✓（永远安全）。核心原则：指向的东西必须比指针本身活得长 |
+| c6 | code | 用代码验证——让四区"可见" | 打印全局/static/局部/new/函数地址，跑两遍观察规律。配典型输出截图标注各地址段对应哪个区。学生跑完亲眼看到四区确实在不同数值范围的地址段 |
+| c7 | practice | 变量归属判断——①~⑧ 各在哪个区？ | 给 8 个标注的代码片段（全局变量、局部变量、局部 static、new 数据、字符串字面量、函数参数），选正确的映射表。核心辨析：局部 static → 静态区（存储），只在该函数可见（作用域） |
+| c8 | practice | 悬空陷阱——哪些返回是安全的？ | 五道选择题辨析 `return &x`(栈↛悬空) / `return new int`(堆→安全但调用者负责) / `return &staticX`(静态区→绝对安全) / `return x`引用(栈→悬空) / `return "hello"`(rodata→安全)。takeaway：安全条件 = 指向的东西比函数活得长 |
+
+### 2.2 指针基础 ✅ 已实现 (9 卡)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -320,7 +337,7 @@
 | c8 | practice | `int x=10; int* p=&x; *p=20;` 后 x 的值？ | fill: 20（*p 就是 x 的别名，*p=20 等价于 x=20） |
 | c9 | practice | `const int* p = &x;` — 以下哪项合法？ | choice: `*p=5` / `p=&y` / 都可以 / 都不可以 → `p=&y`（const 在 * 左边管目标，不能改值但能改指向） |
 
-### 2.2 指针与数组 ✅ 已实现 (8 卡)
+### 2.3 指针与数组 ✅ 已实现 (8 卡)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -333,55 +350,134 @@
 | c7 | practice(choice) | `int* p = arr + 2; cout << p[-1];` 输出？ | choice: 10/20/30/编译错误 → 20（p[-1]=*(p-1)，[] 就是指针算术） |
 | c8 | practice(choice) | `int* p1=&arr[1]; int* p2=&arr[4]; cout << p2-p1;` 输出？ | choice: 3/12(字节数)/编译错误/不确定 → 3（指针相减返回元素个数，非字节数） |
 
-### 2.3 动态内存
+### 2.4 动态内存 ✅ 已实现 (8 卡)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
-| c1 | concept | 堆 vs 栈 | 栈：局部变量自动管理，大小有限；堆：`new` 手动分配，需 `delete` 释放，大小灵活 |
-| c2 | **animation** | **栈与堆的物理隔离** | MemoryBox 两片区域：上方栈区（局部变量 `int* p`），下方堆区（`new int(42)` 分配的格子）。`p` 存的是堆区地址，画箭头。`delete p` 后堆区格子变灰释放，`p` 悬空 |
-| c3 | code | new 与 delete | `int* p = new int(42);` 堆上分配；`delete p; p = nullptr;` 释放后置空防野指针；`int* arr = new int[100]; delete[] arr;` |
-| c4 | concept | 内存泄漏 | `new` 后忘记 `delete` → 内存泄漏；多次泄漏导致程序耗尽内存；delete 数组要用 `delete[]` 而不是 `delete` |
-| c5 | practice | `int* p = new int;` 忘写 `delete p;` 的后果？ | choice: 编译错误 / 内存泄漏 / 程序崩溃 → 内存泄漏 |
+| c1 | concept | 栈 vs 堆 — 两种"存放方式" | 栈：编译时确定大小，函数结束自动回收，空间有限（几MB）。堆：运行时动态申请，要多大要多大，用完必须手动归还。用 new 在堆上创建，用 delete 归还 |
+| c2 | concept | new 与 delete | 四步拆解：`new int` → 堆上找4字节空间 → 返回地址 → p 存地址 → `delete p` 归还。铁律：一个 new 对应一个 delete |
+| c3 | **animation** | **new 与 delete 全过程** | `dynamic-memory` — ScopeCode 新动画：栈指针→堆分配→delete释放→p置空，五步展示完整生命周期 |
+| c4 | concept | 动态数组 — new[] 与 delete[] | `int* arr = new int[n];` 运行时确定大小（栈数组做不到）。致命错误：new 配 delete，new[] 配 delete[]，乱配是未定义行为 |
+| c5 | code | 动态数组实战 | 用户输入 n → `new int[n]` 分配 → for 循环读入分数 → 输出成绩单 → `delete[]` 归还。完整程序 |
+| c6 | concept | 内存泄漏 — 忘还了 | `new` 后没 `delete`，指针销毁但堆空间没人还。循环100万次=浪费4MB。更隐蔽的：覆盖指针 `p = new int(20)` 后原来那块泄漏 |
+| c7 | concept | 悬空指针 — 还了还用 | delete 后内存已不属于你，但指针还指着。解引用悬空指针可能崩溃/读到垃圾/碰巧正常——最可怕的是"碰巧正常"。防御：`delete p; p = nullptr;` |
+| c8 | practice | 以下代码有什么问题？`void f() { int* p = new int[10]; }` | choice: p 离开 f 后变成悬空指针 / 没有 delete[]，内存泄漏 / new int[10] 语法错误 / 没有问题 → 没有 delete[]，内存泄漏 |
+| c9 | practice | `int* p = new int(5); int* q = p; delete p; p = nullptr;` 此时 *q 会怎样？ | choice: 正常输出5 / 输出0 / 未定义行为（q是悬空指针） / 编译错误 → 未定义行为（多个指针指向同块内存，delete后全变悬空） |
 
-### 2.4 引用进阶
-
-> 01 基础已在 1.17 讲完引用的基本用法（别名、按引用传递、const 引用）。本节重点：和指针的对比、引用做返回值、底层实现——需要先学完指针三连才能理解。
-
-| # | 卡类型 | 标题 | 内容要点 |
-|---|--------|------|---------|
-| c1 | concept | 三种传参方式串联 | 同一需求（函数内修改外部变量）的三种写法：① `addTen(int x)` 按值—改不了；② `addTen(int* p)` 指针版—能改但需 `*p` 解引用、调用要 `&n` 取地址、可为空需判空；③ `addTen(int& x)` 引用版—能改且语法干净，调用就是 `addTen(n)`。一句话："想改外部变量，用引用" |
-| c2 | code | 指针 vs 引用 — swap 对比 | `void swap(int& a, int& b)` vs `void swap(int* a, int* b)`。引用版：`swap(x, y)` 调用自然、函数内像操作普通变量、必不为空。指针版：`swap(&x, &y)` 调用啰嗦、函数内需 * 解引用、可能为 nullptr 需判空 |
-| c3 | concept | 引用做返回值 | `int& getElement(int* arr, int i) { return arr[i]; }` 返回左值引用，可放等号左边 `getElement(arr, 0) = 100;`。返回引用 = 返回别名，调用方拿到的是原始数据本身。典型用途：`cout << x` 返回 `ostream&` 实现链式调用 |
-| c4 | concept | 引用的底层实现 | 编译器怎么实现引用？`int& r = x;` 编译后等价于 `int* const r = &x;`（指向固定的常量指针），每次用 `r` 时编译器自动加 `*` 解引用。所以引用传参时栈上实际存的也是地址（8字节），只是语法上不用写 `*` 和 `&` |
-| c5 | practice | 引用做返回值，以下用法正确的是？ | choice: `int& f(){int x=5;return x;}`(返回局部变量引用→悬空) / `int& f(int& x){return x;}` → `int& f(int& x){return x;}`（返回的引用绑定到存在的变量，安全） |
-| c6 | practice | 引用的底层实现等价于？ | choice: `int*` / `int* const` / `const int*` / `int` → `int* const`（指向固定不能改的常量指针，自动解引用） |
-
-### 2.5 重载进阶
-
-> 01 基础已在 1.16 讲完重载的基本规则（同名不同参，编译器自动匹配）。本节重点：默认参数引发的二义性、重载决议的隐式转换。
+### 2.5 指针与函数 ✅ 已实现 (6 卡)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
-| c1 | concept | 默认参数 + 重载 = 二义性 | `void f(int a, int b=0)` 和 `void f(int a)` 同时存在，调用 `f(5)` 两个都能匹配——编译器不知道该选谁，报"ambiguous call"。规则：如果默认参数让两个重载都能匹配同一个调用，就是二义性 |
-| c2 | code | 二义性示例 | 完整程序展示 `f(5)` 在两个重载+默认参数同时存在时的编译错误。解决方式：①去掉默认参数 ②去掉单参重载 ③重构命名避免冲突 |
-| c3 | concept | 重载决议的隐式转换 | 编译器匹配重载的顺序：①完全匹配最优先 ②类型提升（float→double）次之 ③标准转换（int→double）再次 ④用户自定义转换最后。如果同一优先级有多个重载都匹配→歧义报错。示例：`f(3.14f)` 在 `f(int)` 和 `f(double)` 之间选 `f(double)`（提升优于截断） |
-| c4 | practice | `void f(int a, int b=0)` 和 `void f(int a)` 同时存在，调用 `f(5)` 会？ | choice: 调第一个 / 调第二个 / 编译错误（二义性） → 编译错误 |
-| c5 | practice | `void f(int)` 和 `void f(double)`，调用 `f('A')` 匹配？ | choice: f(int) / f(double) / 编译错误 → f(int)（char→int 是类型提升，完全匹配级别；char→double 需要两次转换，优先级更低） |
+| c1 | concept | 指针 vs 引用做参数 | 指针参数：可为 nullptr（可选），需 * 解引用。引用参数：必须绑定合法对象（必不为空），语法干净。选择标准：参数"必须"有值→引用，"可选"→指针。大多数情况优先引用 |
+| c2 | concept | 返回指针 — 三个禁区 | ①返回局部变量地址→悬空 ②返回局部数组地址→悬空 ③连续调用 new 但不传回所有权→易泄漏。返回的指针必须指向比函数活得久的东西 |
+| c3 | concept | 函数指针 — 函数也有地址 | 函数编译后是机器码，存在内存里，有地址。`void (*fp)() = greet;` fp 是指向函数的指针。作用：把"做什么"作为参数传入（回调） |
+| c4 | code | 函数指针做回调 | `int calc(int a, int b, int (*op)(int, int))` 接受 add/sub 函数指针，`calc(10, 5, add)` → 15。完整程序 |
+| c5 | practice | `int* makeArray() { int arr[100]; return arr; }` 有什么问题？ | choice: 语法正确能运行 / arr是局部数组返回后悬空 / 应返回int / [100]语法错误 → arr是局部数组返回后悬空 |
+| c6 | practice | 指针参数和引用参数，哪个说法正确？ | choice: 指针一定比引用快 / 引用不能为"空"，指针可为nullptr / 指针只能用->访问 / 引用必须&取地址 → 引用不能为"空"，指针可为nullptr |
 
-### 2.6 文件 IO
+### 2.6 多级指针 ✅ 已实现 (7 卡)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
-| c1 | concept | 流 扩展 | `cin`/`cout` 是标准流；`ifstream` 读文件，`ofstream` 写文件；RAII 自动关闭（离开作用域即关闭） |
-| c2 | code | 读写文本文件 | `ofstream out("data.txt"); out << "Hello"; out.close();` + `ifstream in("data.txt"); string s; getline(in, s);` |
-| c3 | concept | 错误处理 | `if (!in.is_open())` 检查文件是否打开成功；`in.fail()` 检查读操作是否失败；常见错误：路径不存在、权限不足 |
-| c4 | practice | `ifstream` 打开不存在的文件会怎样？ | choice: 崩溃 / 创建空文件 / 打开失败 is_open() 返回 false → 打开失败 |
+| c1 | concept | 二级指针 — 指针的指针 | `int** pp = &p;` — pp 存的是 p 的地址。内存链：`pp → p → x`。`*pp` = p（x的地址），`**pp` = x（42）。三级以上就该反思是不是搞复杂了 |
+| c2 | concept | 二级指针的实际用途 | 函数要改 int 变量→传 int*；函数要改 int* 变量→传 int**。`void alloc(int** pp) { *pp = new int[n]; }` 把新地址写入外部指针 |
+| c3 | concept | 指针数组 vs 数组指针 | `int* arr[5]` — arr 是数组，元素是 int*。`int (*p)[5]` — p 是指针，指向 int[5] 的数组。一字之差，天壤之别。括号改变优先级 |
+| c4 | concept | 螺旋法则 — 读懂任何声明 | 从变量名出发，顺时针螺旋向外读：先遇到 [] 是数组，先遇到 * 是指针。`const int* (*fp)()` — fp是指针→指向函数→返回const int* |
+| c5 | code | 二级指针与动态二维数组 | `int** matrix = new int*[rows]` → 每行 `new int[cols]` → 用完先 delete[] 每行再 delete[] matrix。完整程序 |
+| c6 | practice | `int* arr[5]` 和 `int (*p)[5]`，哪个说法正确？ | choice: 两者相同 / arr是数组(元素是指针)，p是指针(指向数组) / arr是指针p是数组 / 都指向数组 → arr是数组(元素是指针)，p是指针(指向数组) |
+| c7 | practice | 用螺旋法则读 `int* (*fp)(int, int);` | choice: fp是函数返回int* / fp是函数指针，接受两个int返回int* / fp是数组 / 语法错误 → fp是函数指针，接受两个int返回int* |
+
+### 2.7 智能指针入门 ✅ 已实现 (10 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 回顾：裸指针的两个致命伤 | 承接 2.4 动态内存，复盘点泄漏和悬空两个坑。根因：释放全靠人记，编译器不帮你。栈变量为什么没这问题？引出"让堆数据也享受自动销毁"的动机 |
+| c2 | concept | 智能指针的本质：RAII 包装器 | RAII = 资源获取即初始化。把堆内存包在栈对象里，栈对象创建→获取资源，销毁→析构自动 delete。即使抛异常也不会泄漏——裸指针做不到。`#include <memory>` |
+| c3 | concept | unique_ptr — 独占所有权 | 同一时刻只有一个 unique_ptr 拥有内存。不能拷贝（编译期禁止），可以 move 转移。`*p` 解引用、`p->` 访问成员、`p.get()` 获取裸指针借给老接口 |
+| c4 | concept | 创建 unique_ptr：make_unique 是首选 | `auto p = make_unique<int>(42)` 比裸 new 安全（异常安全、自动配 delete[]）、比 `unique_ptr<int>(new int)` 更短。创建数组：`make_unique<int[]>(100)`。无脑用 make_unique |
+| c5 | concept | 所有权转移：move、返回、传参 | `std::move` 转移所有权→原指针变 nullptr。函数返回 unique_ptr 自动 move——最常见的用法。传参三态：只看不拿(裸指针)、要接管(值)、可修改不管所有权(引用) |
+| c6 | code | unique_ptr 实战：从分配到归还 | 工厂函数创建→返回→使用→move 转移→修改→动态数组。代码无 class 依赖，纯 int 示例。全程零 delete |
+| c7 | concept | shared_ptr — 共享所有权 | 引用计数机制：拷贝+1、销毁-1、归零→delete。类比合租房。开销比 unique_ptr 大（控制块）。两个坑：不能和裸指针混管→double free；循环引用→泄漏（weak_ptr 日后讲） |
+| c8 | code | shared_ptr 引用计数可视化 | 嵌套作用域中 p1→p2→p3 逐层拷贝，use_count() 打印实时计数，展示离开每层作用域后计数的逐步递减过程 |
+| c9 | practice | unique_ptr 所有权转移辨析 | `p1=make_unique(10); p2=move(p1);` — 选正确的说法。辨析：move 后 p1 变 nullptr，p2 接管。不能继续通过 p1 访问 |
+| c10 | practice | 场景选择：独占 → unique_ptr | 函数创建对象返回给调用者独占使用——选 unique_ptr。辨析：裸指针(无自动释放) vs shared_ptr(有多余开销) vs unique_ptr(正合适) |
 
 ---
 
-## 03 面向对象 (5 节点 / ~27 卡片)
+## 03 流与文件 (6 节点 / 35 卡片) 📋 已设计
 
-### 3.1 类与对象
+> 插入在进阶和面向对象之间。文件流不依赖 OOP，反而是"使用别人写的类"的热身——ifstream/ofstream/stringstream 都是标准库类，学生先用熟，到 OOP 自然过渡到"自己写类"。原 03-06 模块顺延为 04-07。
+
+### 3.1 流是什么 (5 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 流抽象——一个统一的数据通道 | 所有 I/O 都通过"流"。流 = 程序和数据源之间的管道。cin 连键盘、cout 连屏幕、ifstream 连文件、stringstream 连字符串——换源头/目标，不换 << 和 >>。学一次，到处用 |
+| c2 | concept | 四个标准流——各司其职 | cin(标准输入,键盘,缓冲)、cout(标准输出,屏幕,缓冲)、cerr(标准错误,屏幕,无缓冲→立刻显示)、clog(标准日志,屏幕,缓冲)。cerr 无缓冲的原因：cout 重定向到文件时，cerr 仍直接输出到屏幕 |
+| c3 | concept | >> 与 <<——箭头指向就是数据流向 | >> 从流中提取数据（cin >> x 读入 x）、<< 把数据插入到流中（cout << x 写出 x）。数据顺着箭头方向流动。这个心智模型对 ifstream/ofstream/stringstream 全部适用 |
+| c4 | code | cerr vs cout——独立输出通道 | 对比 cout 和 cerr 的输出行为，高亮缓冲 vs 无缓冲差异。`./program 2>errors.log` 重定向验证两个通道独立 |
+| c5 | practice | cerr 和 cout 最重要的区别？ | choice: cerr 比 cout 快 / cerr 无缓冲立即输出，cout 有缓冲 / cerr 只能输出数字 / 没有区别 → cerr 无缓冲立即输出，cout 有缓冲 |
+
+### 3.2 文件输入 (6 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | ifstream——把文件当键盘读 | `#include <fstream>`、ifstream 是类（bridge to OOP：第一次用别人写的类）、>> 和 getline 跟 cin 一模一样。RAII：离开作用域自动关闭 |
+| c2 | concept | >> vs getline——词 vs 行 | >> 读到空白符停止（逐词）。getline 读到 \n 停止（逐行）。文件 "Alice 25\nBob 30\n"→>> 拆成 4 个 token，getline 拆成 2 行。按数据格式选择 |
+| c3 | concept | 打开失败——文件不一定存在 | is_open() 返回 false / fail() 检查操作。标准开头：`if (!file) { cerr << "打不开"; return; }`。文件不存在、没权限、路径是目录→都可能失败 |
+| c4 | code | 逐行读取——C++ 惯用法 | `while (getline(file, line)) { ... }` — getline 到 EOF 返回 false，循环自动停止。完整程序：读文件 + 加行号输出 |
+| c5 | code | >> 与 getline 混用的陷阱 | `file >> age; getline(file, name);` — >> 读完后残留 \n 在缓冲区，getline 直接读到空行。修复：`file.ignore()` 吃掉残留换行符 |
+| c6 | practice | 文件不存在时 is_open() 返回什么？ | fill → false（ifstream 不抛异常，必须检查后再读） |
+
+### 3.3 文件输出 (6 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | ofstream——把文件当屏幕写 | << 跟 cout 完全一样。**默认覆盖**已有文件（反直觉！）。RAII 自动关闭+刷新。`#include <fstream>` |
+| c2 | concept | 打开模式——覆盖还是追加 | 默认 ios::out（覆盖）、ios::app（追加到末尾）、ios::trunc（显式截断）。组合：`ios::out \| ios::app`。日志文件**必须**用 app——每次运行追加，绝不覆盖 |
+| c3 | concept | 缓冲区——数据不是立即写入的 | 流有缓冲区，攒一批再写磁盘（快）。endl = \n + flush，\n 不刷新。flush 时机：需要立即看到结果、程序退出前、ofstream 析构时。规则：默认用 \n，endl 只在需要 flush 时用 |
+| c4 | code | 读写流水线——处理数据流 | ifstream 读 → 处理 → ofstream 写。完整程序：读文件逐行转大写，写入新文件。两个文件出作用域自动关闭（RAII） |
+| c5 | code | 追加模式实战——简单日志 | `ofstream log("app.log", ios::app);` 多次运行日志不覆盖，每次追加在末尾。演示第二次运行的输出追加在第一次内容之后 |
+| c6 | practice | ios::app 模式下，文件已存在会怎样？ | choice: 删除旧内容重新写 / 新内容追加在末尾 / 编译错误 / 运行时错误 → 新内容追加在末尾，旧内容保留 |
+
+### 3.4 字符串流 (6 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | stringstream——把字符串当流操作 | istringstream：像 cin 一样从字符串读取。ostringstream：像 cout 一样写入字符串。`#include <sstream>`。一种 << >> 技能，无穷种数据源/目标——这是流抽象的"啊哈时刻" |
+| c2 | concept | 万能类型转换 | string→数值：`istringstream("42") >> n`，任何有 >> 的类型都能这样转。数值→string：`oss << 3.14; s = oss.str()`。比 stoi/to_string 通用——支持自定义类型 |
+| c3 | concept | CSV 解析——切字符串的最优解 | `getline(iss, field, ',')` 以逗号分隔，比手动 find+substr 干净一个数量级。空字段自动处理（"Alice,,Beijing"→age=""）。三行代码 = 一个 CSV 解析器 |
+| c4 | code | ostringstream vs 字符串拼接 | 构造复杂字符串：左边 `oss << "Name:" << name << ", Age:" << age` 一行清晰，右边 `"Name:" + name + ", Age:" + to_string(age)` 混合拼接易错且多次重新分配内存 |
+| c5 | code | CSV 解析实战 | `istringstream iss(line); getline(iss, name, ','); getline(iss, age, ','); getline(iss, city);` 完整程序：解析→转换→输出 |
+| c6 | practice | `istringstream iss("1 2 3"); int a,b,c; iss>>a>>b>>c; cout<<a+b+c;` 输出？ | fill → 6（istringstream 像 cin 一样处理空格分隔的值） |
+
+### 3.5 流状态与格式化 (7 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 流有状态——四种标志位 | goodbit(正常)、eofbit(读到末尾)、failbit(操作失败-可恢复)、badbit(流损坏-不可恢复)。`while (cin >> x)` 能工作因为 >> 返回 cin，cin 转 bool 时检查 failbit |
+| c2 | concept | 失败后流会"卡住"——最坑的新手 bug | `int n; cin >> n;` 用户输入 "abc"→failbit 置位→之后**所有** >> 操作静默失败。"abc" 残留在缓冲区挡路。程序看起来卡死，实际在空转——这是 #1 I/O 新手坑 |
+| c3 | concept | 逃生方案——clear() + ignore() | `cin.clear()` 重置错误标志、`cin.ignore(10000, '\n')` 清空缓冲区直到换行。标准恢复：clear → ignore → 重新提示。两者缺一不可——clear 后不 ignore，坏数据还在 |
+| c4 | code | 健壮的输入验证函数 | 循环 `while (!(cin >> n)) { cin.clear(); cin.ignore(10000, '\n'); ... }` 封装成 readInt(prompt)，反复要求直到合法输入 |
+| c5 | concept | iomanip——格式化输出的工具箱 | `#include <iomanip>`：setw(n) 列宽（仅下次生效！）、setprecision(n) 小数位、fixed/scientific 浮点格式、left/right 对齐、setfill 填充字符。除 setw 外都是"粘性"的 |
+| c6 | code | 打印整齐的表格 | left 对齐姓名列 + right 对齐数字列 + setw 固定列宽 + 分隔线。完整成绩单表格。对比有无格式化的差异 |
+| c7 | practice | cin >> n 失败后，哪个操作能让 cin 恢复？ | choice: cin.reset() / cin.clear(); cin.ignore(10000, '\n'); / cin.flush() / 重新启动程序 → cin.clear(); cin.ignore(10000, '\n'); |
+
+### 3.6 二进制与随机访问 (5 卡)
+
+| # | 卡类型 | 标题 | 内容要点 |
+|---|--------|------|---------|
+| c1 | concept | 文本 vs 二进制——同一文件的两种解读 | 文本："42"=2 字节字符 '4' 和 '2'。二进制：42=int=4 字节 0x2A000000。二进制更快更小但不可读、不可移植（字节序、struct 填充因编译器而异） |
+| c2 | concept | read() 与 write()——直接读写字节 | `file.write(reinterpret_cast<const char*>(&data), sizeof(data))` 按内存原样写入。`file.read(...)` 读取。**必须** `ios::binary` 模式，否则 Windows 上 \n 会被转译为 \r\n |
+| c3 | code | 读写 struct——固定格式记录 | 定义 Record struct → `ofstream(path, ios::binary)` → write → `ifstream(path, ios::binary)` → read → 验证。警告：不同编译器/系统可能不兼容 |
+| c4 | concept | 随机访问——直接跳到第 N 个记录 | seekg(offset, from) 移动读位置、seekp 移动写位置、tellg/tellp 获取当前位置。ios::beg/cur/end 三种基准点。固定大小记录可 O(1) 跳到任意一条——文本文件做不到 |
+| c5 | practice | 为什么二进制文件通常比文本文件小？ | choice: 自动压缩 / 数值按内存格式存储而非逐位字符 / 不存空格 / 使用哈希 → 数值按内存格式存储而非逐位字符（如 int 42 文本=2 字节，二进制=4 字节；int 123456789 文本=9 字节，二进制仍 4 字节） |
+
+---
+
+## 04 面向对象 (5 节点 / ~28 卡片)
+
+### 4.1 类与对象
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -394,7 +490,7 @@
 | c7 | concept | static 成员函数 | 无 `this` 指针，只能访问 static 成员；调用方式 `ClassName::func()`（不需要对象）；典型用途：工厂方法、访问私有 static 变量 |
 | c8 | practice | 以下哪项是封装的好处？ | choice: 代码更短 / 防止外部直接篡改数据 / 运行更快 → 防止外部直接篡改数据 |
 
-### 3.2 构造与析构
+### 4.2 构造与析构
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -407,7 +503,7 @@
 | c7 | **animation** | **浅拷贝 vs 深拷贝** | MemoryBox 三步：(1) 对象 a 在栈上，data 指向堆区；(2) 浅拷贝 `Buffer b = a` → 两个对象的 data 指向同一块堆内存；(3) a 析构释放堆区→b 的 data 变成悬空指针。深拷贝：各自拥有独立堆区副本 |
 | c8 | practice | 析构函数什么时候调用？ | choice: 手动调用 / 对象离开作用域时自动调用 / new 对象时 → 对象离开作用域时自动调用 |
 
-### 3.3 继承
+### 4.3 继承
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -417,7 +513,7 @@
 | c4 | practice | 私有的父类成员能被子类访问吗？ | choice: 能 / 不能（需用 protected 或 public 成员函数） → 不能 |
 | c5 | concept | 组合 vs 继承 | 继承是 "is-a"（狗是动物），组合是 "has-a"（车有引擎）。`class Car { Engine e; };` 比 `class Car : public Engine { };` 更合理——车不是引擎。原则："能用组合就别继承"，组合更灵活、耦合更低 |
 
-### 3.4 多态
+### 4.4 多态
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -427,7 +523,7 @@
 | c4 | code | 抽象类 | `class Shape { virtual double area() = 0; };` 纯虚函数 = 0 → 抽象类不能实例化；子类必须实现纯虚函数 |
 | c5 | practice | 不用 virtual 会怎样？ | choice: 编译错误 / 始终调父类函数(静态绑定) / 随机调 → 始终调父类函数 |
 
-### 3.5 运算符重载
+### 4.5 运算符重载
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -438,9 +534,9 @@
 
 ---
 
-## 04 STL (5 节点 / ~21 卡片)
+## 05 STL (5 节点 / ~27 卡片)
 
-### 4.1 vector
+### 5.1 vector
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -450,7 +546,7 @@
 | c4 | practice | `vector<int> v(10);` 中 v.size() 是？ | fill: 10（构造 10 个默认值 0 的元素） |
 | c5 | concept | 其他顺序容器 | `list` 双向链表 — O(1) 任意位置插入删除，不可随机访问；`deque` 双端队列 — 两端 O(1) 插入，支持 `[]` 随机访问。选用口诀：随机访问用 vector，头尾操作用 deque，频繁中间插入/删除用 list |
 
-### 4.2 string
+### 5.2 string
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -459,7 +555,7 @@
 | c3 | concept | string_view | `std::string_view` 不拥有数据，只"查看"；O(1) 的 substr；生命周期短，原字符串销毁后 view 悬空 |
 | c4 | practice | `string s = "abc";` 修改第 2 个字符的最简方式？ | choice: `s[1]='x'` / `s.at(1)='x'` / `s.replace(1,1,"x")` → `s[1]='x'` |
 
-### 4.3 map / set
+### 5.3 map / set
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -469,7 +565,7 @@
 | c4 | code | unordered_map vs map | `unordered_map<string, int>` 哈希表 O(1) 查找、无序；`map<string, int>` 红黑树 O(log n) 查找、按键排序；键无顺序需求时优先 unordered_map；有排序/范围查询需求用 map |
 | c5 | practice | map 中 `m["new_key"]` 如果不存在？ | choice: 抛异常 / 创建该 key 值为默认值 / 编译错误 → 创建该 key 值为默认值（operator[] 的隐式插入行为） |
 
-### 4.4 algorithm
+### 5.4 algorithm
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -478,7 +574,7 @@
 | c3 | code | 常用算法 | `reverse(v.begin(), v.end()); count(v.begin(), v.end(), 1); min_element/max_element; for_each(v.begin(), v.end(), [](int x) { ... });` |
 | c4 | practice | `find` 未找到返回什么？ | choice: nullptr / v.end() / -1 → v.end()（返回迭代器，未找到返回尾后迭代器） |
 
-### 4.5 iterator
+### 5.5 iterator
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -489,9 +585,9 @@
 
 ---
 
-## 05 泛型 (~18 卡片)
+## 06 泛型 (4 节点 / ~18 卡片)
 
-### 5.1 函数模板
+### 6.1 函数模板
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -500,7 +596,7 @@
 | c3 | concept | 模板参数推导 | 编译器从实参推导 T；`myMax(3, 5)` → T=int；`myMax(3.0, 5)` → 编译错误（T 歧义），需 `myMax<double>(3.0, 5)` |
 | c4 | practice | 函数模板的代码何时生成？ | choice: 运行时 / 编译时（实例化） / 链接时 → 编译时 |
 
-### 5.2 类模板
+### 6.2 类模板
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -509,7 +605,7 @@
 | c3 | concept | CTAD | C++17 类模板参数推导：`Pair p{1, "hello"};` 自动推导为 `Pair<int, const char*>`，无需显式指定类型 |
 | c4 | practice | `vector<int>` 中的 int 是什么？ | choice: 函数参数 / 模板参数 / 返回值类型 → 模板参数 |
 
-### 5.3 模板特化
+### 6.3 模板特化
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -518,7 +614,7 @@
 | c3 | code | 特化示例 | 通用 max 对 `const char*` 比较地址而非内容 — 特化用 `strcmp` 修复 |
 | c4 | practice | 全特化 vs 偏特化的区别？ | choice: 无区别 / 全特化所有参数都确定，偏特化只确定部分 → 全特化所有参数都确定 |
 
-### 5.4 概念 (C++20)
+### 6.4 概念 (C++20)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -529,9 +625,9 @@
 
 ---
 
-## 06 现代 C++ (~21 卡片)
+## 07 现代 C++ (7 节点 / ~32 卡片)
 
-### 6.1 智能指针
+### 7.1 智能指针
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -542,7 +638,7 @@
 | c5 | code | weak_ptr | `weak_ptr<T>` 不增加引用计数、解决 shared_ptr 循环引用；`lock()` 返回 shared_ptr（对象还存在）或空 |
 | c6 | practice | unique_ptr 能拷贝吗？ | choice: 能 / 不能 / 能但只浅拷贝 → 不能（独占所有权，编译期禁止） |
 
-### 6.2 lambda
+### 7.2 lambda
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -551,7 +647,7 @@
 | c3 | code | lambda 实战 | `sort(v.begin(), v.end(), [](int a, int b) { return abs(a) < abs(b); });` + `auto add = [](auto a, auto b) { return a+b; };` 泛型 lambda |
 | c4 | practice | `[=]` 捕获的变量能在 lambda 内修改吗？ | choice: 能 / 不能（需加 mutable） / 编译错误 → 不能（需加 mutable） |
 
-### 6.3 移动语义
+### 7.3 移动语义
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -561,7 +657,7 @@
 | c4 | code | 移动构造 | `class Buffer { char* data; Buffer(Buffer&& other) noexcept : data(other.data) { other.data = nullptr; } };` |
 | c5 | practice | `std::move` 之后原对象还能用吗？ | choice: 能用且值不变 / 能用但处于"有效但未指定"状态 / 立即崩溃 → 能用但处于"有效但未指定"状态 |
 
-### 6.4 constexpr
+### 7.4 constexpr
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -569,7 +665,7 @@
 | c2 | code | 编译期计算 | `constexpr int fib(int n) { return n <= 1 ? n : fib(n-1) + fib(n-2); } constexpr int f5 = fib(5);` 在编译期算出 5 |
 | c3 | practice | constexpr 函数一定在编译期执行？ | choice: 一定 / 不一定（取决于调用上下文是否为 constexpr） → 不一定 |
 
-### 6.5 Ranges (C++20)
+### 7.5 Ranges (C++20)
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -578,7 +674,7 @@
 | c3 | code | Ranges 实战 | `auto even = [](int x) { return x % 2 == 0; }; auto r = v \| views::filter(even) \| views::transform([](int x) { return x * x; });` 不用中间 vector，惰性求值只在遍历时计算 |
 | c4 | practice | `views::filter` 会生成中间容器吗？ | choice: 会生成新 vector / 不会（惰性求值，遍历时才计算） / 取决于元素数量 → 不会（惰性求值） |
 
-### 6.6 variant 与 optional
+### 7.6 variant 与 optional
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|
@@ -587,7 +683,7 @@
 | c3 | code | variant + optional 实战 | 解析配置文件：`variant<int, string> parseValue(string key);` 值可能是整数或字符串。查找缓存：`optional<User> findUser(int id);` 找不到返回 nullopt |
 | c4 | practice | `optional<int> o;` 访问 `*o` 会？ | choice: 返回 0 / 未定义行为 / 编译错误 → 未定义行为（应先用 has_value() 或 value() 抛异常） |
 
-### 6.7 结构化绑定
+### 7.7 结构化绑定
 
 | # | 卡类型 | 标题 | 内容要点 |
 |---|--------|------|---------|

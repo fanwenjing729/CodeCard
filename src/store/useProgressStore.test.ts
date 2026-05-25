@@ -213,6 +213,77 @@ describe('removeWrongCard', () => {
   });
 });
 
+// ─── removeCompletedCards ──────────────────────────────────
+
+describe('removeCompletedCards', () => {
+  it('removes specified cards from completedCards and wrongCards', () => {
+    const s = getState();
+    s.rewardCard('cpp', 'c1', XP_PER_CARD);
+    s.rewardCard('cpp', 'c2', XP_PER_CARD);
+    s.rewardCard('cpp', 'c3', XP_PER_CARD);
+    s.addWrongCard('cpp', 'c1');
+    s.addWrongCard('cpp', 'c2');
+
+    s.removeCompletedCards('cpp', ['c1', 'c2'], XP_PER_CARD * 2);
+
+    const c = getState().courses['cpp'];
+    expect(c.completedCards['c3']).toBe(true);        // untouched
+    expect(c.completedCards['c1']).toBeUndefined();    // removed
+    expect(c.completedCards['c2']).toBeUndefined();    // removed
+    expect(c.wrongCards['c1']).toBeUndefined();        // removed
+    expect(c.wrongCards['c2']).toBeUndefined();        // removed
+  });
+
+  it('deducts XP from course and global, recalculates level', () => {
+    const s = getState();
+    s.addXP('cpp', 200); // 200 XP → level 3 (0–99=1, 100–199=2, 200–299=3)
+    expect(getState().global.level).toBe(3);
+
+    s.rewardCard('cpp', 'c1', XP_PER_CARD);  // +5  → 205
+    s.rewardCard('cpp', 'c2', XP_PER_CARD);  // +5  → 210
+
+    s.removeCompletedCards('cpp', ['c1', 'c2'], XP_PER_CARD * 2); // -10 → 200
+
+    const s2 = getState();
+    expect(s2.courses['cpp'].xp).toBe(200);
+    expect(s2.global.totalXP).toBe(200);
+    expect(s2.global.level).toBe(3); // still 200, still level 3
+  });
+
+  it('does not let XP go below zero', () => {
+    const s = getState();
+    s.rewardCard('cpp', 'c1', XP_PER_CARD);
+
+    // Subtract more XP than exists
+    s.removeCompletedCards('cpp', ['c1'], 999);
+
+    const s2 = getState();
+    expect(s2.courses['cpp'].xp).toBe(0);
+    expect(s2.global.totalXP).toBe(0);
+  });
+
+  it('is a no-op when cardIds is empty', () => {
+    const s = getState();
+    s.addXP('cpp', 100);
+    const xpBefore = getState().global.totalXP;
+
+    s.removeCompletedCards('cpp', [], 50);
+
+    expect(getState().global.totalXP).toBe(xpBefore);
+  });
+
+  it('does not affect other courses', () => {
+    const s = getState();
+    s.rewardCard('cpp', 'c1', XP_PER_CARD);
+    s.rewardCard('ds', 'd1', XP_PER_CARD);
+
+    s.removeCompletedCards('cpp', ['c1'], XP_PER_CARD);
+
+    expect(getState().courses['ds'].completedCards['d1']).toBe(true);
+    expect(getState().courses['ds'].xp).toBe(XP_PER_CARD);
+  });
+});
+
 // ─── resetCourse ──────────────────────────────────────────
 
 describe('resetCourse', () => {

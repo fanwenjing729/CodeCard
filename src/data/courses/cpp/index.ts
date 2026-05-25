@@ -1,14 +1,16 @@
 import type { Course, CourseModule, ModuleMeta } from '@/types';
 import { basicsModule } from './01-basics';
 import { advancedModule } from './02-advanced';
-import { oopModule } from './03-oop';
-import { stlModule } from './04-stl';
-import { genericsModule } from './05-generics';
-import { modernModule } from './06-modern';
+import { streamsModule } from './03-streams';
+import { oopModule } from './04-oop';
+import { stlModule } from './05-stl';
+import { genericsModule } from './06-generics';
+import { modernModule } from './07-modern';
 
 const modules: CourseModule[] = [
   basicsModule,
   advancedModule,
+  streamsModule,
   oopModule,
   stlModule,
   genericsModule,

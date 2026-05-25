@@ -1,23 +1,67 @@
-import { Fragment, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { Colors, Spacing, Radius } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useProgressStore } from '@/store/useProgressStore';
+import { useProgressStore, XP_PER_CARD, XP_PER_PRACTICE } from '@/store/useProgressStore';
 import { courses } from '@/data/courses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
+import type { CourseModule, PathNode } from '@/types';
 import ScreenHeader from '@/components/shared/ScreenHeader';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+// --------------- view state ---------------
+
+type DataView =
+  | { level: 'courses' }
+  | { level: 'modules'; courseId: string }
+  | { level: 'nodes'; courseId: string; moduleId: string };
+
+// --------------- helpers ---------------
+
+function buildCardTypeMap() {
+  const map = new Map<string, 'concept' | 'code' | 'animation' | 'practice'>();
+  for (const c of courses) {
+    for (const n of c.nodes) {
+      for (const card of n.cards) {
+        map.set(card.id, card.cardType);
+      }
+    }
+  }
+  return map;
+}
+
+function calcXPToSubtract(
+  completedCards: Record<string, true>,
+  cardIds: string[],
+  cardTypeMap: Map<string, 'concept' | 'code' | 'animation' | 'practice'>,
+): number {
+  let xp = 0;
+  for (const cid of cardIds) {
+    if (cid in completedCards) {
+      const t = cardTypeMap.get(cid);
+      xp += t === 'practice' ? XP_PER_PRACTICE : XP_PER_CARD;
+    }
+  }
+  return xp;
+}
+
+// --------------- component ---------------
 
 export default function DataScreen() {
   const navigation = useNavigation<Nav>();
   const coursesState = useProgressStore((s) => s.courses);
   const resetCourse = useProgressStore((s) => s.resetCourse);
+  const removeCompletedCards = useProgressStore((s) => s.removeCompletedCards);
   const flush = useProgressStore((s) => s.flush);
 
-  // ---- confirm modal state ----
+  const [view, setView] = useState<DataView>({ level: 'courses' });
+
+  const cardTypeMap = useMemo(() => buildCardTypeMap(), []);
+
+  // ---- confirm modal ----
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmTitle, setConfirmTitle] = useState('');
   const [confirmMessage, setConfirmMessage] = useState('');
@@ -32,58 +76,111 @@ export default function DataScreen() {
     setConfirmVisible(true);
   };
 
-  const hasProgress = courses.some((c) => {
-    const p = coursesState[c.id];
-    return p && Object.keys(p.completedCards).length > 0;
-  });
+  // ---- computed data based on view ----
+
+  const headerTitle = (() => {
+    if (view.level === 'courses') return '数据管理';
+    const c = courses.find((c) => c.id === view.courseId);
+    if (view.level === 'modules') return c?.title ?? '';
+    return c?.modulesMeta.find((m) => m.moduleId === view.moduleId)?.module ?? '';
+  })();
+
+  const headerBackLabel = (() => {
+    if (view.level === 'courses') return '设置';
+    if (view.level === 'modules') return '数据管理';
+    return courses.find((c) => c.id === view.courseId)?.title ?? '';
+  })();
+
+  // ---- reset handlers ----
 
   const handleResetCourse = (courseId: string, title: string) => {
+    showConfirm(`重置 ${title}`, `确定要清除 ${title} 的全部学习进度吗？此操作不可撤销。`, '重置', () => {
+      resetCourse(courseId);
+      flush();
+    });
+  };
+
+  const handleResetModule = (courseId: string, moduleId: string, moduleName: string) => {
+    const course = courses.find((c) => c.id === courseId);
+    if (!course) return;
+    const nodes = course.nodes.filter((n) => n.moduleId === moduleId);
+    const cardIds = nodes.flatMap((n) => n.cards.map((card) => card.id));
+    const progress = coursesState[courseId];
+    const completed = progress?.completedCards ?? {};
+    const xp = calcXPToSubtract(completed, cardIds, cardTypeMap);
+    const completedCount = cardIds.filter((id) => id in completed).length;
+
     showConfirm(
-      `重置 ${title}`,
-      `确定要清除 ${title} 的所有学习进度吗？此操作不可撤销。`,
+      `重置 ${moduleName}`,
+      `确定要清除「${moduleName}」模块的学习进度吗？\n已完成 ${completedCount} 张卡片将全部清除。此操作不可撤销。`,
       '重置',
       () => {
-        resetCourse(courseId);
+        removeCompletedCards(courseId, cardIds, xp);
+        flush();
+      },
+    );
+  };
+
+  const handleResetNode = (courseId: string, node: PathNode) => {
+    const cardIds = node.cards.map((c) => c.id);
+    const progress = coursesState[courseId];
+    const completed = progress?.completedCards ?? {};
+    const xp = calcXPToSubtract(completed, cardIds, cardTypeMap);
+    const completedCount = cardIds.filter((id) => id in completed).length;
+
+    showConfirm(
+      `重置 ${node.title}`,
+      `确定要清除「${node.title}」节点的学习进度吗？\n已完成 ${completedCount} 张卡片将全部清除。此操作不可撤销。`,
+      '重置',
+      () => {
+        removeCompletedCards(courseId, cardIds, xp);
         flush();
       },
     );
   };
 
   const handleClearAll = () => {
-    showConfirm(
-      '清空全部数据',
-      '确定要清除所有学科的全部学习进度吗？此操作不可撤销。',
-      '全部清除',
-      () => {
-        courses.forEach((c) => resetCourse(c.id));
-        flush();
-      },
-    );
+    showConfirm('清空全部数据', '确定要清除所有学科的全部学习进度吗？此操作不可撤销。', '全部清除', () => {
+      courses.forEach((c) => resetCourse(c.id));
+      flush();
+    });
   };
 
-  return (
-    <View style={styles.container}>
-      <ScreenHeader title="数据管理" backLabel="设置" onBack={() => navigation.goBack()} variant="default" />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.section}>
-          {courses.map((c, i) => {
-            const progress = coursesState[c.id];
-            const completed = c.nodes.flatMap((n) => n.cards.map((card) => card.id))
-              .filter((id) => id in (progress?.completedCards ?? {})).length;
-            return (
-              <Fragment key={c.id}>
-                {i > 0 && <View style={styles.separator} />}
+  // ---- helper: count completed cards ----
+
+  const countCompleted = (courseId: string, cardIds: string[]) => {
+    const completed = coursesState[courseId]?.completedCards ?? {};
+    return cardIds.filter((id) => id in completed).length;
+  };
+
+  // ---- render items based on view level ----
+
+  const renderCourses = () => {
+    const hasProgress = courses.some((c) => {
+      const p = coursesState[c.id];
+      return p && Object.keys(p.completedCards).length > 0;
+    });
+
+    return (
+      <>
+        {courses.map((c, i) => {
+          const allCardIds = c.nodes.flatMap((n) => n.cards.map((card) => card.id));
+          const completed = countCompleted(c.id, allCardIds);
+          return (
+            <View key={c.id}>
+              {i > 0 && <View style={styles.separator} />}
+              <View style={styles.row}>
                 <TouchableOpacity
-                  style={styles.row}
-                  onPress={() => handleResetCourse(c.id, c.title)}
+                  style={styles.rowMain}
+                  onPress={() => setView({ level: 'modules', courseId: c.id })}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.rowIconBox, { backgroundColor: c.color }]}>
-                    {c.icon ? (
-                      <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={18} color={Colors.textInverse} />
-                    ) : (
-                      <Text style={styles.rowIconText}>{c.title[0]}</Text>
-                    )}
+                    <MaterialCommunityIcons
+                      name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+                      size={18}
+                      color={Colors.textInverse}
+                    />
                   </View>
                   <Text style={styles.rowText}>
                     {c.title}
@@ -91,26 +188,135 @@ export default function DataScreen() {
                   </Text>
                   <Text style={styles.arrow}>›</Text>
                 </TouchableOpacity>
-              </Fragment>
-            );
-          })}
+                {completed > 0 && (
+                  <TouchableOpacity
+                    style={styles.resetBtn}
+                    onPress={() => handleResetCourse(c.id, c.title)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <MaterialCommunityIcons name="refresh" size={18} color={Colors.danger} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          );
+        })}
 
-          {hasProgress && (
-            <>
-              <View style={styles.separator} />
+        {hasProgress && (
+          <>
+            <View style={styles.separator} />
+            <TouchableOpacity style={styles.row} onPress={handleClearAll} activeOpacity={0.7}>
+              <View style={styles.dangerRowLeft}>
+                <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.danger} />
+                <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
+              </View>
+              <Text style={[styles.arrow, styles.dangerArrow]}>›</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </>
+    );
+  };
+
+  const renderModules = (v: Extract<DataView, { level: 'modules' }>) => {
+    const course = courses.find((c) => c.id === v.courseId)!;
+    const modules = course.modulesMeta;
+
+    return modules.map((m, i) => {
+      const moduleNodes = course.nodes.filter((n) => n.moduleId === m.moduleId);
+      const cardIds = moduleNodes.flatMap((n) => n.cards.map((c) => c.id));
+      const completed = countCompleted(course.id, cardIds);
+      return (
+        <View key={m.moduleId}>
+          {i > 0 && <View style={styles.separator} />}
+          <View style={styles.row}>
+            <TouchableOpacity
+              style={styles.rowMain}
+              onPress={() => setView({ level: 'nodes', courseId: course.id, moduleId: m.moduleId })}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.rowIconBox, { backgroundColor: course.color }]}>
+                <MaterialCommunityIcons name="folder-outline" size={18} color={Colors.textInverse} />
+              </View>
+              <Text style={styles.rowText}>
+                {m.module}
+                {completed > 0 ? `（${completed} 张已完成）` : ''}
+              </Text>
+              <Text style={styles.arrow}>›</Text>
+            </TouchableOpacity>
+            {completed > 0 && (
               <TouchableOpacity
-                style={styles.row}
-                onPress={handleClearAll}
-                activeOpacity={0.7}
+                style={styles.resetBtn}
+                onPress={() => handleResetModule(course.id, m.moduleId, m.module)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <View style={styles.dangerRowLeft}>
-                  <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.danger} />
-                  <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
-                </View>
-                <Text style={[styles.arrow, styles.dangerArrow]}>›</Text>
+                <MaterialCommunityIcons name="refresh" size={18} color={Colors.danger} />
               </TouchableOpacity>
-            </>
-          )}
+            )}
+          </View>
+        </View>
+      );
+    });
+  };
+
+  const renderNodes = (v: Extract<DataView, { level: 'nodes' }>) => {
+    const course = courses.find((c) => c.id === v.courseId)!;
+    const nodes = course.nodes.filter((n) => n.moduleId === v.moduleId);
+
+    return nodes.map((n, i) => {
+      const cardIds = n.cards.map((c) => c.id);
+      const completed = countCompleted(course.id, cardIds);
+      return (
+        <View key={n.id}>
+          {i > 0 && <View style={styles.separator} />}
+          <View style={styles.row}>
+            <View style={styles.rowMain}>
+              <View style={[styles.rowIconBox, { backgroundColor: course.color }]}>
+                <MaterialCommunityIcons name="file-document-outline" size={18} color={Colors.textInverse} />
+              </View>
+              <Text style={styles.rowText}>
+                {n.title}
+                {completed > 0 ? `（${completed} 张已完成）` : ''}
+              </Text>
+            </View>
+            {completed > 0 && (
+              <TouchableOpacity
+                style={styles.resetBtn}
+                onPress={() => handleResetNode(course.id, n)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <MaterialCommunityIcons name="refresh" size={18} color={Colors.danger} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      );
+    });
+  };
+
+  // ---- main render ----
+
+  return (
+    <View style={styles.container}>
+      <ScreenHeader
+        title={headerTitle}
+        backLabel={headerBackLabel}
+        onBack={() => {
+          if (view.level === 'nodes') {
+            setView({ level: 'modules', courseId: view.courseId });
+          } else if (view.level === 'modules') {
+            setView({ level: 'courses' });
+          } else {
+            navigation.goBack();
+          }
+        }}
+        variant="default"
+      />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.section}>
+          {view.level === 'courses' && renderCourses()}
+          {view.level === 'modules' && renderModules(view)}
+          {view.level === 'nodes' && renderNodes(view)}
         </View>
       </ScrollView>
 
@@ -121,10 +327,7 @@ export default function DataScreen() {
             <Text style={styles.modalTitle}>{confirmTitle}</Text>
             <Text style={styles.modalMessage}>{confirmMessage}</Text>
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalBtn}
-                onPress={() => setConfirmVisible(false)}
-              >
+              <TouchableOpacity style={styles.modalBtn} onPress={() => setConfirmVisible(false)}>
                 <Text style={styles.modalCancelText}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -163,6 +366,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.md,
   },
+  rowMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   separator: {
     height: 1,
     backgroundColor: Colors.borderLight,
@@ -176,11 +384,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: Spacing.md,
   },
-  rowIconText: {
-    color: Colors.textInverse,
-    fontSize: 16,
-    fontWeight: '700',
-  },
   rowText: {
     fontSize: 16,
     color: Colors.text,
@@ -189,6 +392,13 @@ const styles = StyleSheet.create({
   arrow: {
     fontSize: 18,
     color: Colors.arrow,
+  },
+  resetBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.sm,
   },
   dangerRowLeft: {
     flexDirection: 'row',
