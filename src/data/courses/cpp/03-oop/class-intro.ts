@@ -181,7 +181,7 @@ export const classIntroNode: PathNode = {
           '}',
         ].join('\n'),
         language: 'cpp',
-        highlights: [3, 4, 5, 9, 10, 14, 15, 20, 21, 24, 29, 30, 33, 34],
+        highlights: [3, 4, 5, 10, 15, 21, 22, 25, 26, 30, 31, 32, 35],
       },
     },
     {
