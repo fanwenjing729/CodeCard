@@ -49,6 +49,7 @@ export default function NodeScreen({ route, navigation }: Props) {
     handlePracticeStateChange,
     practiceStates,
     getAnimTotalSteps,
+    isContinuous,
   } = useNodeScreen({ courseId, nodeId, cards, savedIndex, navigation });
 
   if (!card) {
@@ -103,11 +104,13 @@ export default function NodeScreen({ route, navigation }: Props) {
               activeOpacity={0.7}
             >
               <Text style={styles.navText}>
-                {card.cardType === 'animation' && animStep < totalAnimSteps - 1
-                  ? `下一步 ${animStep + 1}/${totalAnimSteps}`
-                  : isLast
-                    ? '完成'
-                    : '下一张'}
+                {isContinuous
+                  ? (isLast ? '完成' : '下一张')
+                  : card.cardType === 'animation' && animStep < totalAnimSteps - 1
+                    ? `下一步 ${animStep + 1}/${totalAnimSteps}`
+                    : isLast
+                      ? '完成'
+                      : '下一张'}
               </Text>
             </TouchableOpacity>
           )}

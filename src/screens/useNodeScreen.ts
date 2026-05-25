@@ -31,6 +31,10 @@ export function useNodeScreen({ courseId, nodeId, cards, savedIndex, navigation 
   const card = cards[index];
   const isLast = index === cards.length - 1;
 
+  const isContinuous =
+    card?.cardType === 'animation' &&
+    getAnimScenario(card.content.animationId)?.continuous === true;
+
   useEffect(() => {
     setAnimStep(0);
   }, [card?.id]);
@@ -54,16 +58,7 @@ export function useNodeScreen({ courseId, nodeId, cards, savedIndex, navigation 
     return scenario?.totalSteps ?? 1;
   }, [card]);
 
-  const advance = useCallback(() => {
-    if (!card) return;
-    if (card.cardType === 'animation') {
-      const totalSteps = getAnimTotalSteps();
-      if (animStep < totalSteps - 1) {
-        setAnimStep((s) => s + 1);
-        return;
-      }
-    }
-    rewardCard(courseId, card.id, XP_PER_CARD);
+  const goNext = useCallback(() => {
     if (isLast) {
       savePosition(index);
       navigation.goBack();
@@ -72,7 +67,26 @@ export function useNodeScreen({ courseId, nodeId, cards, savedIndex, navigation 
       setIndex(nextIndex);
       savePosition(nextIndex);
     }
-  }, [card, animStep, getAnimTotalSteps, rewardCard, courseId, isLast, index, savePosition, navigation]);
+  }, [isLast, index, savePosition, navigation]);
+
+  const advance = useCallback(() => {
+    if (!card) return;
+    if (card.cardType === 'animation') {
+      // 连续动画：点一次就完成当前卡片
+      if (isContinuous) {
+        rewardCard(courseId, card.id, XP_PER_CARD);
+        goNext();
+        return;
+      }
+      const totalSteps = getAnimTotalSteps();
+      if (animStep < totalSteps - 1) {
+        setAnimStep((s) => s + 1);
+        return;
+      }
+    }
+    rewardCard(courseId, card.id, XP_PER_CARD);
+    goNext();
+  }, [card, animStep, getAnimTotalSteps, isContinuous, rewardCard, courseId, goNext]);
 
   const previous = useCallback(() => {
     if (index > 0) {
@@ -101,21 +115,15 @@ export function useNodeScreen({ courseId, nodeId, cards, savedIndex, navigation 
   );
 
   const handlePracticeNext = useCallback(() => {
-    if (isLast) {
-      savePosition(index);
-      navigation.goBack();
-    } else {
-      const nextIndex = index + 1;
-      setIndex(nextIndex);
-      savePosition(nextIndex);
-    }
-  }, [isLast, index, savePosition, navigation]);
+    goNext();
+  }, [goNext]);
 
   return {
     card,
     index,
     animStep,
     isLast,
+    isContinuous,
     advance,
     previous,
     handlePracticeComplete,

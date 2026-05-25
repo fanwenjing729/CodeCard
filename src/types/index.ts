@@ -94,6 +94,8 @@ export interface AnimScenario {
   id: string;
   title: string;
   totalSteps: number;
+  /** true → 组件自动播放，NodeScreen 隐藏步进按钮。默认 false */
+  continuous?: boolean;
 }
 
 // ===== MemoryBox 动画专用 =====
@@ -164,7 +166,7 @@ export interface BranchScenario extends AnimScenario {
 
 // ===== Lottie 动画专用 =====
 export interface LottieScenario extends AnimScenario {
-  lottieFile: string;
+  source: any; // require('./file.json') 或 { uri: 'https://...' }
 }
 
 // ===== BreakContinue 动画专用 =====
