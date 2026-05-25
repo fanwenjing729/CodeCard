@@ -48,7 +48,7 @@ export default function CourseScreen({ route, navigation }: Props) {
       />
 
       <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 32 }]}>
-        {modules.map(({ moduleId, module: moduleName, nodes }) => {
+        {modules.map(({ moduleId, module: moduleName, nodes, note }) => {
           const { total, done } = countNodeCards(nodes, completedCards);
           const isDone = total > 0 && done === total;
           const isStarted = done > 0 && !isDone;
@@ -65,6 +65,7 @@ export default function CourseScreen({ route, navigation }: Props) {
               key={moduleId}
               title={moduleName}
               subtitle={subtitle}
+              note={note}
               status={isDone ? 'done' : isStarted ? 'started' : 'pending'}
               themeColor={themeColor}
               onPress={nodes.length > 0 ? () => navigation.navigate('Module', { courseId, moduleId }) : undefined}

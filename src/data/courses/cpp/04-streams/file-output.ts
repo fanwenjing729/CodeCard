@@ -1,11 +1,11 @@
 import type { PathNode } from '@/types';
 
-export const streamStateNode: PathNode = {
-  id: 'cpp-03-stream-state',
+export const fileOutputNode: PathNode = {
+  id: 'cpp-04-file-output',
   courseId: 'cpp',
   type: 'knowledge',
   moduleId: 'streams',
   module: '流与文件',
-  title: '流状态与格式化',
+  title: '文件输出',
   cards: [],
 };

@@ -7,9 +7,10 @@ interface Props {
   status: 'pending' | 'started' | 'done';
   themeColor: string;
   onPress?: () => void;
+  note?: string;
 }
 
-export default function ListItem({ title, subtitle, status, themeColor, onPress }: Props) {
+export default function ListItem({ title, subtitle, status, themeColor, onPress, note }: Props) {
   const isDone = status === 'done';
   const isStarted = status === 'started';
 
@@ -34,7 +35,14 @@ export default function ListItem({ title, subtitle, status, themeColor, onPress 
           {isDone && <Text style={styles.check}>✓</Text>}
         </View>
         <View>
-          <Text style={[styles.title, isDone && { color: Colors.textMuted }]}>{title}</Text>
+          <View style={styles.titleRow}>
+            <Text style={[styles.title, isDone && { color: Colors.textMuted }]}>{title}</Text>
+            {note != null && (
+              <View style={styles.noteBadge}>
+                <Text style={styles.noteText}>{note}</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
       </View>
@@ -72,10 +80,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   title: {
     fontSize: 16,
     fontWeight: '600',
     color: Colors.text,
+  },
+  noteBadge: {
+    backgroundColor: Colors.warning + '18',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  noteText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.warning,
   },
   subtitle: {
     fontSize: 12,

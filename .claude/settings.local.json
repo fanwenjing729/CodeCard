@@ -25,7 +25,28 @@
       "Bash(git push *)",
       "Bash(GIT_SEQUENCE_EDITOR=\"sed -i '1s/^pick 9891bca/pick 9891bca/; 2s/^pick f9dce79/fixup f9dce79/; 3s/^pick a60c3f3/pick a60c3f3/; 4s/^pick fd1b14d/fixup fd1b14d/; 5s/^pick de5f67f/pick de5f67f/; 6s/^pick 816554b/fixup 816554b/; 7s/^pick a33719d/fixup a33719d/'\" git rebase -i 6ff9771)",
       "Bash(git stash *)",
-      "Bash(GIT_SEQUENCE_EDITOR=\"sed -i '2s/pick/fixup/; 4s/pick/fixup/; 6s/pick/fixup/; 7s/pick/fixup/'\" git rebase -i 6ff9771)"
+      "Bash(GIT_SEQUENCE_EDITOR=\"sed -i '2s/pick/fixup/; 4s/pick/fixup/; 6s/pick/fixup/; 7s/pick/fixup/'\" git rebase -i 6ff9771)",
+      "Bash(git checkout *)",
+      "Bash(sed -i \"s/moduleId: 'linear', nodes/moduleId: 'linear', module: '线性表', nodes/\" src/data/courses/ds/01-linear/index.ts)",
+      "Bash(sed -i \"s/moduleId: 'tree', nodes/moduleId: 'tree', module: '树', nodes/\" src/data/courses/ds/02-tree/index.ts)",
+      "Bash(sed -i \"s/moduleId: 'graph', nodes/moduleId: 'graph', module: '图', nodes/\" src/data/courses/ds/03-graph/index.ts)",
+      "Bash(sed -i \"s/moduleId: 'search', nodes/moduleId: 'search', module: '查找', nodes/\" src/data/courses/ds/04-search/index.ts)",
+      "Bash(sed -i \"s/moduleId: 'sort', nodes/moduleId: 'sort', module: '排序', nodes/\" src/data/courses/ds/05-sort/index.ts)",
+      "Read(//tmp/**)",
+      "Bash(npx vitest *)",
+      "Bash(git *)",
+      "WebFetch(domain:news.gzu.edu.cn)",
+      "WebFetch(domain:www.gzu.edu.cn)",
+      "Bash(npx jest *)",
+      "Bash(sed -n '52,58p' G:/CodeCard/docs/cpp-course-design.md)",
+      "Bash(sed -n '46,52p' G:/CodeCard/docs/3-year-plan.md)",
+      "Bash(echo \"姓名: $\\(git config user.name\\)\")",
+      "Bash(echo \"邮箱: $\\(git config user.email\\)\")",
+      "Bash(echo \"姓名: $\\(git config --global user.name 2>/dev/null || echo '未设置'\\)\")",
+      "Bash(echo \"邮箱: $\\(git config --global user.email 2>/dev/null || echo '未设置'\\)\")",
+      "Bash(where python *)",
+      "Read(//usr/**)",
+      "Read(//c/Users/**)"
     ]
   }
 }

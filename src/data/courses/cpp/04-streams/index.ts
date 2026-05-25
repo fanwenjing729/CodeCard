@@ -9,6 +9,7 @@ import { binaryFileNode } from './binary-file';
 export const streamsModule: CourseModule = {
   moduleId: 'streams',
   module: '流与文件',
+  note: '可跳过',
   nodes: [
     streamBasicsNode,
     fileInputNode,

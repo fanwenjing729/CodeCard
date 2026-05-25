@@ -236,18 +236,18 @@ describe('removeCompletedCards', () => {
 
   it('deducts XP from course and global, recalculates level', () => {
     const s = getState();
-    s.addXP('cpp', 200); // 200 XP → level 3 (0–99=1, 100–199=2, 200–299=3)
+    s.addXP('cpp', 300); // 300 XP → level 3 (0–99=1, 100–299=2, 300–599=3)
     expect(getState().global.level).toBe(3);
 
-    s.rewardCard('cpp', 'c1', XP_PER_CARD);  // +5  → 205
-    s.rewardCard('cpp', 'c2', XP_PER_CARD);  // +5  → 210
+    s.rewardCard('cpp', 'c1', XP_PER_CARD);  // +5  → 305
+    s.rewardCard('cpp', 'c2', XP_PER_CARD);  // +5  → 310
 
-    s.removeCompletedCards('cpp', ['c1', 'c2'], XP_PER_CARD * 2); // -10 → 200
+    s.removeCompletedCards('cpp', ['c1', 'c2'], XP_PER_CARD * 2); // -10 → 300
 
     const s2 = getState();
-    expect(s2.courses['cpp'].xp).toBe(200);
-    expect(s2.global.totalXP).toBe(200);
-    expect(s2.global.level).toBe(3); // still 200, still level 3
+    expect(s2.courses['cpp'].xp).toBe(300);
+    expect(s2.global.totalXP).toBe(300);
+    expect(s2.global.level).toBe(3); // still 300, still level 3
   });
 
   it('does not let XP go below zero', () => {

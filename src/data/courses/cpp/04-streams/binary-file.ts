@@ -1,7 +1,7 @@
 import type { PathNode } from '@/types';
 
 export const binaryFileNode: PathNode = {
-  id: 'cpp-03-binary-file',
+  id: 'cpp-04-binary-file',
   courseId: 'cpp',
   type: 'knowledge',
   moduleId: 'streams',

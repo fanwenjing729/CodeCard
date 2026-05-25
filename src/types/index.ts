@@ -3,11 +3,15 @@ export interface CourseModule {
   moduleId: string;
   module: string;
   nodes: PathNode[];
+  /** 模块标签，如"可跳过"、"选读"，透传至 ModuleMeta */
+  note?: string;
 }
 
 export interface ModuleMeta {
   moduleId: string;
   module: string;
+  /** 模块标签，如"可跳过"、"选读"，显示在模块列表标题旁 */
+  note?: string;
 }
 
 export interface Course {
