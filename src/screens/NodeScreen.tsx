@@ -1,5 +1,7 @@
+import { useRef, useCallback, useLayoutEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Colors } from '@/theme';
+import Animated, { FadeInRight, FadeOutLeft, FadeInLeft, FadeOutRight } from 'react-native-reanimated';
+import { Colors, useColors, FontFamily } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -10,17 +12,24 @@ import { useCourse } from '@/lib/useCourses';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Node'>;
 
+const ANIM_DURATION = 250;
+
 export default function NodeScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
   const savedIndex = useProgressStore(
     (s) => s.courses[courseId]?.nodePositions[nodeId] ?? 0,
   );
+  const C = useColors();
 
   const course = useCourse(courseId);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
+  }, [navigation, C.bg]);
   if (!course) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>课程未找到</Text>
+      <View style={[styles.empty, { backgroundColor: C.bg }]}>
+        <Text style={[styles.emptyText, { color: C.textMuted }]}>课程未找到</Text>
       </View>
     );
   }
@@ -29,8 +38,8 @@ export default function NodeScreen({ route, navigation }: Props) {
   if (!node) {
     console.warn(`[NodeScreen] 节点未找到: nodeId="${nodeId}" courseId="${courseId}"`);
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>节点未找到</Text>
+      <View style={[styles.empty, { backgroundColor: C.bg }]}>
+        <Text style={[styles.emptyText, { color: C.textMuted }]}>节点未找到</Text>
       </View>
     );
   }
@@ -54,25 +63,51 @@ export default function NodeScreen({ route, navigation }: Props) {
 
   if (!card) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>暂无卡片</Text>
+      <View style={[styles.empty, { backgroundColor: C.bg }]}>
+        <Text style={[styles.emptyText, { color: C.textMuted }]}>暂无卡片</Text>
       </View>
     );
   }
 
   const totalAnimSteps = getAnimTotalSteps();
 
+  // 追踪切换方向
+  const directionRef = useRef<'forward' | 'backward'>('forward');
+
+  const handleAdvance = useCallback(() => {
+    directionRef.current = 'forward';
+    advance();
+  }, [advance]);
+
+  const handlePrevious = useCallback(() => {
+    directionRef.current = 'backward';
+    previous();
+  }, [previous]);
+
+  // 动画方向
+  const entering = directionRef.current === 'forward'
+    ? FadeInRight.duration(ANIM_DURATION)
+    : FadeInLeft.duration(ANIM_DURATION);
+  const exiting = directionRef.current === 'forward'
+    ? FadeOutLeft.duration(ANIM_DURATION)
+    : FadeOutRight.duration(ANIM_DURATION);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
       <ScreenHeader
         onBack={() => navigation.goBack()}
         backLabel="返回"
-        center={<Text style={styles.module}>{node.module}</Text>}
-        right={<Text style={styles.progress}>{index + 1} / {cards.length}</Text>}
+        center={<Text style={[styles.module, { color: C.textSecondary }]}>{node.module}</Text>}
+        right={<Text style={[styles.progress, { color: C.textMuted }]}>{index + 1} / {cards.length}</Text>}
         variant="compact"
       />
 
-      <View style={styles.cardArea}>
+      <Animated.View
+        key={index}
+        entering={entering}
+        exiting={exiting}
+        style={styles.cardArea}
+      >
         {renderCard({
           card,
           animStep,
@@ -82,13 +117,13 @@ export default function NodeScreen({ route, navigation }: Props) {
           practiceState: practiceStates.current.get(card.id),
           onPracticeStateChange: (s) => handlePracticeStateChange(card.id, s),
         })}
-      </View>
+      </Animated.View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: C.border }]}>
         <View style={styles.footerRow}>
           <TouchableOpacity
-            style={[styles.prevBtn, index === 0 && styles.navBtnDisabled]}
-            onPress={previous}
+            style={[styles.prevBtn, index === 0 && styles.navBtnDisabled, { backgroundColor: C.disabledBg }]}
+            onPress={handlePrevious}
             disabled={index === 0}
             activeOpacity={0.7}
           >
@@ -98,9 +133,10 @@ export default function NodeScreen({ route, navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.nextBtn,
+                { backgroundColor: (isLast && animStep >= totalAnimSteps - 1) ? C.success : C.primary },
                 isLast && animStep >= totalAnimSteps - 1 && styles.nextBtnDone,
               ]}
-              onPress={advance}
+              onPress={handleAdvance}
               activeOpacity={0.7}
             >
               <Text style={styles.navText}>
@@ -129,6 +165,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   module: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 14,
     fontWeight: '600',
     color: Colors.textSecondary,
@@ -167,6 +204,7 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   navText: {
+    fontFamily: FontFamily.sansBold,
     color: Colors.textInverse,
     fontSize: 16,
     fontWeight: '600',

@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, DarkColors } from '@/theme';
+import { ThemeContext } from '@/theme/ThemeContext';
+import type { ReactNode } from 'react';
 import { useProgressStore } from '@/store/useProgressStore';
 
 interface Props {
@@ -11,7 +13,7 @@ interface State {
   hasError: boolean;
 }
 
-export default class ErrorBoundary extends React.Component<Props, State> {
+export class ErrorBoundaryInner extends React.Component<Props & { colors: Record<string, string> }, State> {
   state: State = { hasError: false };
 
   static getDerivedStateFromError(): State {
@@ -33,17 +35,18 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const C = this.props.colors;
       return (
-        <View style={styles.container}>
-          <Text style={styles.title}>出错了</Text>
-          <Text style={styles.subtitle}>应用遇到了意外错误，学习进度已保存</Text>
-          <TouchableOpacity style={styles.button} onPress={this.handleRetry}>
-            <Text style={styles.buttonText}>重试</Text>
+        <View style={[styles.container, { backgroundColor: C.bg }]}>
+          <Text style={[styles.title, { color: C.optionText }]}>出错了</Text>
+          <Text style={[styles.subtitle, { color: C.textMuted }]}>应用遇到了意外错误，学习进度已保存</Text>
+          <TouchableOpacity style={[styles.button, { backgroundColor: C.primary }]} onPress={this.handleRetry}>
+            <Text style={[styles.buttonText, { color: C.textInverse }]}>重试</Text>
           </TouchableOpacity>
         </View>
       );
     }
-    return this.props.children;
+    return this.props.children as ReactNode;
   }
 }
 
@@ -79,3 +82,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default function ErrorBoundary({ children }: Props) {
+  return (
+    <ThemeContext.Consumer>
+      {({ isDark }) => (
+        <ErrorBoundaryInner colors={isDark ? DarkColors : Colors}>
+          {children}
+        </ErrorBoundaryInner>
+      )}
+    </ThemeContext.Consumer>
+  );
+}

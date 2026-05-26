@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useLayoutEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { Colors, Spacing, Radius } from '@/theme';
+import { Colors, useColors, Spacing, Radius } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -51,7 +51,13 @@ function calcXPToSubtract(
 // --------------- component ---------------
 
 export default function DataScreen() {
+  const C = useColors();
   const navigation = useNavigation<Nav>();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
+  }, [navigation, C.bg]);
+
   const coursesState = useProgressStore((s) => s.courses);
   const resetCourse = useProgressStore((s) => s.resetCourse);
   const removeCompletedCards = useProgressStore((s) => s.removeCompletedCards);
@@ -169,7 +175,7 @@ export default function DataScreen() {
           const completed = countCompleted(c.id, allCardIds);
           return (
             <View key={c.id}>
-              {i > 0 && <View style={styles.separator} />}
+              {i > 0 && <View style={[styles.separator, { backgroundColor: C.borderLight }]} />}
               <View style={styles.row}>
                 <TouchableOpacity
                   style={styles.rowMain}
@@ -180,14 +186,14 @@ export default function DataScreen() {
                     <MaterialCommunityIcons
                       name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap}
                       size={18}
-                      color={Colors.textInverse}
+                      color={C.textInverse}
                     />
                   </View>
-                  <Text style={styles.rowText}>
+                  <Text style={[styles.rowText, { color: C.text }]}>
                     {c.title}
                     {completed > 0 ? `（${completed} 张已完成）` : ''}
                   </Text>
-                  <Text style={styles.arrow}>›</Text>
+                  <Text style={[styles.arrow, { color: C.arrow }]}>›</Text>
                 </TouchableOpacity>
                 {completed > 0 && (
                   <TouchableOpacity
@@ -195,7 +201,7 @@ export default function DataScreen() {
                     onPress={() => handleResetCourse(c.id, c.title)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <MaterialCommunityIcons name="refresh" size={18} color={Colors.danger} />
+                    <MaterialCommunityIcons name="refresh" size={18} color={C.danger} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -205,13 +211,13 @@ export default function DataScreen() {
 
         {hasProgress && (
           <>
-            <View style={styles.separator} />
+            <View style={[styles.separator, { backgroundColor: C.borderLight }]} />
             <TouchableOpacity style={styles.row} onPress={handleClearAll} activeOpacity={0.7}>
               <View style={styles.dangerRowLeft}>
-                <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.danger} />
-                <Text style={[styles.rowText, styles.dangerText]}>清空全部数据</Text>
+                <MaterialCommunityIcons name="alert-circle-outline" size={20} color={C.danger} />
+                <Text style={[styles.rowText, styles.dangerText, { color: C.danger }]}>清空全部数据</Text>
               </View>
-              <Text style={[styles.arrow, styles.dangerArrow]}>›</Text>
+              <Text style={[styles.arrow, styles.dangerArrow, { color: C.danger }]}>›</Text>
             </TouchableOpacity>
           </>
         )}
@@ -229,7 +235,7 @@ export default function DataScreen() {
       const completed = countCompleted(course.id, cardIds);
       return (
         <View key={m.moduleId}>
-          {i > 0 && <View style={styles.separator} />}
+          {i > 0 && <View style={[styles.separator, { backgroundColor: C.borderLight }]} />}
           <View style={styles.row}>
             <TouchableOpacity
               style={styles.rowMain}
@@ -237,13 +243,13 @@ export default function DataScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.rowIconBox, { backgroundColor: course.color }]}>
-                <MaterialCommunityIcons name="folder-outline" size={18} color={Colors.textInverse} />
+                <MaterialCommunityIcons name="folder-outline" size={18} color={C.textInverse} />
               </View>
-              <Text style={styles.rowText}>
+              <Text style={[styles.rowText, { color: C.text }]}>
                 {m.module}
                 {completed > 0 ? `（${completed} 张已完成）` : ''}
               </Text>
-              <Text style={styles.arrow}>›</Text>
+              <Text style={[styles.arrow, { color: C.arrow }]}>›</Text>
             </TouchableOpacity>
             {completed > 0 && (
               <TouchableOpacity
@@ -251,7 +257,7 @@ export default function DataScreen() {
                 onPress={() => handleResetModule(course.id, m.moduleId, m.module)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <MaterialCommunityIcons name="refresh" size={18} color={Colors.danger} />
+                <MaterialCommunityIcons name="refresh" size={18} color={C.danger} />
               </TouchableOpacity>
             )}
           </View>
@@ -269,13 +275,13 @@ export default function DataScreen() {
       const completed = countCompleted(course.id, cardIds);
       return (
         <View key={n.id}>
-          {i > 0 && <View style={styles.separator} />}
+          {i > 0 && <View style={[styles.separator, { backgroundColor: C.borderLight }]} />}
           <View style={styles.row}>
             <View style={styles.rowMain}>
               <View style={[styles.rowIconBox, { backgroundColor: course.color }]}>
-                <MaterialCommunityIcons name="file-document-outline" size={18} color={Colors.textInverse} />
+                <MaterialCommunityIcons name="file-document-outline" size={18} color={C.textInverse} />
               </View>
-              <Text style={styles.rowText}>
+              <Text style={[styles.rowText, { color: C.text }]}>
                 {n.title}
                 {completed > 0 ? `（${completed} 张已完成）` : ''}
               </Text>
@@ -286,7 +292,7 @@ export default function DataScreen() {
                 onPress={() => handleResetNode(course.id, n)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <MaterialCommunityIcons name="refresh" size={18} color={Colors.danger} />
+                <MaterialCommunityIcons name="refresh" size={18} color={C.danger} />
               </TouchableOpacity>
             )}
           </View>
@@ -298,7 +304,7 @@ export default function DataScreen() {
   // ---- main render ----
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
       <ScreenHeader
         title={headerTitle}
         backLabel={headerBackLabel}
@@ -314,7 +320,7 @@ export default function DataScreen() {
         variant="default"
       />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.section}>
+        <View style={[styles.section, { backgroundColor: C.bg }]}>
           {view.level === 'courses' && renderCourses()}
           {view.level === 'modules' && renderModules(view)}
           {view.level === 'nodes' && renderNodes(view)}
@@ -323,16 +329,16 @@ export default function DataScreen() {
 
       {/* Confirm modal */}
       <Modal visible={confirmVisible} transparent animationType="fade">
-        <View style={styles.backdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{confirmTitle}</Text>
-            <Text style={styles.modalMessage}>{confirmMessage}</Text>
+        <View style={[styles.backdrop, { backgroundColor: C.backdrop }]}>
+          <View style={[styles.modalCard, { backgroundColor: C.bg }]}>
+            <Text style={[styles.modalTitle, { color: C.text }]}>{confirmTitle}</Text>
+            <Text style={[styles.modalMessage, { color: C.textSecondary }]}>{confirmMessage}</Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.modalBtn} onPress={() => setConfirmVisible(false)}>
-                <Text style={styles.modalCancelText}>取消</Text>
+                <Text style={[styles.modalCancelText, { color: C.textMuted }]}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.modalConfirmBtn]}
+                style={[styles.modalBtn, styles.modalConfirmBtn, { backgroundColor: C.danger }]}
                 onPress={() => {
                   setConfirmVisible(false);
                   confirmAction();

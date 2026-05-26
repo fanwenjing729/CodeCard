@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useLayoutEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -22,9 +22,14 @@ function groupByModule(nodes: PathNode[]) {
 
 export default function CourseScreen({ route, navigation }: Props) {
   const { courseId } = route.params;
+  const C = useColors();
   const coursesProgress = useProgressStore((s) => s.courses);
   const course = useCourse(courseId);
   const themeColor = course?.color ?? Colors.primary;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
+  }, [navigation, C.bg]);
 
   const modules = useMemo(() => {
     if (!course) return [];
@@ -40,7 +45,7 @@ export default function CourseScreen({ route, navigation }: Props) {
   }, [coursesProgress, courseId]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
       <ScreenHeader
         onBack={() => navigation.goBack()}
         title={course?.title ?? ''}
@@ -75,7 +80,7 @@ export default function CourseScreen({ route, navigation }: Props) {
         })}
 
         {modules.length === 0 && (
-          <Text style={styles.empty}>暂无课程内容</Text>
+          <Text style={[styles.empty, { color: C.textMuted }]}>暂无课程内容</Text>
         )}
       </ScrollView>
     </View>

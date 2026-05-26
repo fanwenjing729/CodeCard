@@ -16,11 +16,18 @@ vi.mock('@/store/useProgressStore', () => ({
   ),
 }));
 
-import ErrorBoundary from './ErrorBoundary';
+vi.mock('@/theme/ThemeContext', () => ({
+  ThemeContext: {
+    Consumer: ({ children }: any) => children({ isDark: false }),
+  },
+}));
+
+import ErrorBoundary, { ErrorBoundaryInner } from './ErrorBoundary';
+import { Colors } from '@/theme';
 
 describe('ErrorBoundary', () => {
   it('getDerivedStateFromError returns hasError true', () => {
-    const state = ErrorBoundary.getDerivedStateFromError();
+    const state = ErrorBoundaryInner.getDerivedStateFromError();
     expect(state.hasError).toBe(true);
   });
 
@@ -30,11 +37,10 @@ describe('ErrorBoundary', () => {
   });
 
   it('renders fallback UI when hasError', () => {
-    const instance = new (ErrorBoundary as any)({ children: null });
+    const instance = new (ErrorBoundaryInner as any)({ children: null, colors: Colors });
     instance.state = { hasError: true };
 
     const rendered = instance.render() as any;
-    // Fallback contains title, subtitle, and retry button
     const title = rendered.props.children[0];
     expect(title.props.children).toBe('出错了');
 
@@ -47,7 +53,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('flushes progress on componentDidCatch', () => {
-    const instance = new (ErrorBoundary.prototype.constructor as any)({ children: null });
+    const instance = new (ErrorBoundaryInner.prototype.constructor as any)({ children: null, colors: Colors });
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     instance.componentDidCatch(new Error('test'));
     spy.mockRestore();
@@ -55,13 +61,13 @@ describe('ErrorBoundary', () => {
   });
 
   it('renders children when hasError is false', () => {
-    const instance = new (ErrorBoundary.prototype.constructor as any)({
+    const instance = new (ErrorBoundaryInner.prototype.constructor as any)({
       children: React.createElement('Text' as any, {}, 'child content'),
+      colors: Colors,
     });
     instance.state = { hasError: false };
 
     const rendered = instance.render() as any;
-    // When no error, renders children directly
     expect(rendered.props.children).toBe('child content');
   });
 });

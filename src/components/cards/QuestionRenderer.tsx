@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors } from '@/theme';
 import type { PracticeContent } from '@/types';
 
 export function normalize(s: string): string {
@@ -36,31 +36,32 @@ export default function QuestionRenderer({
   onNext,
   nextLabel,
 }: QuestionRendererProps) {
+  const C = useColors();
   const isFill = content.questionType === 'fill';
   const rawAnswer = isFill ? fillAnswer.trim() : selected;
   const correct = submitted && isCorrectAnswer(rawAnswer, content.answer);
 
   return (
     <ScrollView style={styles.wrap} contentContainerStyle={styles.wrapContent}>
-      <Text style={styles.question}>{content.question}</Text>
+      <Text style={[styles.question, { color: C.text }]}>{content.question}</Text>
 
       {/* 选择题 */}
       {!isFill &&
         content.options?.map((opt) => {
-          let bg: string = Colors.optionBg;
-          if (submitted && isCorrectAnswer(opt, content.answer)) bg = Colors.correctBg;
-          if (submitted && opt === selected && !isCorrectAnswer(opt, content.answer)) bg = Colors.wrongBg;
-          if (!submitted && opt === selected) bg = Colors.optionSelectedBg;
+          let bg: string = C.optionBg;
+          if (submitted && isCorrectAnswer(opt, content.answer)) bg = C.correctBg;
+          if (submitted && opt === selected && !isCorrectAnswer(opt, content.answer)) bg = C.wrongBg;
+          if (!submitted && opt === selected) bg = C.optionSelectedBg;
 
           return (
             <TouchableOpacity
               key={opt}
-              style={[styles.option, { backgroundColor: bg }]}
+              style={[styles.option, { backgroundColor: bg, borderColor: C.optionBorder }]}
               onPress={() => { if (!submitted) onSelect(opt); }}
               disabled={submitted}
               activeOpacity={0.7}
             >
-              <Text style={styles.optionText}>{opt}</Text>
+              <Text style={[styles.optionText, { color: C.optionText }]}>{opt}</Text>
             </TouchableOpacity>
           );
         })}
@@ -71,18 +72,20 @@ export default function QuestionRenderer({
           <TextInput
             style={[
               styles.fillInput,
+              { color: C.optionText, backgroundColor: C.fillInputBg, borderColor: C.borderLight },
               submitted && (correct ? styles.fillCorrect : styles.fillWrong),
+              submitted && (correct ? { backgroundColor: C.correctBg } : { backgroundColor: C.wrongBg }),
             ]}
             value={fillAnswer}
             onChangeText={onFillChange}
             editable={!submitted}
             placeholder="输入你的答案..."
-            placeholderTextColor={Colors.textPlaceholder}
+            placeholderTextColor={C.textPlaceholder}
             autoCapitalize="none"
             autoCorrect={false}
           />
           {submitted && !correct && (
-            <Text style={styles.correctAnswer}>正确答案：{content.answer}</Text>
+            <Text style={[styles.correctAnswer, { color: C.textSecondary }]}>正确答案：{content.answer}</Text>
           )}
         </View>
       )}
@@ -90,29 +93,29 @@ export default function QuestionRenderer({
       {/* 提交 */}
       {!submitted && (
         <TouchableOpacity
-          style={[styles.submitBtn, !rawAnswer && styles.submitBtnDisabled]}
+          style={[styles.submitBtn, { backgroundColor: C.primary }, !rawAnswer && styles.submitBtnDisabled]}
           onPress={onSubmit}
           disabled={!rawAnswer}
           activeOpacity={0.7}
         >
-          <Text style={styles.submitText}>确认</Text>
+          <Text style={[styles.submitText, { color: C.textInverse }]}>确认</Text>
         </TouchableOpacity>
       )}
 
       {/* 反馈 + 下一题 */}
       {submitted && (
         <View style={styles.feedbackWrap}>
-          <View style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
-            <Text style={styles.feedbackIcon}>{correct ? '✓ 正确！' : '✗ 错误'}</Text>
-            <Text style={styles.explanation}>{content.explanation}</Text>
+          <View style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong, correct ? { backgroundColor: C.correctBg } : { backgroundColor: C.wrongBg }]}>
+            <Text style={[styles.feedbackIcon, { color: C.text }]}>{correct ? '✓ 正确！' : '✗ 错误'}</Text>
+            <Text style={[styles.explanation, { color: C.explanationText }]}>{content.explanation}</Text>
           </View>
           {onNext && (
             <TouchableOpacity
-              style={[styles.nextBtn, correct ? styles.nextBtnCorrect : {}]}
+              style={[styles.nextBtn, correct ? styles.nextBtnCorrect : {}, correct ? { backgroundColor: C.primary } : { backgroundColor: C.warning }]}
               onPress={onNext}
               activeOpacity={0.7}
             >
-              <Text style={styles.nextText}>{nextLabel}</Text>
+              <Text style={[styles.nextText, { color: C.textInverse }]}>{nextLabel}</Text>
             </TouchableOpacity>
           )}
         </View>

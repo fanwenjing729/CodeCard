@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors, FontFamily } from '@/theme';
 import type { TextContent } from '@/types';
 
 interface Props {
@@ -7,13 +7,14 @@ interface Props {
 }
 
 export default function ConceptCard({ content }: Props) {
+  const C = useColors();
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: C.bg }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.title}>{content.title}</Text>
-      <Text style={styles.body}>{content.body}</Text>
+      <Text style={[styles.title, { color: C.text }]}>{content.title}</Text>
+      <Text style={[styles.body, { color: C.bodyText }]}>{content.body}</Text>
     </ScrollView>
   );
 }
@@ -29,6 +30,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 22,
     fontWeight: '700',
     color: Colors.text,

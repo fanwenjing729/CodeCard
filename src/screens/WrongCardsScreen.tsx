@@ -1,5 +1,6 @@
+import { useLayoutEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors } from '@/theme';
 import { useProgressStore } from '@/store/useProgressStore';
 import { getCourse, getCourses, useCourse } from '@/lib/useCourses';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -47,13 +48,14 @@ function CourseList({
   entries: WrongEntry[];
   onPress: (course: { id: string; title: string; color: string }) => void;
 }) {
+  const C = useColors();
   type Summary = { id: string; title: string; color: string; count: number };
   const map = new Map<string, Summary>();
   for (const e of entries) {
     const s = map.get(e.courseId);
     if (s) { s.count++; } else {
       const c = getCourse(e.courseId);
-      map.set(e.courseId, { id: e.courseId, title: c?.title ?? '', color: c?.color ?? Colors.primary, count: 1 });
+      map.set(e.courseId, { id: e.courseId, title: c?.title ?? '', color: c?.color ?? C.primary, count: 1 });
     }
   }
   const summaries = [...map.values()];
@@ -63,19 +65,19 @@ function CourseList({
       {summaries.map((c) => (
         <TouchableOpacity
           key={c.id}
-          style={styles.row}
+          style={[styles.row, { backgroundColor: C.bg }]}
           onPress={() => onPress({ id: c.id, title: c.title, color: c.color })}
           activeOpacity={0.7}
         >
           <View style={styles.rowLeft}>
             <View style={[styles.dot, { backgroundColor: c.color }]} />
-            <Text style={styles.rowTitle}>{c.title}</Text>
+            <Text style={[styles.rowTitle, { color: C.text }]}>{c.title}</Text>
           </View>
           <View style={styles.rowRight}>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{c.count}</Text>
+            <View style={[styles.countBadge, { backgroundColor: C.warning }]}>
+              <Text style={[styles.countBadgeText, { color: C.bg }]}>{c.count}</Text>
             </View>
-            <Text style={styles.arrow}>›</Text>
+            <Text style={[styles.arrow, { color: C.arrow }]}>›</Text>
           </View>
         </TouchableOpacity>
       ))}
@@ -91,6 +93,7 @@ function ModuleList({
   entries: WrongEntry[];
   onPress: (moduleId: string, moduleName: string) => void;
 }) {
+  const C = useColors();
   type Summary = { moduleId: string; module: string; count: number };
   const map = new Map<string, Summary>();
   for (const e of entries) {
@@ -106,19 +109,19 @@ function ModuleList({
       {summaries.map((m) => (
         <TouchableOpacity
           key={m.moduleId}
-          style={styles.row}
+          style={[styles.row, { backgroundColor: C.bg }]}
           onPress={() => onPress(m.moduleId, m.module)}
           activeOpacity={0.7}
         >
           <View style={styles.rowLeft}>
             <Text style={styles.moduleIcon}>📦</Text>
-            <Text style={styles.rowTitle}>{m.module}</Text>
+            <Text style={[styles.rowTitle, { color: C.text }]}>{m.module}</Text>
           </View>
           <View style={styles.rowRight}>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{m.count}</Text>
+            <View style={[styles.countBadge, { backgroundColor: C.warning }]}>
+              <Text style={[styles.countBadgeText, { color: C.bg }]}>{m.count}</Text>
             </View>
-            <Text style={styles.arrow}>›</Text>
+            <Text style={[styles.arrow, { color: C.arrow }]}>›</Text>
           </View>
         </TouchableOpacity>
       ))}
@@ -128,25 +131,32 @@ function ModuleList({
 
 // ===== Level 3: 错题详情 =====
 function CardList({ entries }: { entries: WrongEntry[] }) {
+  const C = useColors();
   return (
     <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
       {entries.map((entry) => (
-        <View key={entry.cardId} style={styles.card}>
-          <Text style={styles.question}>{entry.content.question}</Text>
+        <View key={entry.cardId} style={[styles.card, { backgroundColor: C.bg }]}>
+          <Text style={[styles.question, { color: C.text }]}>{entry.content.question}</Text>
           <View style={styles.answerRow}>
-            <Text style={styles.answerLabel}>答案 </Text>
-            <Text style={styles.answerText}>{entry.content.answer}</Text>
+            <Text style={[styles.answerLabel, { color: C.textMuted }]}>答案 </Text>
+            <Text style={[styles.answerText, { color: C.success }]}>{entry.content.answer}</Text>
           </View>
-          <Text style={styles.explanation}>{entry.content.explanation}</Text>
+          <Text style={[styles.explanation, { color: C.textSecondary }]}>{entry.content.explanation}</Text>
         </View>
       ))}
-      <Text style={styles.footer}>共 {entries.length} 道错题 · 答对后自动移除</Text>
+      <Text style={[styles.footer, { color: C.textPlaceholder }]}>共 {entries.length} 道错题 · 答对后自动移除</Text>
     </ScrollView>
   );
 }
 
 // ===== Screen =====
 export default function WrongCardsScreen({ route, navigation }: Props) {
+  const C = useColors();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bgTertiary } });
+  }, [navigation, C.bgTertiary]);
+
   const coursesState = useProgressStore((s) => s.courses);
   const { courseId, moduleId } = route.params ?? {};
 
@@ -155,13 +165,13 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
   // Level 1 — 课程列表
   if (!courseId) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
         <ScreenHeader onBack={() => navigation.goBack()} backLabel="返回" title="错题集" variant="default" />
         {allEntries.length === 0 ? (
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyIcon}>🎯</Text>
-            <Text style={styles.emptyTitle}>暂无错题</Text>
-            <Text style={styles.emptySubtitle}>答题时选错会自动收录到这里</Text>
+            <Text style={[styles.emptyTitle, { color: C.text }]}>暂无错题</Text>
+            <Text style={[styles.emptySubtitle, { color: C.textMuted }]}>答题时选错会自动收录到这里</Text>
           </View>
         ) : (
           <CourseList
@@ -179,7 +189,7 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
 
   if (!moduleId) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
         <ScreenHeader
           onBack={() => navigation.goBack()}
           backLabel="错题集"
@@ -189,8 +199,8 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
         {courseEntries.length === 0 ? (
           <View style={styles.emptyWrap}>
             <Text style={styles.emptyIcon}>✅</Text>
-            <Text style={styles.emptyTitle}>全部掌握</Text>
-            <Text style={styles.emptySubtitle}>这门课的错题都已消灭</Text>
+            <Text style={[styles.emptyTitle, { color: C.text }]}>全部掌握</Text>
+            <Text style={[styles.emptySubtitle, { color: C.textMuted }]}>这门课的错题都已消灭</Text>
           </View>
         ) : (
           <ModuleList
@@ -206,7 +216,7 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
   const moduleEntries = courseEntries.filter((e) => e.moduleId === moduleId);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
       <ScreenHeader
         onBack={() => navigation.goBack()}
         backLabel={course?.title ?? '返回'}
@@ -216,8 +226,8 @@ export default function WrongCardsScreen({ route, navigation }: Props) {
       {moduleEntries.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyIcon}>✅</Text>
-          <Text style={styles.emptyTitle}>全部掌握</Text>
-          <Text style={styles.emptySubtitle}>此模块的错题都已消灭</Text>
+          <Text style={[styles.emptyTitle, { color: C.text }]}>全部掌握</Text>
+          <Text style={[styles.emptySubtitle, { color: C.textMuted }]}>此模块的错题都已消灭</Text>
         </View>
       ) : (
         <CardList entries={moduleEntries} />

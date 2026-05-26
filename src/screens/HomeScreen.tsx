@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import type { DimensionValue } from 'react-native';
-import { Colors, FontSize, Radius, Spacing } from '@/theme';
+import { Colors, useColors, FontSize, FontFamily, Radius, Spacing } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +9,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useProgressStore } from '@/store/useProgressStore';
 import { countNodeCards } from '@/lib/courseProgress';
 import { useCourses } from '@/lib/useCourses';
+import Skeleton from '@/components/shared/Skeleton';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -16,13 +17,41 @@ export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
   const coursesProgress = useProgressStore((s) => s.courses);
+  const hydrated = useProgressStore((s) => s.hydrated);
   const courses = useCourses();
+  const C = useColors();
+
+  if (!hydrated) {
+    return (
+      <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
+        <View style={{ marginTop: insets.top + 42, paddingHorizontal: Spacing.lg }}>
+          <Skeleton width={160} height={32} borderRadius={4} />
+          <View style={{ height: 4 }} />
+          <Skeleton width={120} height={15} borderRadius={4} />
+        </View>
+        <View style={[styles.list, { marginTop: 20 }]}>
+          {[1, 2, 3].map((i) => (
+            <View key={i} style={[styles.card, { backgroundColor: C.bg, borderLeftWidth: 0 }]}>
+              <Skeleton width={48} height={48} borderRadius={14} />
+              <View style={styles.info}>
+                <Skeleton width={100} height={17} borderRadius={4} />
+                <View style={{ height: 3 }} />
+                <Skeleton width={140} height={13} borderRadius={4} />
+                <View style={{ height: 8 }} />
+                <Skeleton width="80%" height={4} borderRadius={2} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
       <View style={{ marginTop: insets.top + 42 }}>
-        <Text style={styles.heading}>CodeCard</Text>
-        <Text style={styles.subtitle}>选择学科开始学习</Text>
+        <Text style={[styles.heading, { color: C.text }]}>CodeCard</Text>
+        <Text style={[styles.subtitle, { color: C.textMuted }]}>选择学科开始学习</Text>
       </View>
       <View style={styles.list}>
         {courses.map((c) => {
@@ -32,34 +61,34 @@ export default function HomeScreen() {
           return (
             <TouchableOpacity
               key={c.id}
-              style={[styles.card, { borderLeftColor: c.color }]}
+              style={[styles.card, { borderLeftColor: c.color, backgroundColor: C.bg }]}
               onPress={() => navigation.navigate('Course', { courseId: c.id })}
               activeOpacity={0.7}
             >
               <View style={[styles.iconBox, { backgroundColor: c.color }]}>
                 {c.icon ? (
-                  <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={26} color={Colors.textInverse} />
+                  <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={26} color={C.textInverse} />
                 ) : (
                   <Text style={styles.iconText}>{c.title[0]}</Text>
                 )}
               </View>
               <View style={styles.info}>
-                <Text style={styles.title}>{c.title}</Text>
-                <Text style={styles.meta}>
+                <Text style={[styles.title, { color: C.text }]}>{c.title}</Text>
+                <Text style={[styles.meta, { color: C.textMuted }]}>
                   {c.moduleCount > 0
                     ? `${c.moduleCount} 个模块 · ${total} 张卡片`
                     : '暂无内容'}
                 </Text>
                 {total > 0 && (
                   <View style={styles.progressRow}>
-                    <View style={styles.miniBar}>
+                    <View style={[styles.miniBar, { backgroundColor: C.progressBarBg }]}>
                       <View style={[styles.miniBarFill, { width: `${pct}%` as DimensionValue, backgroundColor: c.color }]} />
                     </View>
-                    <Text style={styles.pct}>{pct}%</Text>
+                    <Text style={[styles.pct, { color: C.textMuted }]}>{pct}%</Text>
                   </View>
                 )}
               </View>
-              <Text style={styles.arrow}>›</Text>
+              <Text style={[styles.arrow, { color: C.arrow }]}>›</Text>
             </TouchableOpacity>
           );
         })}
@@ -74,6 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgTertiary,
   },
   heading: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 28,
     fontWeight: '800',
     color: Colors.text,
@@ -117,6 +147,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   title: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 17,
     fontWeight: '700',
     color: Colors.text,

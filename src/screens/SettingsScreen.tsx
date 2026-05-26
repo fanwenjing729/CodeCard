@@ -10,8 +10,10 @@ import {
   Image,
   Modal,
   TextInput,
+  Switch,
 } from 'react-native';
-import { Colors, Spacing, Radius } from '@/theme';
+import { Colors, useColors, useTheme, FontFamily, Gradient, Spacing, Radius } from '@/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -24,6 +26,8 @@ import Constants from 'expo-constants';
 const version = Constants.expoConfig?.version ?? '1.0.0';
 
 export default function SettingsScreen() {
+  const C = useColors();
+  const { isDark, toggle: toggleTheme } = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -69,20 +73,25 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
+    <ScrollView style={[styles.container, { backgroundColor: C.bgTertiary }]} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
       {/* 头像区域 */}
-      <View style={styles.avatarSection}>
+      <LinearGradient
+        colors={[C.bgTertiary, C.bg, C.bgTertiary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.avatarSection}
+      >
         <TouchableOpacity
           onPress={() => {
             if (!isLoggedIn) navigation.navigate('Login');
           }}
           activeOpacity={isLoggedIn ? 1 : 0.7}
         >
-          <View style={styles.avatarCircle}>
+          <View style={[styles.avatarCircle, { backgroundColor: C.border }]}>
             {user?.avatar ? (
               <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
             ) : (
-              <MaterialCommunityIcons name="account" size={52} color={Colors.arrow} />
+              <MaterialCommunityIcons name="account" size={52} color={C.arrow} />
             )}
           </View>
         </TouchableOpacity>
@@ -91,25 +100,25 @@ export default function SettingsScreen() {
           <>
             <TouchableOpacity onPress={openEditDisplayId} activeOpacity={0.6}>
               <View style={styles.displayIdRow}>
-                <Text style={styles.displayIdText} numberOfLines={1}>
+                <Text style={[styles.displayIdText, { color: C.text }]} numberOfLines={1}>
                   {user?.displayId || '设置用户名'}
                 </Text>
-                <MaterialCommunityIcons name="pencil" size={14} color={Colors.textMuted} />
+                <MaterialCommunityIcons name="pencil" size={14} color={C.textMuted} />
               </View>
             </TouchableOpacity>
-            <Text style={styles.phoneText}>{user?.phone ?? user?.name ?? ''}</Text>
+            <Text style={[styles.phoneText, { color: C.textMuted }]}>{user?.phone ?? user?.name ?? ''}</Text>
 
-            <Text style={styles.syncText}>上次同步：{lastSync ? formatTime(lastSync) : '暂未同步'}</Text>
+            <Text style={[styles.syncText, { color: C.textPlaceholder }]}>上次同步：{lastSync ? formatTime(lastSync) : '暂未同步'}</Text>
 
             <View style={styles.actionRow}>
               <TouchableOpacity
-                style={styles.actionButton}
+                style={[styles.actionButton, { backgroundColor: C.primary }]}
                 onPress={handleSync}
                 disabled={syncing}
                 activeOpacity={0.7}
               >
                 {syncing ? (
-                  <ActivityIndicator size="small" color={Colors.primary} />
+                  <ActivityIndicator size="small" color={C.textInverse} />
                 ) : (
                   <Text style={styles.actionButtonText}>立即同步</Text>
                 )}
@@ -125,9 +134,9 @@ export default function SettingsScreen() {
           </>
         ) : (
           <>
-            <Text style={styles.notLoggedInText}>未登录</Text>
+            <Text style={[styles.notLoggedInText, { color: C.disabledText }]}>未登录</Text>
             <TouchableOpacity
-              style={styles.loginButton}
+              style={[styles.loginButton, { backgroundColor: C.primary }]}
               onPress={() => navigation.navigate('Login')}
               activeOpacity={0.7}
             >
@@ -135,15 +144,15 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </>
         )}
-      </View>
+      </LinearGradient>
 
       {/* 编辑 displayId 弹窗 */}
       <Modal visible={editModalVisible} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>修改用户名</Text>
+        <View style={[styles.modalBackdrop, { backgroundColor: C.backdrop }]}>
+          <View style={[styles.modalCard, { backgroundColor: C.bg }]}>
+            <Text style={[styles.modalTitle, { color: C.text }]}>修改用户名</Text>
             <TextInput
-              style={styles.modalInput}
+              style={[styles.modalInput, { color: C.text, borderColor: C.inputBorder }]}
               value={editingDisplayId}
               onChangeText={setEditingDisplayId}
               placeholder="输入用户名"
@@ -155,10 +164,10 @@ export default function SettingsScreen() {
                 style={styles.modalButton}
                 onPress={() => setEditModalVisible(false)}
               >
-                <Text style={styles.modalButtonCancel}>取消</Text>
+                <Text style={[styles.modalButtonCancel, { color: C.textMuted }]}>取消</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonConfirm]}
+                style={[styles.modalButton, styles.modalButtonConfirm, { backgroundColor: C.primary }]}
                 onPress={confirmEditDisplayId}
               >
                 <Text style={styles.modalButtonConfirmText}>确认</Text>
@@ -169,23 +178,32 @@ export default function SettingsScreen() {
       </Modal>
 
       {/* 数据管理 */}
-      <View style={styles.section}>
+      <View style={[styles.section, { backgroundColor: C.bg }]}>
         <TouchableOpacity
           style={styles.entryRow}
           onPress={() => navigation.navigate('Data')}
           activeOpacity={0.7}
         >
-          <Text style={styles.entryText}>数据管理</Text>
-          <Text style={styles.entryArrow}>›</Text>
+          <Text style={[styles.entryText, { color: C.text }]}>数据管理</Text>
+          <Text style={[styles.entryArrow, { color: C.arrow }]}>›</Text>
         </TouchableOpacity>
       </View>
 
       {/* 关于 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>关于</Text>
+      <View style={[styles.section, { backgroundColor: C.bg }]}>
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>关于</Text>
+        <View style={[styles.row, { borderBottomWidth: 1, borderBottomColor: C.border }]}>
+          <Text style={[styles.rowText, { color: C.text }]}>深色模式</Text>
+          <Switch
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: C.progressBarBg, true: C.primary }}
+            thumbColor={C.bg}
+          />
+        </View>
         <View style={styles.row}>
-          <Text style={styles.rowText}>版本</Text>
-          <Text style={styles.rowValue}>CodeCard v{version}</Text>
+          <Text style={[styles.rowText, { color: C.text }]}>版本</Text>
+          <Text style={[styles.rowValue, { color: C.textMuted }]}>CodeCard v{version}</Text>
         </View>
       </View>
     </ScrollView>
@@ -273,6 +291,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   displayIdText: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 20,
     fontWeight: '600',
     color: Colors.text,

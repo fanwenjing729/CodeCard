@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useLayoutEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import ScreenHeader from '@/components/shared/ScreenHeader';
@@ -13,9 +13,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Module'>;
 
 export default function ModuleScreen({ route, navigation }: Props) {
   const { courseId, moduleId } = route.params;
+  const C = useColors();
   const coursesProgress = useProgressStore((s) => s.courses);
   const course = useCourse(courseId);
   const themeColor = course?.color ?? Colors.primary;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
+  }, [navigation, C.bg]);
 
   const completedCards = useMemo(() => {
     return coursesProgress[courseId]?.completedCards ?? {};
@@ -28,7 +33,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
   const moduleName = nodes[0]?.module ?? '未知模块';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
       <ScreenHeader
         onBack={() => navigation.goBack()}
         title={moduleName}
@@ -45,9 +50,9 @@ export default function ModuleScreen({ route, navigation }: Props) {
 
           if (total === 0) {
             return (
-              <View key={node.id} style={styles.nodeCardEmpty}>
-                <Text style={styles.nodeTitleEmpty}>{node.title}</Text>
-                <Text style={styles.comingSoon}>敬请期待</Text>
+              <View key={node.id} style={[styles.nodeCardEmpty, { backgroundColor: C.bgTertiary }]}>
+                <Text style={[styles.nodeTitleEmpty, { color: C.textMuted }]}>{node.title}</Text>
+                <Text style={[styles.comingSoon, { color: C.textPlaceholder }]}>敬请期待</Text>
               </View>
             );
           }
@@ -75,7 +80,7 @@ export default function ModuleScreen({ route, navigation }: Props) {
         })}
 
         {nodes.length === 0 && (
-          <Text style={styles.empty}>暂无内容</Text>
+          <Text style={[styles.empty, { color: C.textMuted }]}>暂无内容</Text>
         )}
       </ScrollView>
     </View>

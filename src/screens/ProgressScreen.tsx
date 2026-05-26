@@ -1,17 +1,21 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import type { DimensionValue } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors, FontFamily, Gradient } from '@/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle } from 'react-native-svg';
+import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useProgressStore } from '@/store/useProgressStore';
 import { countNodeCards } from '@/lib/courseProgress';
 import { xpForLevelStart, xpForNextLevel } from '@/lib/xp';
 import { useCourses } from '@/lib/useCourses';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 // ---- 环形进度条 ----
 const RING_SIZE = 160;
@@ -26,7 +30,19 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
   xpIntoLevel: number;
   nextLevelXP: number;
 }) {
-  const dashOffset = RING_CIRCUMFERENCE * (1 - xpPercent / 100);
+  const C = useColors();
+  const animProgress = useSharedValue(xpPercent);
+
+  useEffect(() => {
+    animProgress.value = withTiming(xpPercent, {
+      duration: 600,
+      easing: Easing.inOut(Easing.ease),
+    });
+  }, [xpPercent, animProgress]);
+
+  const animProps = useAnimatedProps(() => ({
+    strokeDashoffset: RING_CIRCUMFERENCE * (1 - animProgress.value / 100),
+  }));
 
   return (
     <View style={styles.ringWrap}>
@@ -36,7 +52,7 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
           cx={RING_CENTER}
           cy={RING_CENTER}
           r={RING_RADIUS}
-          stroke={Colors.progressBarBg}
+          stroke={C.progressBarBg}
           strokeWidth={RING_STROKE}
           fill="none"
           strokeLinecap="round"
@@ -44,25 +60,25 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
           origin={`${RING_CENTER}, ${RING_CENTER}`}
         />
         {/* 进度弧 */}
-        <Circle
+        <AnimatedCircle
           cx={RING_CENTER}
           cy={RING_CENTER}
           r={RING_RADIUS}
-          stroke={Colors.primary}
+          stroke={C.primary}
           strokeWidth={RING_STROKE}
           fill="none"
           strokeLinecap="round"
           strokeDasharray={RING_CIRCUMFERENCE}
-          strokeDashoffset={dashOffset}
+          animatedProps={animProps}
           rotation="-90"
           origin={`${RING_CENTER}, ${RING_CENTER}`}
         />
       </Svg>
       {/* 中心文字 */}
       <View style={styles.ringLabel}>
-        <Text style={styles.ringLevel}>{level}</Text>
-        <Text style={styles.ringLV}>LV</Text>
-        <Text style={styles.ringXP}>{xpIntoLevel}/{nextLevelXP}</Text>
+        <Text style={[styles.ringLevel, { color: C.textInverse }]}>{level}</Text>
+        <Text style={[styles.ringLV, { color: C.textInverseSecondary }]}>LV</Text>
+        <Text style={[styles.ringXP, { color: C.textInverseSecondary }]}>{xpIntoLevel}/{nextLevelXP}</Text>
       </View>
     </View>
   );
@@ -70,6 +86,7 @@ function LevelRing({ level, xpPercent, xpIntoLevel, nextLevelXP }: {
 
 // ---- 页面 ----
 export default function ProgressScreen() {
+  const C = useColors();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const global = useProgressStore((s) => s.global);
@@ -105,51 +122,56 @@ export default function ProgressScreen() {
   );
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
+    <ScrollView style={[styles.container, { backgroundColor: C.bgTertiary }]} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
       {/* 等级卡片 — 环形进度 */}
-      <View style={styles.levelCard}>
+      <LinearGradient
+        colors={Gradient.levelRing as unknown as readonly [string, string]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.levelCard}
+      >
         <LevelRing
           level={global.level}
           xpPercent={xpPercent}
           xpIntoLevel={xpIntoLevel}
           nextLevelXP={nextLevelXP}
         />
-      </View>
+      </LinearGradient>
 
       {/* 错题集 */}
       {totalWrongCards === 0 ? (
-        <View style={styles.wrongCardEmpty}>
-          <MaterialCommunityIcons name="check-circle-outline" size={20} color={Colors.success} />
-          <Text style={styles.wrongCardEmptyText}>全部掌握</Text>
+        <View style={[styles.wrongCardEmpty, { backgroundColor: C.bg }]}>
+          <MaterialCommunityIcons name="check-circle-outline" size={20} color={C.success} />
+          <Text style={[styles.wrongCardEmptyText, { color: C.success }]}>全部掌握</Text>
         </View>
       ) : (
         <TouchableOpacity
-          style={styles.wrongCard}
+          style={[styles.wrongCard, { backgroundColor: C.bg }]}
           onPress={() => navigation.navigate('WrongCards')}
           activeOpacity={0.7}
         >
           <View style={styles.wrongHeader}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={20} color={Colors.warning} />
-            <Text style={styles.wrongHeaderTitle}>错题集</Text>
-            <View style={styles.wrongBadge}>
-              <Text style={styles.wrongBadgeText}>{totalWrongCards}</Text>
+            <MaterialCommunityIcons name="alert-circle-outline" size={20} color={C.warning} />
+            <Text style={[styles.wrongHeaderTitle, { color: C.text }]}>错题集</Text>
+            <View style={[styles.wrongBadge, { backgroundColor: C.warning }]}>
+              <Text style={[styles.wrongBadgeText, { color: C.textInverse }]}>{totalWrongCards}</Text>
             </View>
             <View style={{ flex: 1 }} />
-            <MaterialCommunityIcons name="chevron-right" size={18} color={Colors.arrow} />
+            <MaterialCommunityIcons name="chevron-right" size={18} color={C.arrow} />
           </View>
           {courseWrongCounts.map((c) => (
             <View key={c.courseId} style={styles.wrongCourseRow}>
               <View style={[styles.wrongCourseDot, { backgroundColor: c.color }]} />
-              <Text style={styles.wrongCourseName}>{c.title}</Text>
-              <Text style={styles.wrongCourseCount}>{c.count} 道</Text>
+              <Text style={[styles.wrongCourseName, { color: C.textSecondary }]}>{c.title}</Text>
+              <Text style={[styles.wrongCourseCount, { color: C.textMuted }]}>{c.count} 道</Text>
             </View>
           ))}
         </TouchableOpacity>
       )}
 
       {/* 各学科进度 */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>学科进度</Text>
+      <View style={[styles.section, { backgroundColor: C.bg }]}>
+        <Text style={[styles.sectionTitle, { color: C.textMuted }]}>学科进度</Text>
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
           const { total, done, pct } = countNodeCards(c.nodes, progress?.completedCards ?? {});
@@ -158,10 +180,10 @@ export default function ProgressScreen() {
             <View key={c.id} style={styles.courseRow}>
               <View style={styles.courseInfo}>
                 <View style={[styles.courseDot, { backgroundColor: c.color }]} />
-                <Text style={styles.courseName}>{c.title}</Text>
+                <Text style={[styles.courseName, { color: C.text }]}>{c.title}</Text>
               </View>
               <View style={styles.courseBarWrap}>
-                <View style={styles.courseBar}>
+                <View style={[styles.courseBar, { backgroundColor: C.progressBarBg }]}>
                   <View
                     style={[
                       styles.courseBarFill,
@@ -169,7 +191,7 @@ export default function ProgressScreen() {
                     ]}
                   />
                 </View>
-                <Text style={styles.courseBarText}>
+                <Text style={[styles.courseBarText, { color: C.textMuted }]}>
                   {done}/{total} · {pct}%
                 </Text>
               </View>
@@ -210,12 +232,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ringLevel: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 48,
     fontWeight: '800',
     color: Colors.text,
     lineHeight: 50,
   },
   ringLV: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 12,
     fontWeight: '600',
     color: Colors.primary,
@@ -223,6 +247,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   ringXP: {
+    fontFamily: FontFamily.sans,
     fontSize: 12,
     color: Colors.textMuted,
   },
@@ -254,6 +279,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   wrongHeaderTitle: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 15,
     fontWeight: '700',
     color: Colors.text,
@@ -302,6 +328,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 13,
     fontWeight: '600',
     color: Colors.textMuted,
@@ -323,6 +350,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   courseName: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 15,
     fontWeight: '600',
     color: Colors.text,

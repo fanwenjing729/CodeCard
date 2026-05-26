@@ -167,6 +167,7 @@ export interface BranchScenario extends AnimScenario {
 // ===== Lottie 动画专用 =====
 export interface LottieScenario extends AnimScenario {
   source: any; // require('./file.json') 或 { uri: 'https://...' }
+  loop?: boolean; // 默认 true
 }
 
 // ===== BreakContinue 动画专用 =====

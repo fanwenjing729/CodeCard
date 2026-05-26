@@ -1,0 +1,1522 @@
+// ===== 亮色 =====
+export const Colors = {
+  primary: '#5B7FFF',
+  success: '#34D399',
+  danger: '#EF4444',
+  warning: '#F59E0B',
+  bg: '#fff',
+  bgSecondary: '#f8f9fa',
+  bgTertiary: '#f5f5f5',
+  text: '#222',
+  textSecondary: '#666',
+  textMuted: '#999',
+  textPlaceholder: '#bbb',
+  textInverse: '#fff',
+  bodyText: '#444',
+  border: '#eee',
+  borderLight: '#d0d0d0',
+  arrow: '#ccc',
+  codeBg: '#1e1e1e',
+  codeText: '#d4d4d4',
+  codeLineNum: '#888',
+  codeHighlightBg: '#ffffff18',
+  correctBg: '#d4edda',
+  wrongBg: '#f8d7da',
+  progressBarBg: '#e8edf2',
+  tabBarActive: '#5B7FFF',
+  tabBarInactive: '#999',
+  tabBarBorder: '#e0e0e0',
+  disabledBg: '#8899aa',
+  disabledText: '#aaa',
+  // 问答组件
+  optionBg: '#f0f4ff',
+  optionSelectedBg: '#cce5ff',
+  optionBorder: '#d0d8f0',
+  optionText: '#333',
+  fillInputBg: '#fafafa',
+  explanationText: '#555',
+  wrongBorder: '#ff6b6b',
+  // 其他 UI
+  dangerBorder: '#ffccd5',
+  inputBorder: '#ddd',
+  backdrop: 'rgba(0,0,0,0.35)',
+  // 动画
+  gridEmpty: '#2a2a3e',
+  gridEmptyStroke: '#3a3a4e',
+  animCodeConditionBg: 'rgba(74,158,255,0.20)',
+  animCodeActiveBg: 'rgba(46,213,115,0.18)',
+  animCodeSkippedBg: 'rgba(153,153,153,0.10)',
+  animBadgeSuccess: 'rgba(46,213,115,0.12)',
+  animBadgeMuted: 'rgba(153,153,153,0.12)',
+  textInverseSecondary: 'rgba(255,255,255,0.8)',
+} as const;
+
+// ===== 暗色 =====
+export const DarkColors = {
+  primary: '#7B9BFF',
+  success: '#4ADE80',
+  danger: '#F87171',
+  warning: '#FBBF24',
+  bg: '#0f0f1a',
+  bgSecondary: '#1a1a2e',
+  bgTertiary: '#141428',
+  text: '#e8e8e8',
+  textSecondary: '#b0b0b0',
+  textMuted: '#7a8a9a',
+  textPlaceholder: '#5a6a7a',
+  textInverse: '#fff',
+  bodyText: '#c0c0c0',
+  border: '#2a2a3e',
+  borderLight: '#3a3a5a',
+  arrow: '#5a6a7a',
+  codeBg: '#0d1117',
+  codeText: '#c9d1d9',
+  codeLineNum: '#6e7681',
+  codeHighlightBg: '#ffffff12',
+  correctBg: '#1a3d2a',
+  wrongBg: '#3d1a1a',
+  progressBarBg: '#2a2a3e',
+  tabBarActive: '#7B9BFF',
+  tabBarInactive: '#5a6a7a',
+  tabBarBorder: '#2a2a3e',
+  disabledBg: '#3a4a5a',
+  disabledText: '#5a6a7a',
+  // 问答组件
+  optionBg: '#1a2a4a',
+  optionSelectedBg: '#2a3a6a',
+  optionBorder: '#3a4a6a',
+  optionText: '#d0d0d0',
+  fillInputBg: '#1a1a2e',
+  explanationText: '#a0a0a0',
+  wrongBorder: '#6b3a3a',
+  // 其他 UI
+  dangerBorder: '#5a2a2a',
+  inputBorder: '#3a3a5a',
+  backdrop: 'rgba(0,0,0,0.6)',
+  // 动画
+  gridEmpty: '#1a1a2e',
+  gridEmptyStroke: '#2a2a4e',
+  animCodeConditionBg: 'rgba(123,155,255,0.20)',
+  animCodeActiveBg: 'rgba(74,222,128,0.18)',
+  animCodeSkippedBg: 'rgba(122,138,154,0.10)',
+  animBadgeSuccess: 'rgba(74,222,128,0.12)',
+  animBadgeMuted: 'rgba(122,138,154,0.12)',
+  textInverseSecondary: 'rgba(255,255,255,0.7)',
+} as const;
+// ===== 字体 =====
+export const FontFamily = {
+  sans: 'Inter_400Regular',
+  sansBold: 'Inter_700Bold',
+  mono: 'monospace',
+  cjk: 'System',
+} as const;
+
+export { Colors, DarkColors } from './colors';
+
+// ===== 阴影 =====
+export const Shadow = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+} as const;
+
+// ===== 渐变 =====
+export const Gradient = {
+  primary: ['#5B7FFF', '#7B5FFF'] as readonly [string, string],
+  success: ['#34D399', '#10B981'] as readonly [string, string],
+  levelRing: ['#5B7FFF', '#A78BFA'] as readonly [string, string],
+  celebration: ['#5B7FFF', '#F59E0B', '#EF4444'] as readonly [string, string, string],
+} as const;
+
+// ===== 字号 =====
+export const FontSize = {
+  xs: 12,
+  sm: 13,
+  md: 14,
+  base: 15,
+  lg: 16,
+  xl: 17,
+  xxl: 18,
+  title: 20,
+  heading: 22,
+  hero: 24,
+  xhero: 48,
+  code: 12,
+} as const;
+
+// ===== 字重 =====
+export const FontWeight = {
+  light: '300' as const,
+  regular: '400' as const,
+  semibold: '600' as const,
+  bold: '700' as const,
+  extrabold: '800' as const,
+};
+
+// ===== 圆角 =====
+export const Radius = {
+  sm: 8,
+  md: 10,
+  lg: 12,
+  xl: 16,
+  full: 999,
+} as const;
+
+// ===== 间距 =====
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  base: 14,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+} as const;
+
+export { useTheme, useColors } from './useTheme';
+
+// ===== 布局常量 =====
+export const Layout = {
+  headerPaddingBottom: 8,
+  tabBarHeight: 58,
+  iconSize: 26,
+} as const;
+import { useContext } from 'react';
+import { ThemeContext } from './ThemeContext';
+import { Colors, DarkColors } from './colors';
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}
+
+export function useColors() {
+  const { isDark } = useContext(ThemeContext);
+  return isDark ? DarkColors : Colors;
+}
+import { createContext, useCallback, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ReactNode } from 'react';
+
+const STORAGE_KEY = 'theme_mode';
+
+export interface ThemeCtx {
+  isDark: boolean;
+  toggle: () => void;
+}
+
+export const ThemeContext = createContext<ThemeCtx>({
+  isDark: false,
+  toggle: () => {},
+});
+
+export function ThemeProvider({ children, initialDark = false }: { children: ReactNode; initialDark?: boolean }) {
+  const [isDark, setIsDark] = useState(initialDark);
+
+  useEffect(() => {
+    // 确认存储值是否与初始值一致（理论上已一致，此处做兜底）
+    AsyncStorage.getItem(STORAGE_KEY).then((v) => {
+      if (v === 'dark' && !isDark) {
+        setIsDark(true);
+      } else if (v === 'light' && isDark) {
+        setIsDark(false);
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggle = useCallback(() => {
+    setIsDark((prev) => {
+      const next = !prev;
+      AsyncStorage.setItem(STORAGE_KEY, next ? 'dark' : 'light').catch(() => {});
+      return next;
+    });
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ isDark, toggle }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+// ===== 学科层 =====
+export interface CourseModule {
+  moduleId: string;
+  module: string;
+  nodes: PathNode[];
+  /** 模块标签，如"可跳过"、"选读"，透传至 ModuleMeta */
+  note?: string;
+}
+
+export interface ModuleMeta {
+  moduleId: string;
+  module: string;
+  /** 模块标签，如"可跳过"、"选读"，显示在模块列表标题旁 */
+  note?: string;
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  icon: string;
+  color: string;
+  nodes: PathNode[];
+  moduleCount: number;
+  modulesMeta: ModuleMeta[];
+  prerequisites?: string[];
+}
+
+// ===== 学习路径节点 =====
+export type ModuleId = string;
+
+export interface PathNode {
+  id: string;
+  courseId: string;
+  type: 'knowledge' | 'quiz';
+  moduleId: ModuleId;
+  module: string;
+  title: string;
+  cards: Card[];
+}
+
+// ===== 卡片（判別联合） =====
+export interface CardBase {
+  id: string;
+}
+
+export interface ConceptCardData extends CardBase {
+  cardType: 'concept';
+  content: TextContent;
+}
+
+export interface CodeCardData extends CardBase {
+  cardType: 'code';
+  content: CodeContent;
+}
+
+export interface AnimationCardData extends CardBase {
+  cardType: 'animation';
+  content: AnimationContent;
+}
+
+export interface PracticeCardData extends CardBase {
+  cardType: 'practice';
+  content: PracticeContent;
+}
+
+export type Card = ConceptCardData | CodeCardData | AnimationCardData | PracticeCardData;
+
+export interface AnimationContent {
+  animationId: string;
+}
+
+export interface PracticeContent {
+  question: string;
+  questionType: 'choice' | 'fill';
+  options?: string[];
+  answer: string;
+  explanation: string;
+}
+
+export interface TextContent {
+  title: string;
+  body: string;
+}
+
+export interface CodeContent {
+  title: string;
+  code: string;
+  language: string;
+  highlights: number[];
+}
+
+// ===== 动画基类 =====
+export interface AnimScenario {
+  id: string;
+  title: string;
+  totalSteps: number;
+  /** true → 组件自动播放，NodeScreen 隐藏步进按钮。默认 false */
+  continuous?: boolean;
+}
+
+// ===== MemoryBox 动画专用 =====
+export interface VarAlloc {
+  name: string;
+  type: string;
+  typeSize: number;
+  value: string;
+  color: string;
+}
+
+export interface MemoryBoxStep {
+  label: string;
+  allocations: VarAlloc[];
+  showAddresses: boolean;
+  annotation: string;
+}
+
+export interface MemoryBoxScenario extends AnimScenario {
+  cellsPerRow: number;
+  totalRows: number;
+  steps: MemoryBoxStep[];
+}
+
+// ===== ScopeCode 动画专用 =====
+export interface ScopeCodeStep {
+  label: string;
+  highlightLines: number[];
+  allocations: VarAlloc[];
+  annotation: string;
+}
+
+export interface ScopeCodeScenario extends AnimScenario {
+  sourceCode: string;
+  cellsPerRow: number;
+  totalRows: number;
+  steps: ScopeCodeStep[];
+}
+
+// ===== Loop 动画专用 =====
+export interface LoopStep {
+  label: string;
+  highlightLines: number[];  // for 行
+  bodyLines: number[];       // 循环体行
+  iteration: number;         // 0=init, 1..n=第N轮, -1=跳出
+  entered: boolean;          // 本轮是否进入循环体
+  annotation: string;
+}
+
+export interface LoopScenario extends AnimScenario {
+  sourceCode: string;
+  steps: LoopStep[];
+}
+
+// ===== Branch 动画专用 =====
+export interface BranchStep {
+  label: string;
+  highlightLines: number[];  // 条件行 / switch 行
+  takenLines: number[];      // 本次执行的行（绿色高亮）
+  skippedLines: number[];    // 本次跳过的行（灰色）
+  annotation: string;
+}
+
+export interface BranchScenario extends AnimScenario {
+  sourceCode: string;
+  steps: BranchStep[];
+}
+
+// ===== Lottie 动画专用 =====
+export interface LottieScenario extends AnimScenario {
+  source: any; // require('./file.json') 或 { uri: 'https://...' }
+  loop?: boolean; // 默认 true
+}
+
+// ===== BreakContinue 动画专用 =====
+export interface BreakContinueStep {
+  label: string;
+  breakLines: number[];
+  continueLines: number[];
+  breakIteration: number;
+  continueIteration: number;
+  breakEntered: boolean;
+  continueEntered: boolean;
+  annotation: string;
+}
+
+export interface BreakContinueScenario extends AnimScenario {
+  breakCode: string;
+  continueCode: string;
+  steps: BreakContinueStep[];
+}
+
+// ===== 奖励 / 反馈系统 =====
+
+export type RewardEventType = 'xp_gain' | 'level_up';
+
+export interface XpGainReward {
+  type: 'xp_gain';
+  amount: number;
+  source: 'card' | 'practice' | 'quiz';
+}
+
+export interface LevelUpReward {
+  type: 'level_up';
+  from: number;
+  to: number;
+}
+
+export type RewardEvent = XpGainReward | LevelUpReward;
+
+export interface RewardState {
+  /** 当前正在展示的奖励事件，null 表示无事件 */
+  current: RewardEvent | null;
+  /** 关闭当前事件，播放下一个 */
+  dismiss: () => void;
+}
+
+export interface WhileDoWhileStep {
+  label: string;
+  whileLines: number[];
+  doWhileLines: number[];
+  whileIteration: number;
+  doWhileIteration: number;
+  whileEntered: boolean;
+  doWhileEntered: boolean;
+  annotation: string;
+}
+
+export interface WhileDoWhileScenario extends AnimScenario {
+  whileCode: string;
+  doWhileCode: string;
+  steps: WhileDoWhileStep[];
+}
+
+export const XP_PER_LEVEL = 100;
+
+export function calcLevel(totalXP: number): number {
+  let level = 1;
+  let threshold = XP_PER_LEVEL;
+  let xp = totalXP;
+  while (xp >= threshold) {
+    xp -= threshold;
+    level++;
+    threshold = level * XP_PER_LEVEL;
+  }
+  return level;
+}
+
+/** 到达指定等级需要的累计 XP */
+export function xpForLevelStart(level: number): number {
+  return (XP_PER_LEVEL / 2) * (level - 1) * level;
+}
+
+/** 当前等级升到下一级需要的 XP */
+export function xpForNextLevel(level: number): number {
+  return level * XP_PER_LEVEL;
+}
+export interface ProgressCount {
+  total: number;
+  done: number;
+  pct: number;
+}
+
+/** Count completed cards from a card list. `cards` only needs `id`. */
+export function countCards(
+  cards: { id: string }[],
+  completedCards: Record<string, true>,
+): ProgressCount {
+  const total = cards.length;
+  const done = cards.filter((c) => c.id in completedCards).length;
+  return { total, done, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
+}
+
+/** Count completed cards across all cards in a list of nodes. */
+export function countNodeCards(
+  nodes: { cards: { id: string }[] }[],
+  completedCards: Record<string, true>,
+): ProgressCount {
+  return countCards(
+    nodes.flatMap((n) => n.cards),
+    completedCards,
+  );
+}
+// 课程数据访问层
+//
+// 设计约束（防止单点故障）：
+//   当前只有一门 C++ 课程，使用静态 import。当新增第二门课时，
+//   改为动态 import() + try-catch，使单门课程加载失败不影响其他课程。
+//   对外 API（useCourses / useCourse）保持不变，只改内部实现即可。
+//
+//   安全网：validate.test.ts 遍历所有卡片，提交前运行即可捕获断裂的 import 链。
+
+import { useMemo } from 'react';
+import type { Course } from '@/types';
+import { courses } from '@/data/courses';
+
+/** 所有已注册课程（同步，未来可切换为异步加载） */
+export function getCourses(): Course[] {
+  return courses;
+}
+
+/** 按 id 查找课程，找不到时打 warn 并返回 undefined */
+export function getCourse(courseId: string): Course | undefined {
+  const course = courses.find((c) => c.id === courseId);
+  if (!course) {
+    console.warn(`[useCourses] 课程未找到: courseId="${courseId}"`);
+  }
+  return course;
+}
+
+/** React hook — 获取全部课程列表 */
+export function useCourses(): Course[] {
+  return useMemo(() => getCourses(), []);
+}
+
+/** React hook — 按 id 获取单门课程，找不到返回 undefined */
+export function useCourse(courseId: string): Course | undefined {
+  return useMemo(() => getCourse(courseId), [courseId]);
+}
+import { create } from 'zustand';
+import { AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { calcLevel } from '@/lib/xp';
+
+interface CourseProgress {
+  completedCards: Record<string, true>;
+  xp: number;
+  quizScores: Record<string, number>;
+  nodePositions: Record<string, number>;
+  wrongCards: Record<string, true>;
+}
+
+function getOrCreateCourse(
+  courses: Record<string, CourseProgress>,
+  courseId: string,
+): CourseProgress {
+  return courses[courseId] ?? { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} };
+}
+
+const STORAGE_KEY = 'codecard-progress';
+const CURRENT_VERSION = 3;
+
+interface PersistedData {
+  version: number;
+  global: {
+    totalXP: number;
+    level: number;
+  };
+  courses: Record<string, CourseProgress>;
+}
+
+function arrayToRecord(arr: string[] | Record<string, true>): Record<string, true> {
+  if (!Array.isArray(arr)) return arr as Record<string, true>;
+  const rec: Record<string, true> = {};
+  for (const item of arr) rec[item] = true;
+  return rec;
+}
+
+// 迁移链：每个 key 是"从该版本迁到下一版"的函数
+const MIGRATIONS: Record<number, (data: any) => any> = {
+  1: (data) => ({
+    ...data,
+    version: 2,
+    courses: Object.fromEntries(
+      Object.entries(data.courses).map(([id, c]: [string, any]) => [
+        id,
+        { ...c, wrongCards: [] },
+      ]),
+    ),
+  }),
+  2: (data) => ({
+    ...data,
+    version: 3,
+    courses: Object.fromEntries(
+      Object.entries(data.courses).map(([id, c]: [string, any]) => [
+        id,
+        {
+          ...c,
+          completedCards: arrayToRecord(c.completedCards ?? []),
+          wrongCards: arrayToRecord(c.wrongCards ?? []),
+        },
+      ]),
+    ),
+  }),
+};
+
+function migrate(data: any): PersistedData {
+  let version: number = data.version ?? 1;
+  while (MIGRATIONS[version]) {
+    data = MIGRATIONS[version](data);
+    version++;
+  }
+  data.version = CURRENT_VERSION;
+  return data as PersistedData;
+}
+
+export const XP_PER_CARD = 5;
+export const XP_PER_PRACTICE = 10;
+
+interface ProgressStore extends PersistedData {
+  hydrated: boolean;
+  addXP: (courseId: string, amount: number) => void;
+  rewardCard: (courseId: string, cardId: string, xpAmount: number) => boolean;
+  saveQuizScore: (courseId: string, nodeId: string, score: number) => void;
+  setNodePosition: (courseId: string, nodeId: string, cardIndex: number) => void;
+  addWrongCard: (courseId: string, cardId: string) => void;
+  removeWrongCard: (courseId: string, cardId: string) => void;
+  hydrate: () => Promise<void>;
+  flush: () => Promise<void>;
+  resetCourse: (courseId: string) => void;
+  removeCompletedCards: (courseId: string, cardIds: string[], xpToSubtract: number) => void;
+}
+
+const initialState: PersistedData = {
+  version: CURRENT_VERSION,
+  global: {
+    totalXP: 0,
+    level: 1,
+  },
+  courses: {},
+};
+
+// 提取可序列化数据，排除方法
+function pickData(s: ProgressStore): PersistedData {
+  return {
+    version: CURRENT_VERSION,
+    global: { totalXP: s.global.totalXP, level: s.global.level },
+    courses: s.courses,
+  };
+}
+
+const save = async (data: PersistedData) => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.warn('[CodeCard] AsyncStorage write failed:', e);
+  }
+};
+
+export const useProgressStore = create<ProgressStore>()((set, get) => ({
+  ...initialState,
+  hydrated: false,
+
+  addXP: (courseId, amount) => {
+    set((s) => {
+      const course = getOrCreateCourse(s.courses, courseId);
+      const newTotalXP = s.global.totalXP + amount;
+      return {
+        global: {
+          ...s.global,
+          totalXP: newTotalXP,
+          level: calcLevel(newTotalXP),
+        },
+        courses: {
+          ...s.courses,
+          [courseId]: { ...course, xp: course.xp + amount },
+        },
+      };
+    });
+  },
+
+  rewardCard: (courseId, cardId, xpAmount) => {
+    let isNew = false;
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      if (cardId in c.completedCards) return s;
+      isNew = true;
+      const newTotalXP = s.global.totalXP + xpAmount;
+      return {
+        global: {
+          ...s.global,
+          totalXP: newTotalXP,
+          level: calcLevel(newTotalXP),
+        },
+        courses: {
+          ...s.courses,
+          [courseId]: {
+            ...c,
+            completedCards: { ...c.completedCards, [cardId]: true },
+            xp: c.xp + xpAmount,
+          },
+        },
+      };
+    });
+    return isNew;
+  },
+
+  saveQuizScore: (courseId, nodeId, score) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: {
+            ...c,
+            quizScores: { ...c.quizScores, [nodeId]: score },
+          },
+        },
+      };
+    });
+  },
+
+  setNodePosition: (courseId, nodeId, cardIndex) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: {
+            ...c,
+            nodePositions: { ...c.nodePositions, [nodeId]: cardIndex },
+          },
+        },
+      };
+    });
+  },
+
+  addWrongCard: (courseId, cardId) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      if (cardId in c.wrongCards) return s;
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: { ...c, wrongCards: { ...c.wrongCards, [cardId]: true } },
+        },
+      };
+    });
+  },
+
+  removeWrongCard: (courseId, cardId) => {
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      if (!(cardId in c.wrongCards)) return s;
+      const { [cardId]: _, ...rest } = c.wrongCards;
+      return {
+        courses: {
+          ...s.courses,
+          [courseId]: { ...c, wrongCards: rest },
+        },
+      };
+    });
+  },
+
+  hydrate: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      if (!raw) { set({ hydrated: true }); return; }
+      const data = JSON.parse(raw);
+      if (!data || typeof data !== 'object') { set({ hydrated: true }); return; }
+      const migrated = migrate(data);
+      set({
+        hydrated: true,
+        global: {
+          ...migrated.global,
+          level: calcLevel(migrated.global.totalXP),
+        },
+        courses: migrated.courses,
+      });
+    } catch (e) {
+      console.warn('[CodeCard] AsyncStorage read failed:', e);
+      set({ hydrated: true });
+    }
+  },
+
+  flush: async () => {
+    await save(pickData(get()));
+  },
+
+  resetCourse: (courseId) => {
+    set((s) => {
+      const course = getOrCreateCourse(s.courses, courseId);
+      return {
+        global: {
+          ...s.global,
+          totalXP: Math.max(0, s.global.totalXP - course.xp),
+          level: calcLevel(Math.max(0, s.global.totalXP - course.xp)),
+        },
+        courses: {
+          ...s.courses,
+          [courseId]: { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} },
+        },
+      };
+    });
+  },
+
+  removeCompletedCards: (courseId, cardIds, xpToSubtract) => {
+    if (cardIds.length === 0) return;
+    set((s) => {
+      const c = getOrCreateCourse(s.courses, courseId);
+      const removeSet = new Set(cardIds);
+      const nextCompleted: Record<string, true> = {};
+      for (const id of Object.keys(c.completedCards)) {
+        if (!removeSet.has(id)) nextCompleted[id] = true;
+      }
+      const nextWrong: Record<string, true> = {};
+      for (const id of Object.keys(c.wrongCards)) {
+        if (!removeSet.has(id)) nextWrong[id] = true;
+      }
+      const newXP = Math.max(0, c.xp - xpToSubtract);
+      const newTotalXP = Math.max(0, s.global.totalXP - xpToSubtract);
+      return {
+        global: {
+          ...s.global,
+          totalXP: newTotalXP,
+          level: calcLevel(newTotalXP),
+        },
+        courses: {
+          ...s.courses,
+          [courseId]: {
+            ...c,
+            completedCards: nextCompleted,
+            wrongCards: nextWrong,
+            xp: newXP,
+          },
+        },
+      };
+    });
+  },
+}));
+
+// 持久化：状态变化时防抖写入，数据未变则跳过
+let lastSavedJSON: string | null = null;
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function saveIfDirty(data: PersistedData) {
+  const json = JSON.stringify(data);
+  if (json !== lastSavedJSON) {
+    lastSavedJSON = json;
+    save(data);
+  }
+}
+
+useProgressStore.subscribe(() => {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => saveIfDirty(pickData(useProgressStore.getState())), 500);
+});
+
+// App 进后台或退出时立即 flush
+let _appStateRegistered = false;
+if (!_appStateRegistered) {
+  _appStateRegistered = true;
+  AppState.addEventListener('change', (nextState) => {
+    if (nextState === 'inactive' || nextState === 'background') {
+      saveIfDirty(pickData(useProgressStore.getState()));
+    }
+  });
+}
+import { create } from 'zustand';
+
+export interface User {
+  id: string;
+  phone?: string;
+  name?: string;
+  avatar?: string;
+  displayId?: string;
+}
+
+interface AuthStore {
+  user: User | null;
+  isLoggedIn: boolean;
+  isMounted: boolean;
+
+  initialize: () => Promise<void>;
+  loginByPhone: (phone: string) => Promise<{ error?: string }>;
+  verifyOtp: (phone: string, token: string) => Promise<{ error?: string }>;
+  loginByWechat: () => Promise<{ error?: string }>;
+  logout: () => Promise<void>;
+  setDisplayId: (displayId: string) => void;
+}
+
+export const useAuthStore = create<AuthStore>()((set) => ({
+  user: null,
+  isLoggedIn: false,
+  isMounted: false,
+
+  initialize: async () => {
+    // no-op: 真实实现会从持久化存储恢复 session
+    set({ isMounted: true });
+  },
+
+  loginByPhone: async () => {
+    // no-op: 真实实现会调用 supabase.auth.signInWithOtp
+    return { error: '登录功能即将上线' };
+  },
+
+  verifyOtp: async () => {
+    // no-op: 真实实现会调用 supabase.auth.verifyOtp
+    return { error: '登录功能即将上线' };
+  },
+
+  loginByWechat: async () => {
+    // no-op: 真实实现会调用 supabase.auth.signInWithOAuth
+    return { error: '登录功能即将上线' };
+  },
+
+  logout: async () => {
+    // no-op: 真实实现会调用 supabase.auth.signOut + 清空状态
+    set({ user: null, isLoggedIn: false });
+  },
+
+  setDisplayId: (displayId) => {
+    set((s) => ({
+      user: s.user ? { ...s.user, displayId } : null,
+    }));
+  },
+}));
+export async function uploadProgress(_userId: string): Promise<void> {
+  // no-op: 真实实现会将本地进度 upsert 到 Supabase
+}
+
+export async function syncOnLogin(_userId: string): Promise<void> {
+  // no-op: 真实实现会下载远程进度 → 合并 → 回写
+}
+
+export async function manualSync(_userId: string): Promise<{ lastSyncedAt: Date | null }> {
+  // no-op: 真实实现会执行同步并返回时间
+  return { lastSyncedAt: null };
+}
+import React, { useMemo } from 'react';
+import { useTheme, useColors } from '@/theme';
+import { Colors, DarkColors } from '@/theme/colors';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import ErrorBoundary from '@/components/shared/ErrorBoundary';
+import AnimatedTabIcon from '@/components/shared/AnimatedTabIcon';
+import HomeScreen from '@/screens/HomeScreen';
+import CourseScreen from '@/screens/CourseScreen';
+import ModuleScreen from '@/screens/ModuleScreen';
+import NodeScreen from '@/screens/NodeScreen';
+import QuizScreen from '@/screens/QuizScreen';
+import ProgressScreen from '@/screens/ProgressScreen';
+import SettingsScreen from '@/screens/SettingsScreen';
+import LoginScreen from '@/screens/LoginScreen';
+import WrongCardsScreen from '@/screens/WrongCardsScreen';
+import DataScreen from '@/screens/DataScreen';
+
+export type RootStackParamList = {
+  MainTabs: undefined;
+  Course: { courseId: string };
+  Module: { courseId: string; moduleId: string };
+  Node: { courseId: string; nodeId: string };
+  Quiz: { courseId: string; nodeId: string };
+  Login: undefined;
+  WrongCards: { courseId?: string; moduleId?: string } | undefined;
+  Data: undefined;
+};
+
+const Tab = createBottomTabNavigator();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+
+function MainTabs() {
+  const C = useColors();
+
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: C.tabBarActive,
+        tabBarInactiveTintColor: C.tabBarInactive,
+        tabBarLabelStyle: { fontSize: 13 },
+        tabBarStyle: {
+          backgroundColor: C.bg,
+          borderTopColor: C.tabBarBorder,
+          height: 58,
+          paddingTop: 4,
+        },
+      }}
+    >
+      <Tab.Screen
+        name="Learn"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: '学习',
+          tabBarIcon: ({ focused, color }) => (
+            <AnimatedTabIcon focused={focused} color={color} name="school" size={26} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Progress"
+        component={ProgressScreen}
+        options={{
+          tabBarLabel: '进度',
+          tabBarIcon: ({ focused, color }) => (
+            <AnimatedTabIcon focused={focused} color={color} name="trophy" size={26} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: '设置',
+          tabBarIcon: ({ focused, color }) => (
+            <AnimatedTabIcon focused={focused} color={color} name="cog" size={26} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  const { isDark } = useTheme();
+
+  const C = isDark ? DarkColors : Colors;
+
+  const navigationTheme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        background: C.bg,
+        card: C.bg,
+        border: C.border,
+      },
+    };
+  }, [isDark, C]);
+
+  const screenBg = C.bg;
+
+  return (
+    <ErrorBoundary>
+      <NavigationContainer theme={navigationTheme}>
+        <RootStack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: screenBg },
+          }}
+        >
+          <RootStack.Screen name="MainTabs" component={MainTabs} />
+          <RootStack.Screen name="Course" component={CourseScreen} />
+          <RootStack.Screen name="Module" component={ModuleScreen} />
+          <RootStack.Screen name="Node" component={NodeScreen} />
+          <RootStack.Screen name="Quiz" component={QuizScreen} />
+          <RootStack.Screen name="Login" component={LoginScreen} />
+          <RootStack.Screen name="WrongCards" component={WrongCardsScreen} />
+          <RootStack.Screen name="Data" component={DataScreen} />
+        </RootStack.Navigator>
+      </NavigationContainer>
+    </ErrorBoundary>
+  );
+}
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import type { DimensionValue } from 'react-native';
+import { Colors, useColors, FontSize, FontFamily, Radius, Spacing } from '@/theme';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { useProgressStore } from '@/store/useProgressStore';
+import { countNodeCards } from '@/lib/courseProgress';
+import { useCourses } from '@/lib/useCourses';
+import Skeleton from '@/components/shared/Skeleton';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+export default function HomeScreen() {
+  const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
+  const coursesProgress = useProgressStore((s) => s.courses);
+  const hydrated = useProgressStore((s) => s.hydrated);
+  const courses = useCourses();
+  const C = useColors();
+
+  if (!hydrated) {
+    return (
+      <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
+        <View style={{ marginTop: insets.top + 42, paddingHorizontal: Spacing.lg }}>
+          <Skeleton width={160} height={32} borderRadius={4} />
+          <View style={{ height: 4 }} />
+          <Skeleton width={120} height={15} borderRadius={4} />
+        </View>
+        <View style={[styles.list, { marginTop: 20 }]}>
+          {[1, 2, 3].map((i) => (
+            <View key={i} style={[styles.card, { backgroundColor: C.bg, borderLeftWidth: 0 }]}>
+              <Skeleton width={48} height={48} borderRadius={14} />
+              <View style={styles.info}>
+                <Skeleton width={100} height={17} borderRadius={4} />
+                <View style={{ height: 3 }} />
+                <Skeleton width={140} height={13} borderRadius={4} />
+                <View style={{ height: 8 }} />
+                <Skeleton width="80%" height={4} borderRadius={2} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: C.bgTertiary }]}>
+      <View style={{ marginTop: insets.top + 42 }}>
+        <Text style={[styles.heading, { color: C.text }]}>CodeCard</Text>
+        <Text style={[styles.subtitle, { color: C.textMuted }]}>选择学科开始学习</Text>
+      </View>
+      <View style={styles.list}>
+        {courses.map((c) => {
+          const progress = coursesProgress[c.id];
+          const { total, done, pct } = countNodeCards(c.nodes, progress?.completedCards ?? {});
+
+          return (
+            <TouchableOpacity
+              key={c.id}
+              style={[styles.card, { borderLeftColor: c.color, backgroundColor: C.bg }]}
+              onPress={() => navigation.navigate('Course', { courseId: c.id })}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconBox, { backgroundColor: c.color }]}>
+                {c.icon ? (
+                  <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={26} color={C.textInverse} />
+                ) : (
+                  <Text style={styles.iconText}>{c.title[0]}</Text>
+                )}
+              </View>
+              <View style={styles.info}>
+                <Text style={[styles.title, { color: C.text }]}>{c.title}</Text>
+                <Text style={[styles.meta, { color: C.textMuted }]}>
+                  {c.moduleCount > 0
+                    ? `${c.moduleCount} 个模块 · ${total} 张卡片`
+                    : '暂无内容'}
+                </Text>
+                {total > 0 && (
+                  <View style={styles.progressRow}>
+                    <View style={[styles.miniBar, { backgroundColor: C.progressBarBg }]}>
+                      <View style={[styles.miniBarFill, { width: `${pct}%` as DimensionValue, backgroundColor: c.color }]} />
+                    </View>
+                    <Text style={[styles.pct, { color: C.textMuted }]}>{pct}%</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.arrow, { color: C.arrow }]}>›</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bgTertiary,
+  },
+  heading: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.text,
+    paddingHorizontal: Spacing.lg,
+  },
+  subtitle: {
+    fontSize: FontSize.base,
+    color: Colors.textMuted,
+    marginTop: 4,
+    paddingHorizontal: Spacing.lg,
+  },
+  list: {
+    marginTop: 20,
+    paddingHorizontal: Spacing.lg,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.bg,
+    borderRadius: Radius.lg,
+    marginBottom: 10,
+    borderLeftWidth: 4,
+  },
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.lg,
+    marginVertical: Spacing.lg,
+  },
+  iconText: {
+    color: Colors.textInverse,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  info: {
+    flex: 1,
+    marginLeft: 14,
+    marginRight: 8,
+  },
+  title: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 17,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  meta: {
+    fontSize: 13,
+    color: Colors.textMuted,
+    marginTop: 3,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  miniBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: Colors.progressBarBg,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginRight: 10,
+  },
+  miniBarFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  pct: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    width: 36,
+    textAlign: 'right',
+  },
+  arrow: {
+    fontSize: 22,
+    color: Colors.arrow,
+    fontWeight: '300',
+    marginRight: Spacing.md,
+  },
+});
+import { useMemo, useLayoutEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Colors, useColors } from '@/theme';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
+import ScreenHeader from '@/components/shared/ScreenHeader';
+import { useProgressStore } from '@/store/useProgressStore';
+import { countNodeCards } from '@/lib/courseProgress';
+import ListItem from '@/components/shared/ListItem';
+import { useCourse } from '@/lib/useCourses';
+import type { PathNode } from '@/types';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Course'>;
+
+function groupByModule(nodes: PathNode[]) {
+  const map: Record<string, PathNode[]> = {};
+  for (const node of nodes) {
+    (map[node.moduleId] ??= []).push(node);
+  }
+  return Object.entries(map);
+}
+
+export default function CourseScreen({ route, navigation }: Props) {
+  const { courseId } = route.params;
+  const C = useColors();
+  const coursesProgress = useProgressStore((s) => s.courses);
+  const course = useCourse(courseId);
+  const themeColor = course?.color ?? Colors.primary;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
+  }, [navigation, C.bg]);
+
+  const modules = useMemo(() => {
+    if (!course) return [];
+    const nodeMap = Object.fromEntries(groupByModule(course.nodes));
+    return course.modulesMeta.map(m => ({
+      ...m,
+      nodes: nodeMap[m.moduleId] ?? [],
+    }));
+  }, [course]);
+
+  const completedCards = useMemo(() => {
+    return coursesProgress[courseId]?.completedCards ?? {};
+  }, [coursesProgress, courseId]);
+
+  return (
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        title={course?.title ?? ''}
+        themeColor={themeColor}
+        variant="default"
+      />
+
+      <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 32 }]}>
+        {modules.map(({ moduleId, module: moduleName, nodes, note }) => {
+          const { total, done } = countNodeCards(nodes, completedCards);
+          const isDone = total > 0 && done === total;
+          const isStarted = done > 0 && !isDone;
+
+          const subtitle =
+            total === 0
+              ? '敬请期待'
+              : isDone
+                ? `已完成 ${total} 张卡片`
+                : `${done}/${total} 张卡片 · ${nodes.length} 个节点`;
+
+          return (
+            <ListItem
+              key={moduleId}
+              title={moduleName}
+              subtitle={subtitle}
+              note={note}
+              status={isDone ? 'done' : isStarted ? 'started' : 'pending'}
+              themeColor={themeColor}
+              onPress={nodes.length > 0 ? () => navigation.navigate('Module', { courseId, moduleId }) : undefined}
+            />
+          );
+        })}
+
+        {modules.length === 0 && (
+          <Text style={[styles.empty, { color: C.textMuted }]}>暂无课程内容</Text>
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  empty: {
+    textAlign: 'center',
+    color: Colors.textMuted,
+    marginTop: 60,
+    fontSize: 15,
+  },
+});
+import { useMemo, useLayoutEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Colors, useColors } from '@/theme';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
+import ScreenHeader from '@/components/shared/ScreenHeader';
+import { useProgressStore } from '@/store/useProgressStore';
+import { countCards } from '@/lib/courseProgress';
+import ListItem from '@/components/shared/ListItem';
+import { useCourse } from '@/lib/useCourses';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Module'>;
+
+export default function ModuleScreen({ route, navigation }: Props) {
+  const { courseId, moduleId } = route.params;
+  const C = useColors();
+  const coursesProgress = useProgressStore((s) => s.courses);
+  const course = useCourse(courseId);
+  const themeColor = course?.color ?? Colors.primary;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
+  }, [navigation, C.bg]);
+
+  const completedCards = useMemo(() => {
+    return coursesProgress[courseId]?.completedCards ?? {};
+  }, [coursesProgress, courseId]);
+
+  const nodes = useMemo(() => {
+    return (course?.nodes ?? []).filter((n) => n.moduleId === moduleId);
+  }, [course, moduleId]);
+
+  const moduleName = nodes[0]?.module ?? '未知模块';
+
+  return (
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        title={moduleName}
+        backLabel="模块"
+        themeColor={themeColor}
+        variant="default"
+      />
+
+      <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 36 }]}>
+        {nodes.map((node) => {
+          const { total, done } = countCards(node.cards, completedCards);
+          const isDone = total > 0 && done === total;
+          const isStarted = done > 0 && !isDone;
+
+          if (total === 0) {
+            return (
+              <View key={node.id} style={[styles.nodeCardEmpty, { backgroundColor: C.bgTertiary }]}>
+                <Text style={[styles.nodeTitleEmpty, { color: C.textMuted }]}>{node.title}</Text>
+                <Text style={[styles.comingSoon, { color: C.textPlaceholder }]}>敬请期待</Text>
+              </View>
+            );
+          }
+
+          const subtitle = isDone
+            ? `已完成 ${total} 张卡片`
+            : `${done}/${total} 张卡片 · ${node.type === 'quiz' ? '测验' : '学习'}`;
+
+          return (
+            <ListItem
+              key={node.id}
+              title={node.title}
+              subtitle={subtitle}
+              status={isDone ? 'done' : isStarted ? 'started' : 'pending'}
+              themeColor={themeColor}
+              onPress={() => {
+                if (node.type === 'quiz') {
+                  navigation.navigate('Quiz', { courseId, nodeId: node.id });
+                } else {
+                  navigation.navigate('Node', { courseId, nodeId: node.id });
+                }
+              }}
+            />
+          );
+        })}
+
+        {nodes.length === 0 && (
+          <Text style={[styles.empty, { color: C.textMuted }]}>暂无内容</Text>
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.bg,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  nodeCardEmpty: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.bgTertiary,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    opacity: 0.5,
+  },
+  nodeTitleEmpty: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textMuted,
+  },
+  comingSoon: {
+    fontSize: 12,
+    color: Colors.textPlaceholder,
+  },
+  empty: {
+    textAlign: 'center',
+    color: Colors.textMuted,
+    marginTop: 60,
+    fontSize: 15,
+  },
+});

@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors } from '@/theme';
 
 interface Props {
   title: string;
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export default function ListItem({ title, subtitle, status, themeColor, onPress, note }: Props) {
+  const C = useColors();
   const isDone = status === 'done';
   const isStarted = status === 'started';
 
@@ -18,6 +19,7 @@ export default function ListItem({ title, subtitle, status, themeColor, onPress,
     <TouchableOpacity
       style={[
         styles.card,
+        { backgroundColor: C.bgSecondary, borderColor: C.border },
         isDone && { borderColor: themeColor + '40', backgroundColor: themeColor + '08' },
       ]}
       onPress={onPress}
@@ -28,25 +30,25 @@ export default function ListItem({ title, subtitle, status, themeColor, onPress,
         <View
           style={[
             styles.dot,
-            { backgroundColor: isDone ? Colors.success : isStarted ? themeColor : Colors.arrow },
+            { backgroundColor: isDone ? C.success : isStarted ? themeColor : C.arrow },
             isDone && { width: 22, height: 22, borderRadius: 11, marginRight: 4 },
           ]}
         >
-          {isDone && <Text style={styles.check}>✓</Text>}
+          {isDone && <Text style={[styles.check, { color: C.textInverse }]}>✓</Text>}
         </View>
         <View>
           <View style={styles.titleRow}>
-            <Text style={[styles.title, isDone && { color: Colors.textMuted }]}>{title}</Text>
+            <Text style={[styles.title, { color: C.text }, isDone && { color: C.textMuted }]}>{title}</Text>
             {note != null && (
-              <View style={styles.noteBadge}>
-                <Text style={styles.noteText}>{note}</Text>
+              <View style={[styles.noteBadge, { backgroundColor: C.warning + '18' }]}>
+                <Text style={[styles.noteText, { color: C.warning }]}>{note}</Text>
               </View>
             )}
           </View>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          <Text style={[styles.subtitle, { color: C.textMuted }]}>{subtitle}</Text>
         </View>
       </View>
-      <Text style={styles.arrow}>›</Text>
+      <Text style={[styles.arrow, { color: C.arrow }]}>›</Text>
     </TouchableOpacity>
   );
 }

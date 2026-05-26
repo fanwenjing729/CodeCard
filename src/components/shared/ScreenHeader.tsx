@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Colors } from '@/theme';
+import { Colors, useColors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ScreenHeaderProps {
@@ -21,23 +21,24 @@ export default function ScreenHeader({
   themeColor = Colors.primary,
   variant,
 }: ScreenHeaderProps) {
+  const C = useColors();
   const insets = useSafeAreaInsets();
 
   return (
     <View
       style={[
-        variant === 'compact' ? styles.headerCompact : styles.headerDefault,
+        variant === 'compact' ? [styles.headerCompact, { borderBottomColor: C.border }] : styles.headerDefault,
         { paddingTop: insets.top + (variant === 'compact' ? 33 : 42) },
         variant === 'default' && { borderBottomColor: themeColor + '40' },
       ]}
     >
       <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-        <Text style={[styles.backBtn, variant === 'default' && { color: themeColor }]}>
+        <Text style={[styles.backBtn, variant === 'default' ? { color: themeColor } : { color: C.primary }]}>
           ← {backLabel}
         </Text>
       </TouchableOpacity>
 
-      {title && <Text style={styles.title}>{title}</Text>}
+      {title && <Text style={[styles.title, { color: C.text }]}>{title}</Text>}
       {center}
 
       {right ?? <View style={{ width: 40 }} />}

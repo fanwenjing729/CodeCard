@@ -1,11 +1,12 @@
-import React from 'react';
-import { Colors } from '@/theme';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useMemo } from 'react';
+import { useTheme, useColors } from '@/theme';
+import { Colors, DarkColors } from '@/theme/colors';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import ErrorBoundary from '@/components/shared/ErrorBoundary';
+import AnimatedTabIcon from '@/components/shared/AnimatedTabIcon';
 import HomeScreen from '@/screens/HomeScreen';
 import CourseScreen from '@/screens/CourseScreen';
 import ModuleScreen from '@/screens/ModuleScreen';
@@ -32,16 +33,18 @@ const Tab = createBottomTabNavigator();
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 function MainTabs() {
+  const C = useColors();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textMuted,
+        tabBarActiveTintColor: C.tabBarActive,
+        tabBarInactiveTintColor: C.tabBarInactive,
         tabBarLabelStyle: { fontSize: 13 },
         tabBarStyle: {
-          backgroundColor: Colors.bg,
-          borderTopColor: Colors.tabBarBorder,
+          backgroundColor: C.bg,
+          borderTopColor: C.tabBarBorder,
           height: 58,
           paddingTop: 4,
         },
@@ -52,8 +55,8 @@ function MainTabs() {
         component={HomeScreen}
         options={{
           tabBarLabel: '学习',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="school" size={26} color={color} />
+          tabBarIcon: ({ focused, color }) => (
+            <AnimatedTabIcon focused={focused} color={color} name="school" size={26} />
           ),
         }}
       />
@@ -62,8 +65,8 @@ function MainTabs() {
         component={ProgressScreen}
         options={{
           tabBarLabel: '进度',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="trophy" size={26} color={color} />
+          tabBarIcon: ({ focused, color }) => (
+            <AnimatedTabIcon focused={focused} color={color} name="trophy" size={26} />
           ),
         }}
       />
@@ -72,8 +75,8 @@ function MainTabs() {
         component={SettingsScreen}
         options={{
           tabBarLabel: '设置',
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="cog" size={26} color={color} />
+          tabBarIcon: ({ focused, color }) => (
+            <AnimatedTabIcon focused={focused} color={color} name="cog" size={26} />
           ),
         }}
       />
@@ -82,10 +85,34 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
+  const { isDark } = useTheme();
+
+  const C = isDark ? DarkColors : Colors;
+
+  const navigationTheme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        background: C.bg,
+        card: C.bg,
+        border: C.border,
+      },
+    };
+  }, [isDark, C]);
+
+  const screenBg = C.bg;
+
   return (
     <ErrorBoundary>
-      <NavigationContainer>
-        <RootStack.Navigator screenOptions={{ headerShown: false }}>
+      <NavigationContainer theme={navigationTheme}>
+        <RootStack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: screenBg },
+          }}
+        >
           <RootStack.Screen name="MainTabs" component={MainTabs} />
           <RootStack.Screen name="Course" component={CourseScreen} />
           <RootStack.Screen name="Module" component={ModuleScreen} />

@@ -16,13 +16,21 @@ export default function LottiePlayer({ scenario }: Props) {
     ref.current?.play();
   }, []);
 
+  if (!scenario.source) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.caption}>{scenario.title || '动画资源未配置'}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <LottieView
         ref={ref}
         source={scenario.source}
         autoPlay
-        loop
+        loop={scenario.loop ?? true}
         style={styles.lottie}
         resizeMode="contain"
       />

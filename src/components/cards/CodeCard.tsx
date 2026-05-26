@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Colors, FontSize } from '@/theme';
+import { Colors, useColors, FontSize, FontFamily } from '@/theme';
 import type { CodeContent } from '@/types';
 
 interface Props {
@@ -7,26 +7,27 @@ interface Props {
 }
 
 export default function CodeCard({ content }: Props) {
+  const C = useColors();
   const lines = content.code.split(/\r?\n/);
   const highlightSet = new Set(content.highlights ?? []);
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: C.bg }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.title}>{content.title}</Text>
-      <View style={styles.codeBlock}>
+      <Text style={[styles.title, { color: C.text }]}>{content.title}</Text>
+      <View style={[styles.codeBlock, { backgroundColor: C.codeBg }]}>
         {lines.map((line, i) => (
           <View
             key={i}
             style={[
               styles.line,
-              highlightSet.has(i) && styles.highlightedLine,
+              highlightSet.has(i) && [styles.highlightedLine, { backgroundColor: C.codeHighlightBg, borderLeftColor: C.primary }],
             ]}
           >
-            <Text style={styles.lineNum}>{i + 1}</Text>
-            <Text style={styles.code}>{line || ' '}</Text>
+            <Text style={[styles.lineNum, { color: C.codeLineNum }]}>{i + 1}</Text>
+            <Text style={[styles.code, { color: C.codeText }]}>{line || ' '}</Text>
           </View>
         ))}
       </View>
@@ -45,6 +46,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   title: {
+    fontFamily: FontFamily.sansBold,
     fontSize: 18,
     fontWeight: '600',
     color: Colors.text,

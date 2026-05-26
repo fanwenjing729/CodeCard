@@ -1,6 +1,7 @@
-import { useReducer, useEffect, useRef } from 'react';
+import { useReducer, useEffect, useRef, useLayoutEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Colors } from '@/theme';
+import Animated, { FadeInRight, FadeOutLeft, FadeIn } from 'react-native-reanimated';
+import { Colors, useColors } from '@/theme';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
 import type { PracticeContent } from '@/types';
@@ -16,6 +17,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Quiz'>;
 
 export default function QuizScreen({ route, navigation }: Props) {
   const { courseId, nodeId } = route.params;
+  const C = useColors();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
+  }, [navigation, C.bg]);
+
   const rewardCard = useProgressStore((s) => s.rewardCard);
   const saveQuizScore = useProgressStore((s) => s.saveQuizScore);
   const addWrongCard = useProgressStore((s) => s.addWrongCard);
@@ -88,10 +95,10 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   if (!content && !done) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>暂无题目</Text>
+      <View style={[styles.empty, { backgroundColor: C.bg }]}>
+        <Text style={[styles.emptyText, { color: C.textMuted }]}>暂无题目</Text>
         <TouchableOpacity
-          style={styles.backBtn}
+          style={[styles.backBtn, { backgroundColor: C.primary }]}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
@@ -103,34 +110,39 @@ export default function QuizScreen({ route, navigation }: Props) {
 
   if (done) {
     return (
-      <View style={styles.resultWrap}>
-        <Text style={styles.resultTitle}>测验完成</Text>
-        <Text style={styles.resultScore}>
+      <Animated.View entering={FadeIn.duration(400)} style={[styles.resultWrap, { backgroundColor: C.bg }]}>
+        <Text style={[styles.resultTitle, { color: C.success }]}>测验完成</Text>
+        <Text style={[styles.resultScore, { color: C.text }]}>
           {score} / {cards.length}
         </Text>
         <TouchableOpacity
-          style={styles.backBtn}
+          style={[styles.backBtn, { backgroundColor: C.primary }]}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
           <Text style={styles.backBtnText}>返回</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     );
   }
 
   if (!content) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
       <ScreenHeader
         onBack={() => navigation.goBack()}
         backLabel="返回"
-        right={<Text style={styles.progress}>{index + 1} / {cards.length}</Text>}
+        right={<Text style={[styles.progress, { color: C.textMuted }]}>{index + 1} / {cards.length}</Text>}
         variant="compact"
       />
 
-      <View style={styles.questionWrap}>
+      <Animated.View
+        key={index}
+        entering={FadeInRight.duration(250)}
+        exiting={FadeOutLeft.duration(250)}
+        style={styles.questionWrap}
+      >
         <QuestionRenderer
           content={content}
           selected={selected}
@@ -142,7 +154,7 @@ export default function QuizScreen({ route, navigation }: Props) {
           onNext={handleNext}
           nextLabel={index < cards.length - 1 ? '下一题' : '完成测验'}
         />
-      </View>
+      </Animated.View>
     </View>
   );
 }
