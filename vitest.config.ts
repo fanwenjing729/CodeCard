@@ -6,6 +6,6 @@ export default defineConfig({
     alias: { '@': path.resolve(__dirname, 'src') },
   },
   ssr: {
-    external: ['react-native'],
+    external: ['react-native', '@react-native-async-storage/async-storage'],
   },
 });
