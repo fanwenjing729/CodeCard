@@ -3,6 +3,7 @@
     "name": "CodeCard",
     "slug": "CodeCard",
     "version": "1.0.0",
+    "scheme": "codecard",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { calcLevel } from '@/lib/xp';
 
-interface CourseProgress {
+export interface CourseProgress {
   completedCards: Record<string, true>;
   xp: number;
   quizScores: Record<string, number>;
