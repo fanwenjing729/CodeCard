@@ -6,16 +6,21 @@ import {
 import { Colors, useColors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAuthStore } from '@/store/authStore';
 
 export default function RegisterScreen() {
   const C = useColors();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
-  const { sendEmailOtp, verifyEmailOtp, setPassword } = useAuthStore();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { sendEmailOtp, verifyEmailOtp, sendPhoneOtp, verifyPhoneOtp, setPassword } = useAuthStore();
 
+  type AuthType = 'email' | 'phone';
+  const [authType, setAuthType] = useState<AuthType>('email');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -50,21 +55,30 @@ export default function RegisterScreen() {
     }, 1000);
   }, []);
 
-  const validateEmail = () => {
-    const t = email.trim().toLowerCase();
-    if (!t || !t.includes('@')) {
-      Alert.alert('请输入正确的邮箱地址');
+  const validate = (): string | null => {
+    if (authType === 'email') {
+      const t = email.trim().toLowerCase();
+      if (!t || !t.includes('@')) {
+        Alert.alert('请输入正确的邮箱地址');
+        return null;
+      }
+      return t;
+    }
+    const p = phone.trim();
+    if (!p || p.length < 11) {
+      Alert.alert('请输入正确的手机号（如 +8613800138000）');
       return null;
     }
-    return t;
+    return p;
   };
 
   // ── Step 1：发送验证码 ──
   const handleSendCode = async () => {
-    const e = validateEmail();
-    if (!e) return;
+    const v = validate();
+    if (!v) return;
     setSending(true);
-    const { error } = await sendEmailOtp(e);
+    const fn = authType === 'email' ? sendEmailOtp : sendPhoneOtp;
+    const { error } = await fn(v);
     setSending(false);
     if (error) {
       Alert.alert('发送失败', error);
@@ -75,14 +89,15 @@ export default function RegisterScreen() {
 
   // ── Step 1：验证验证码 → 进 Step 2 ──
   const handleVerify = async () => {
-    const e = validateEmail();
-    if (!e) return;
-    if (!code || code.length < 6) {
-      Alert.alert('请输入 6 位验证码');
+    const v = validate();
+    if (!v) return;
+    if (!code || code.length < 4) {
+      Alert.alert('请输入验证码');
       return;
     }
     setLoading(true);
-    const { error } = await verifyEmailOtp(e, code);
+    const fn = authType === 'email' ? verifyEmailOtp : verifyPhoneOtp;
+    const { error } = await fn(v, code);
     setLoading(false);
     if (error) {
       Alert.alert('验证失败', error);
@@ -108,7 +123,8 @@ export default function RegisterScreen() {
       Alert.alert('设置密码失败', error);
       return;
     }
-    navigation.goBack();
+    // 注册成功后跳过 LoginScreen，直接回到上一页
+    if (navigation.canGoBack()) navigation.pop(2);
   };
 
   return (
@@ -125,38 +141,86 @@ export default function RegisterScreen() {
         <MaterialCommunityIcons name="account-plus-outline" size={64} color={C.arrow} />
         <Text style={[styles.title, { color: C.text }]}>注册</Text>
         <Text style={[styles.subtitle, { color: C.textMuted }]}>
-          {step === 1 ? '输入邮箱，验证码会自动发送' : '设置登录密码'}
+          {step === 1
+            ? (authType === 'email' ? '输入邮箱，验证码会自动发送' : '输入手机号，短信验证码会自动发送')
+            : '设置登录密码'}
         </Text>
 
-        {/* ═══ Step 1：邮箱 + 验证码 ═══ */}
+        {/* ═══ Step 1：验证身份 ═══ */}
         {step === 1 && (
           <>
-            <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
-              <TextInput
-                style={[styles.input, { color: C.text }]}
-                placeholder="邮箱"
-                placeholderTextColor={C.textPlaceholder}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-              />
+            {/* 邮箱 / 手机号 切换 */}
+            <View style={styles.toggleRow}>
               <TouchableOpacity
-                style={[styles.otpBtn, { backgroundColor: countdown > 0 ? C.disabledBg : C.primary }]}
-                onPress={handleSendCode}
-                disabled={countdown > 0 || sending}
+                style={[styles.toggleBtn, authType === 'email' && { backgroundColor: C.primary }]}
+                onPress={() => setAuthType('email')}
                 activeOpacity={0.7}
               >
-                {sending ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.otpBtnText}>
-                    {countdown > 0 ? `${countdown}s` : '发送'}
-                  </Text>
-                )}
+                <Text style={[styles.toggleText, authType === 'email' && { color: '#fff' }]}>邮箱</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.toggleBtn, authType === 'phone' && { backgroundColor: C.primary }]}
+                onPress={() => setAuthType('phone')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.toggleText, authType === 'phone' && { color: '#fff' }]}>手机号</Text>
               </TouchableOpacity>
             </View>
+
+            {authType === 'email' ? (
+              <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+                <TextInput
+                  style={[styles.input, { color: C.text }]}
+                  placeholder="邮箱"
+                  placeholderTextColor={C.textPlaceholder}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={email}
+                  onChangeText={setEmail}
+                />
+                <TouchableOpacity
+                  style={[styles.otpBtn, { backgroundColor: countdown > 0 ? C.disabledBg : C.primary }]}
+                  onPress={handleSendCode}
+                  disabled={countdown > 0 || sending}
+                  activeOpacity={0.7}
+                >
+                  {sending ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.otpBtnText}>
+                      {countdown > 0 ? `${countdown}s` : '发送'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+                <TextInput
+                  style={[styles.input, { color: C.text }]}
+                  placeholder="手机号（如 +8613800138000）"
+                  placeholderTextColor={C.textPlaceholder}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                  value={phone}
+                  onChangeText={setPhone}
+                />
+                <TouchableOpacity
+                  style={[styles.otpBtn, { backgroundColor: countdown > 0 ? C.disabledBg : C.primary }]}
+                  onPress={handleSendCode}
+                  disabled={countdown > 0 || sending}
+                  activeOpacity={0.7}
+                >
+                  {sending ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.otpBtnText}>
+                      {countdown > 0 ? `${countdown}s` : '发送'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
 
             <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
               <TextInput
@@ -164,7 +228,7 @@ export default function RegisterScreen() {
                 placeholder="验证码"
                 placeholderTextColor={C.textPlaceholder}
                 keyboardType="number-pad"
-                maxLength={6}
+                maxLength={8}
                 value={code}
                 onChangeText={setCode}
               />
@@ -259,6 +323,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', marginTop: 8,
   },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  toggleRow: {
+    flexDirection: 'row', width: '100%',
+    marginBottom: 12, gap: 10,
+  },
+  toggleBtn: {
+    flex: 1, height: 40, borderRadius: 10,
+    borderWidth: 1, borderColor: Colors.border,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  toggleText: { fontSize: 14, color: Colors.textMuted },
   link: { fontSize: 14 },
   backLink: { marginTop: 20, paddingVertical: 4 },
 });

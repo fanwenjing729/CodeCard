@@ -20,6 +20,8 @@ interface AuthStore {
   loginByEmail: (email: string, password: string) => Promise<{ error?: string }>;
   sendEmailOtp: (email: string) => Promise<{ error?: string }>;
   verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string }>;
+  sendPhoneOtp: (phone: string) => Promise<{ error?: string }>;
+  verifyPhoneOtp: (phone: string, token: string) => Promise<{ error?: string; isNewUser?: boolean }>;
   registerByEmail: (email: string, password: string) => Promise<{ error?: string; info?: string }>;
   setPassword: (password: string) => Promise<{ error?: string }>;
   // loginByWechat: () => Promise<{ error?: string }>;
@@ -117,6 +119,34 @@ export const useAuthStore = create<AuthStore>()((set) => ({
         isLoggedIn: true,
       });
       syncOnLogin(data.session.user.id).catch(() => {});
+    }
+    return {};
+  },
+
+  sendPhoneOtp: async (phone: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      phone,
+      options: { shouldCreateUser: true },
+    });
+    return error ? { error: error.message } : {};
+  },
+
+  verifyPhoneOtp: async (phone: string, token: string) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone,
+      token,
+      type: 'sms',
+    });
+    if (error) return { error: error.message };
+    if (data.session?.user) {
+      const u = data.session.user;
+      const isNewUser = u.created_at === u.updated_at;
+      set({
+        user: toUser(u),
+        isLoggedIn: true,
+      });
+      syncOnLogin(u.id).catch(() => {});
+      return { isNewUser };
     }
     return {};
   },

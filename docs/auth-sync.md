@@ -20,6 +20,13 @@
 | 12 | 拆分登录页：LoginScreen（登录）+ RegisterScreen（两步注册：验证码→设密码） | ✅ |
 | 13 | 注册改为 OTP 验证码流程（不用邮件确认链接） | ✅ |
 | 14 | 自动云端同步：`useAutoSync` hook — 进度变化 3s 防抖上传 | ✅ |
+| 15 | 修复：邮箱验证码发链接 → 改为发数字验证码（Supabase Email Template `{{ .Token }}`） | ✅ |
+| 16 | 修复：验证码输入框 `maxLength` 6→8，去掉"6位"文案（Supabase 生成 8 位 token） | ✅ |
+| 17 | 修复：注册完成后 `pop(2)` 跳过 LoginScreen，避免 `isLoggedIn` 秒弹回 | ✅ |
+| 18 | 修复：LoginScreen 登录按钮加 try/finally，防止异常导致 loading 卡死 | ✅ |
+| 19 | 新增：手机号登录 + 注册（`sendPhoneOtp` / `verifyPhoneOtp` / LoginScreen phone 模式 / RegisterScreen 邮箱/手机号切换） | ✅ |
+| 20 | 配置 SMTP（Resend）+ Supabase Email Template → `{{ .Token }}` | ✅ |
+| 21 | 关闭 Supabase Confirm email | ✅ |
 
 ## 下一步（Supabase 配置）
 
@@ -27,12 +34,15 @@
 
 | # | 事项 | 操作位置 | 备注 |
 |---|------|----------|------|
-| 1 | 填真实的 anon key | 项目 `.env` | |
-| 2 | 开启 Email Auth | Dashboard → Authentication → Email → Enable | |
-| 3 | **关闭邮箱确认（强烈建议）** | Dashboard → Authentication → Email → 关闭 "Confirm email" | 见下方说明 |
-| 4 | 建 `user_progress` 表 | Dashboard → SQL Editor，执行建表 SQL（见下方） | |
-| 5 | 重启 Expo | `npx expo start --clear` | |
-| 6 | 真机验证 | 邮箱+密码 → 注册 → 登录 | 密码模式最稳 |
+| 1 | 填真实的 anon key | 项目 `.env` | ✅ 已完成 |
+| 2 | 开启 Email Auth | Dashboard → Authentication → Email → Enable | ✅ 已开启 |
+| 3 | **关闭邮箱确认** | Dashboard → Authentication → Email → 关闭 "Confirm email" | ✅ 已关闭 |
+| 4 | 建 `user_progress` 表 | Dashboard → SQL Editor，执行建表 SQL（见下方） | 待确认 |
+| 5 | 配置 SMTP（Resend） | Dashboard → Authentication → Email → SMTP | ✅ 已配置 |
+| 6 | 邮件模板改为 `{{ .Token }}` | Dashboard → Authentication → Email Templates | ✅ 已改 |
+| 7 | **开启 Phone Auth + 配置 SMS 提供商** | Dashboard → Authentication → Phone → Enable + 配 Twilio/MessageBird | ⬜ 手机号登录必做 |
+| 8 | 重启 Expo | `npx expo start --clear` | |
+| 9 | 真机验证 | 邮箱+密码 / 邮箱验证码 / 手机验证码 → 注册 → 登录 | |
 
 ### ⚠️ 邮箱验证码的坑
 
@@ -73,64 +83,57 @@ CREATE POLICY "写入自己的进度" ON user_progress FOR ALL
 
 ---
 
-## 登录跑通后的路线
+## 当前状态（2026-05-27）
 
-按顺序，每步做完再进下一步。
+**代码侧已完成。** 以下全部实现完毕，无需再改：
 
-### 第 1 步：验证登录流程
+| 模块 | 内容 |
+|------|------|
+| 认证 | 邮箱密码登录、邮箱验证码登录、**手机号验证码登录**、两步 OTP 注册（邮箱+手机号）、找回密码、登出、session 恢复 |
+| 同步 | 登录时自动拉取合并、学完卡片 3s 防抖自动上传、手动同步按钮 |
+| UI | LoginScreen（密码/邮箱验证码/**手机号**/找回密码）、RegisterScreen（邮箱/手机号+验证码+设密码）、SettingsScreen 用户信息/同步/登出 |
+| 导航 | Login + Register 路由已注册 |
 
-- [ ] 填真实 anon key 到 `.env`
-- [ ] Supabase 开启 Email Auth
-- [ ] 建 user_progress 表（执行上面 SQL）
-- [ ] `npx expo start --clear` 重启
-- [ ] 真机输入邮箱+密码 → 注册 → 登录成功 → 自动跳回首页
-- [ ] 或输入邮箱 → 发送验证码 → 填入 → 登录成功
-- [ ] 杀掉 App 重开 → 仍保持登录态（`initialize()` 恢复 session）
+## 下次要做什么
 
-### 第 2 步：接入同步
+### 第 1 步：配置 Supabase（必需，否则登录跑不通）
 
-当前的 `syncEngine.ts` 写好了但还没接入 UI。需要改两处：
+| # | 事项 | 位置 |
+|---|------|------|
+| 1 | 填真实 anon key | `.env` 替换 `EXPO_PUBLIC_SUPABASE_ANON_KEY` |
+| 2 | 开启 Email Auth | Dashboard → Authentication → Email → Enable |
+| 3 | **关闭邮箱确认** | Dashboard → Authentication → Email → 关 "Confirm email" |
+| 4 | 建 `user_progress` 表 + RLS | SQL Editor，执行上文 SQL |
+| 5 | 配置 SMTP（Resend） | Dashboard → Authentication → Email → SMTP |
+| 6 | 邮件模板改为 `{{ .Token }}` | Dashboard → Authentication → Email Templates |
+| 7 | **开启 Phone Auth + 配置 SMS** | Dashboard → Authentication → Phone（可选，手机号登录需要） |
+| 8 | `npx expo start --clear` | 清缓存重启 |
 
-**2a. 登录成功后自动同步**
+### 第 2 步：真机验证
 
-`authStore.ts` 已在 `initialize()`（session 恢复）和 `onAuthStateChange`（新登录）中自动调用 `syncOnLogin`。手动登录动作（`loginByEmail`、`verifyEmailOtp`、`registerByEmail`）中也内联了调用。以下代码仅供参考：
+- [ ] 邮箱+密码：注册 → 登录 → 学几张卡 → 登录成功自动跳回
+- [ ] 邮箱验证码：输入邮箱 → 发验证码 → 填码 → 登录成功
+- [ ] 手机号验证码：输入手机号 → 发短信 → 填码 → 登录成功
+- [ ] 注册页-邮箱：邮箱 → 验证码 → 设密码 → 完成注册 → 自动回到主页
+- [ ] 注册页-手机号：手机号 → 短信验证码 → 设密码 → 完成注册 → 自动回到主页
+- [ ] 找回密码：邮箱 → 验证码 → 设新密码 → 登录
+- [ ] 杀掉 App 重开 → 仍保持登录态
+- [ ] 登录后学卡 → Settings 点"立即同步" → 确认上传成功
+- [ ] Settings → 退出登录 → 学习功能不受影响
 
-```ts
-import { syncOnLogin } from './syncEngine';
+### 第 3 步：配置 SMTP（解决验证码额度限制）
 
-// 在 set({ user, isLoggedIn: true }) 之后加：
-syncOnLogin(user.id).catch(() => {});
-```
+Supabase 免费额度每小时 3-4 封邮件，开发测试容易触发 `email rate limit exceeded`。
 
-**2b. SettingsScreen 加手动同步按钮**
+- [ ] 注册 [Resend](https://resend.com)（100 封/天免费）或 [Brevo](https://brevo.com)（300 封/天免费）
+- [ ] Supabase Dashboard → Authentication → Email → Custom SMTP，填入 SMTP 信息
+- [ ] 配置完后验证码不再受限制
 
-SettingsScreen 已有 `manualSync` 的调用预留。找到对应的 TouchableOpacity，把 no-op 换成真实调用：
+### 第 4 步：生产上线检查
 
-```ts
-import { manualSync } from '@/store/syncEngine';
-// onClick: manualSync(userId).then(res => setLastSync(res.lastSyncedAt))
-```
-
-### 第 3 步：SettingsScreen 接入真实用户信息
-
-当前 SettingsScreen 的 avatar + phone + displayId 读的是 `useAuthStore`。authStore 已实现，取消注释即可：
-
-- `user?.phone` 显示手机号
-- `user?.displayId` 显示用户 ID
-- 头像用 `user?.phone` 首字符做占位
-
-### 第 4 步：错误处理兜底
-
-- [ ] 同步失败不阻塞 UI——`syncOnLogin` 已有 try/catch，静默失败
-- [ ] 网络断开时 `supabase` 调用会抛异常——LoginScreen 已有 Alert 提示
-- [ ] Token 过期自动刷新——`autoRefreshToken: true` 已配，Supabase 自动处理
-
-### 第 5 步：生产环境准备
-
-- [ ] `.env` 的 anon key 换成生产环境的（Supabase → Settings → API）
-- [ ] Supabase RLS 确认生效（用另一个用户 ID 测试，应该读不到别人的进度）
+- [ ] RLS 确认生效（用另一个账号测试不能读到别人的进度）
+- [ ] `.env` 换生产环境 anon key
 - [ ] App 签名打包后验证 OAuth 回调（`codecard://` scheme）
-- [ ] 考虑把 SMS 切换到生产签名（阿里云短信模板去掉"测试"字样）
 
 ### 架构备忘
 

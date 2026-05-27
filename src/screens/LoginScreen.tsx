@@ -11,7 +11,7 @@ import type { RootStackParamList } from '@/navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAuthStore } from '@/store/authStore';
 
-type Mode = 'password' | 'code' | 'reset';
+type Mode = 'password' | 'code' | 'phone' | 'reset';
 
 export default function LoginScreen() {
   const C = useColors();
@@ -20,6 +20,7 @@ export default function LoginScreen() {
   const {
     loginByEmail,
     sendEmailOtp, verifyEmailOtp,
+    sendPhoneOtp, verifyPhoneOtp,
     setPassword,
     isLoggedIn,
   } = useAuthStore();
@@ -34,6 +35,7 @@ export default function LoginScreen() {
 
   // 验证码 / 重置
   const [code, setCode] = useState('');
+  const [phone, setPhone] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [resetStep, setResetStep] = useState(1);
   const [countdown, setCountdown] = useState(0);
@@ -85,9 +87,16 @@ export default function LoginScreen() {
       return;
     }
     setLoading(true);
-    const { error } = await loginByEmail(e, password);
-    setLoading(false);
-    if (error) Alert.alert('登录失败', error);
+    try {
+      const { error } = await loginByEmail(e, password);
+      if (error) {
+        Alert.alert('登录失败', error);
+      }
+    } catch {
+      Alert.alert('网络错误', '请检查网络后重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── 验证码模式：发送 ──
@@ -109,13 +118,54 @@ export default function LoginScreen() {
     const e = validateEmail();
     if (!e) return;
     if (!code || code.length < 6) {
-      Alert.alert('请输入 6 位验证码');
+      Alert.alert('请输入验证码');
       return;
     }
     setLoading(true);
     const { error } = await verifyEmailOtp(e, code);
     setLoading(false);
     if (error) Alert.alert('验证失败', error);
+  };
+
+  // ── 手机号模式：发送验证码 ──
+  const handlePhoneSend = async () => {
+    const p = phone.trim();
+    if (!p || p.length < 11) {
+      Alert.alert('请输入正确的手机号');
+      return;
+    }
+    setSending(true);
+    const { error } = await sendPhoneOtp(p);
+    setSending(false);
+    if (error) {
+      Alert.alert('发送失败', error);
+      return;
+    }
+    startCountdown();
+  };
+
+  // ── 手机号模式：验证 → 登录 ──
+  const handlePhoneVerify = async () => {
+    const p = phone.trim();
+    if (!p || p.length < 11) {
+      Alert.alert('请输入正确的手机号');
+      return;
+    }
+    if (!code || code.length < 4) {
+      Alert.alert('请输入验证码');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await verifyPhoneOtp(p, code);
+      if (error) {
+        Alert.alert('验证失败', error);
+      }
+    } catch {
+      Alert.alert('网络错误', '请检查网络后重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── 重置第一步：发验证码 → 进第二步 ──
@@ -138,7 +188,7 @@ export default function LoginScreen() {
     const e = validateEmail();
     if (!e) return;
     if (!code || code.length < 6) {
-      Alert.alert('请输入 6 位验证码');
+      Alert.alert('请输入验证码');
       return;
     }
     if (newPassword.length < 6) {
@@ -166,6 +216,7 @@ export default function LoginScreen() {
     setLoading(false);
     setPasswordLocal('');
     setCode('');
+    setPhone('');
     setNewPassword('');
     setCountdown(0);
     setResetStep(1);
@@ -240,7 +291,7 @@ export default function LoginScreen() {
                 placeholder="验证码"
                 placeholderTextColor={C.textPlaceholder}
                 keyboardType="number-pad"
-                maxLength={6}
+                maxLength={8}
                 value={code}
                 onChangeText={setCode}
               />
@@ -275,6 +326,62 @@ export default function LoginScreen() {
           </>
         )}
 
+        {/* ═══ 手机号模式 ═══ */}
+        {mode === 'phone' && (
+          <>
+            <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+              <TextInput
+                style={[styles.input, { color: C.text }]}
+                placeholder="手机号（如 +8613800138000）"
+                placeholderTextColor={C.textPlaceholder}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
+
+            <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+              <TextInput
+                style={[styles.input, { color: C.text }]}
+                placeholder="验证码"
+                placeholderTextColor={C.textPlaceholder}
+                keyboardType="number-pad"
+                maxLength={8}
+                value={code}
+                onChangeText={setCode}
+              />
+              <TouchableOpacity
+                style={[styles.otpBtn, { backgroundColor: countdown > 0 ? C.disabledBg : C.primary }]}
+                onPress={handlePhoneSend}
+                disabled={countdown > 0 || sending}
+                activeOpacity={0.7}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.otpBtnText}>
+                    {countdown > 0 ? `${countdown}s` : '发送'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.fullBtn, { backgroundColor: C.primary }]}
+              onPress={handlePhoneVerify}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>登录</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
         {/* ═══ 重置 Step 1：发验证码 ═══ */}
         {mode === 'reset' && resetStep === 1 && (
           <>
@@ -302,7 +409,7 @@ export default function LoginScreen() {
                 placeholder="验证码"
                 placeholderTextColor={C.textPlaceholder}
                 keyboardType="number-pad"
-                maxLength={6}
+                maxLength={8}
                 value={code}
                 onChangeText={setCode}
               />
@@ -336,20 +443,27 @@ export default function LoginScreen() {
 
         {/* ── 底部链接 ── */}
         {mode === 'password' && (
-          <View style={styles.linkBlock}>
-            <TouchableOpacity onPress={() => switchMode('code')} activeOpacity={0.6}>
-              <Text style={[styles.link, { color: C.textMuted }]}>验证码登录</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Register')}
-              activeOpacity={0.6}
-            >
-              <Text style={[styles.link, { color: C.textMuted }]}>注册账号</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => switchMode('reset')} activeOpacity={0.6}>
-              <Text style={[styles.link, { color: C.textMuted }]}>忘记密码？</Text>
-            </TouchableOpacity>
-          </View>
+          <>
+            <View style={styles.linkBlock}>
+              <TouchableOpacity onPress={() => switchMode('code')} activeOpacity={0.6}>
+                <Text style={[styles.link, { color: C.textMuted }]}>验证码登录</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => switchMode('phone')} activeOpacity={0.6}>
+                <Text style={[styles.link, { color: C.textMuted }]}>手机号登录</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.linkBlock, { marginTop: 4 }]}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Register')}
+                activeOpacity={0.6}
+              >
+                <Text style={[styles.link, { color: C.textMuted }]}>注册账号</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => switchMode('reset')} activeOpacity={0.6}>
+                <Text style={[styles.link, { color: C.textMuted }]}>忘记密码？</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
         {mode !== 'password' && (
