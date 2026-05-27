@@ -6,6 +6,8 @@ import {
 import { Colors, useColors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/navigation/AppNavigator';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAuthStore } from '@/store/authStore';
 
@@ -14,9 +16,9 @@ type Mode = 'password' | 'code' | 'reset';
 export default function LoginScreen() {
   const C = useColors();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
-    loginByEmail, registerByEmail,
+    loginByEmail,
     sendEmailOtp, verifyEmailOtp,
     setPassword,
     isLoggedIn,
@@ -86,20 +88,6 @@ export default function LoginScreen() {
     const { error } = await loginByEmail(e, password);
     setLoading(false);
     if (error) Alert.alert('登录失败', error);
-  };
-
-  // ── 密码模式：注册 ──
-  const handleRegister = async () => {
-    const e = validateEmail();
-    if (!e) return;
-    if (password.length < 6) {
-      Alert.alert('密码至少需要 6 位');
-      return;
-    }
-    setLoading(true);
-    const { error } = await registerByEmail(e, password);
-    setLoading(false);
-    if (error) Alert.alert('注册失败', error);
   };
 
   // ── 验证码模式：发送 ──
@@ -175,6 +163,7 @@ export default function LoginScreen() {
   // ── 模式切换 ──
   const switchMode = (next: Mode) => {
     setMode(next);
+    setLoading(false);
     setPasswordLocal('');
     setCode('');
     setNewPassword('');
@@ -198,21 +187,20 @@ export default function LoginScreen() {
         <Text style={[styles.title, { color: C.text }]}>登录</Text>
         <Text style={[styles.subtitle, { color: C.textMuted }]}>登录后可跨设备同步学习进度</Text>
 
-        {/* 邮箱 — 始终显示（reset step 2 除外，因为此时已通过 step1 发过验证码） */}
-        {!(mode === 'reset' && resetStep === 2) && (
-          <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
-            <TextInput
-              style={[styles.input, { color: C.text }]}
-              placeholder="邮箱"
-              placeholderTextColor={C.textPlaceholder}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={email}
-              onChangeText={setEmail}
-            />
-          </View>
-        )}
+        {/* 邮箱 */}
+        <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+          <TextInput
+            style={[styles.input, { color: C.text }]}
+            placeholder="邮箱"
+            placeholderTextColor={C.textPlaceholder}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!(mode === 'reset' && resetStep === 2)}
+            value={email}
+            onChangeText={setEmail}
+          />
+        </View>
 
         {/* ═══ 密码模式 ═══ */}
         {mode === 'password' && (
@@ -228,28 +216,18 @@ export default function LoginScreen() {
               />
             </View>
 
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={[styles.halfBtn, { backgroundColor: C.primary }]}
-                onPress={handleContinue}
-                disabled={loading}
-                activeOpacity={0.8}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.btnText}>登录</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.halfBtn, styles.outlineBtn, { borderColor: C.primary }]}
-                onPress={handleRegister}
-                disabled={loading}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.btnText, { color: C.primary }]}>注册</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.fullBtn, { backgroundColor: C.primary }]}
+              onPress={handleContinue}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>登录</Text>
+              )}
+            </TouchableOpacity>
           </>
         )}
 
@@ -362,6 +340,12 @@ export default function LoginScreen() {
             <TouchableOpacity onPress={() => switchMode('code')} activeOpacity={0.6}>
               <Text style={[styles.link, { color: C.textMuted }]}>验证码登录</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Register')}
+              activeOpacity={0.6}
+            >
+              <Text style={[styles.link, { color: C.textMuted }]}>注册账号</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => switchMode('reset')} activeOpacity={0.6}>
               <Text style={[styles.link, { color: C.textMuted }]}>忘记密码？</Text>
             </TouchableOpacity>
@@ -397,16 +381,6 @@ const styles = StyleSheet.create({
     marginBottom: 12, paddingHorizontal: 14,
   },
   input: { flex: 1, fontSize: 15, height: '100%' },
-  buttonRow: {
-    flexDirection: 'row', width: '100%', gap: 12, marginTop: 8,
-  },
-  halfBtn: {
-    flex: 1, height: btnH, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  outlineBtn: {
-    backgroundColor: 'transparent', borderWidth: 1.5,
-  },
   fullBtn: {
     width: '100%', height: btnH, borderRadius: 10,
     justifyContent: 'center', alignItems: 'center', marginTop: 8,

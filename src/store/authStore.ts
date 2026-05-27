@@ -20,7 +20,7 @@ interface AuthStore {
   loginByEmail: (email: string, password: string) => Promise<{ error?: string }>;
   sendEmailOtp: (email: string) => Promise<{ error?: string }>;
   verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string }>;
-  registerByEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  registerByEmail: (email: string, password: string) => Promise<{ error?: string; info?: string }>;
   setPassword: (password: string) => Promise<{ error?: string }>;
   // loginByWechat: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
@@ -38,6 +38,7 @@ function toUser(user: { id: string; email?: string; phone?: string; user_metadat
 }
 
 let _unsubscribeAuth: (() => void) | null = null;
+let _initialized = false;
 
 export const useAuthStore = create<AuthStore>()((set) => ({
   user: null,
@@ -45,28 +46,33 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   isMounted: false,
 
   initialize: async () => {
-    // 清理上次注册的监听器
     if (_unsubscribeAuth) _unsubscribeAuth();
 
-    // 监听登录状态变化（登录/登出/过期自动更新）
     const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
       set({
         user: session?.user ? toUser(session.user) : null,
         isLoggedIn: session !== null,
       });
-      if (event === 'SIGNED_IN' && session?.user) {
-        syncOnLogin(session.user.id).catch(() => {});
+      // 仅新登录（非初始化恢复）时触发同步
+      // 初始化恢复的同步在下方 getSession 中处理
+      if (event === 'SIGNED_IN' && _initialized) {
+        if (session?.user) syncOnLogin(session.user.id).catch(() => {});
       }
     });
     _unsubscribeAuth = authData.subscription.unsubscribe;
 
-    // 恢复上次登录状态
     const { data } = await supabase.auth.getSession();
+    const hasSession = data.session !== null;
     set({
       user: data.session?.user ? toUser(data.session.user) : null,
-      isLoggedIn: data.session !== null,
+      isLoggedIn: hasSession,
       isMounted: true,
     });
+
+    if (hasSession && data.session?.user) {
+      syncOnLogin(data.session.user.id).catch(() => {});
+    }
+    _initialized = true;
   },
 
   loginByEmail: async (email: string, password: string) => {
@@ -126,6 +132,11 @@ export const useAuthStore = create<AuthStore>()((set) => ({
       }
       return { error: error.message };
     }
+    // 邮箱确认已开启 → 提示查收邮件
+    if (!data.session) {
+      return { info: '注册成功！请查收验证邮件并点击确认链接，然后返回登录。' };
+    }
+    // 邮箱确认未开启 → 直接登录
     if (data.session?.user) {
       set({
         user: toUser(data.session.user),

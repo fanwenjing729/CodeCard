@@ -14,6 +14,7 @@ import { useTheme, useColors } from '@/theme/useTheme';
 import AppNavigator from '@/navigation/AppNavigator';
 import { useProgressStore } from '@/store/useProgressStore';
 import { useAuthStore } from '@/store/authStore';
+import { useAutoSync } from '@/hooks/useAutoSync';
 
 // 阻止启动屏自动隐藏，等主题 + 字体 + 数据就绪后再手动隐藏
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -21,6 +22,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 function ThemedApp() {
   const { isDark } = useTheme();
   const C = useColors();
+  useAutoSync();
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>

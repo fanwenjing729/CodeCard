@@ -8,25 +8,41 @@
 |---|------|:--:|
 | 1 | `npx expo install @supabase/supabase-js` | ✅ |
 | 2 | 新建 `src/lib/supabase.ts` | ✅ |
-| 3 | 替换 `src/store/authStore.ts`（手机号+微信登录+登出+会话恢复） | ✅ |
+| 3 | 替换 `src/store/authStore.ts`（邮箱+密码/验证码登录+注册+登出+会话恢复） | ✅ |
 | 4 | 替换 `src/store/syncEngine.ts`（上传+下载合并+同步） | ✅ |
-| 5 | 替换 `src/screens/LoginScreen.tsx`（手机号+验证码+倒计时+微信按钮） | ✅ |
+| 5 | 替换 `src/screens/LoginScreen.tsx`（邮箱+密码+验证码+找回密码+倒计时） | ✅ |
 | 6 | `app.json` 加 `scheme: "codecard"` | ✅ |
 | 7 | `App.tsx` 调用 `initialize()`（已有，无需改） | ✅ |
 | 8 | AppNavigator 注册 Login 路由（已有，无需改） | ✅ |
+| 9 | 修复：`_initialized` 防重复同步（`onAuthStateChange` + `getSession` 双重触发） | ✅ |
+| 10 | 修复：注册区分"直接登录"和"需邮箱确认"，给用户明确提示 | ✅ |
+| 11 | 修复：找回密码第二步邮箱禁用而非隐藏，保留上下文 | ✅ |
+| 12 | 拆分登录页：LoginScreen（登录）+ RegisterScreen（两步注册：验证码→设密码） | ✅ |
+| 13 | 注册改为 OTP 验证码流程（不用邮件确认链接） | ✅ |
+| 14 | 自动云端同步：`useAutoSync` hook — 进度变化 3s 防抖上传 | ✅ |
 
 ## 下一步（Supabase 配置）
 
 代码侧已完成，以下是 Supabase 控制台需要做的事：
 
-| # | 事项 | 操作位置 |
-|---|------|----------|
-| 1 | 填真实的 anon key | 项目 `.env`，把 `你的anon_key` 换成真的 |
-| 2 | 开启 Phone Auth | Dashboard → Authentication → Phone → Enable |
-| 3 | 配置 SMS 提供商 | 需 Twilio 或阿里云短信服务（阿里云国内 ~¥0.045/条） |
-| 4 | 建 `user_progress` 表 | Dashboard → SQL Editor，执行建表 SQL（见下方） |
-| 5 | 重启 Expo | `npx expo start --clear` |
-| 6 | 真机验证 | 手机号登录 → 收验证码 → 登录成功 |
+| # | 事项 | 操作位置 | 备注 |
+|---|------|----------|------|
+| 1 | 填真实的 anon key | 项目 `.env` | |
+| 2 | 开启 Email Auth | Dashboard → Authentication → Email → Enable | |
+| 3 | **关闭邮箱确认（强烈建议）** | Dashboard → Authentication → Email → 关闭 "Confirm email" | 见下方说明 |
+| 4 | 建 `user_progress` 表 | Dashboard → SQL Editor，执行建表 SQL（见下方） | |
+| 5 | 重启 Expo | `npx expo start --clear` | |
+| 6 | 真机验证 | 邮箱+密码 → 注册 → 登录 | 密码模式最稳 |
+
+### ⚠️ 邮箱验证码的坑
+
+Supabase 免费计划**每小时限 3-4 封邮件**。开发调试时连续发几次验证码就会触发 `email rate limit exceeded`。
+
+**对策：**
+
+- **开发阶段把邮箱确认关掉**（第 3 步）—— 注册后直接登录，不需要验证邮件，也不受 rate limit 影响
+- 验证码登录和找回密码的"发送验证码"同样消耗配额，密码模式不受限
+- 等配好 SMTP 后再开邮箱确认（推荐 [Resend](https://resend.com) 100 封/天免费额度或 [Brevo](https://brevo.com) 300 封/天）
 
 ### 建表 SQL
 
@@ -47,9 +63,13 @@ CREATE POLICY "写入自己的进度" ON user_progress FOR ALL
   WITH CHECK (auth.uid() = user_id);
 ```
 
-### 不接 SMS 的替代方案
+### 邮箱验证码 vs 密码登录
 
-如果暂时不想搞短信签名审核，可以先做微信登录——不需要 SMS，用户点一下授权即可。但微信登录需要**微信开放平台**账号（个体工商户 + 300 元/年认证）。
+当前支持两种登录方式：
+- **密码模式**：邮箱 + 密码（注册/登录/忘记密码）
+- **验证码模式**：邮箱 + 6 位验证码（Supabase 自动发送邮件）
+
+验证码模式不需要配置任何第三方服务——Supabase 免费额度每月 3 封邮件，超出后需配置 SMTP。
 
 ---
 
@@ -60,10 +80,11 @@ CREATE POLICY "写入自己的进度" ON user_progress FOR ALL
 ### 第 1 步：验证登录流程
 
 - [ ] 填真实 anon key 到 `.env`
-- [ ] Supabase 开启 Phone Auth + 配置 SMS
+- [ ] Supabase 开启 Email Auth
 - [ ] 建 user_progress 表（执行上面 SQL）
 - [ ] `npx expo start --clear` 重启
-- [ ] 真机输入手机号 → 收验证码 → 登录成功 → 自动跳回首页
+- [ ] 真机输入邮箱+密码 → 注册 → 登录成功 → 自动跳回首页
+- [ ] 或输入邮箱 → 发送验证码 → 填入 → 登录成功
 - [ ] 杀掉 App 重开 → 仍保持登录态（`initialize()` 恢复 session）
 
 ### 第 2 步：接入同步
@@ -72,7 +93,7 @@ CREATE POLICY "写入自己的进度" ON user_progress FOR ALL
 
 **2a. 登录成功后自动同步**
 
-在 `authStore.ts` 的 `verifyOtp` 和 `onAuthStateChange` 里，登录成功后调：
+`authStore.ts` 已在 `initialize()`（session 恢复）和 `onAuthStateChange`（新登录）中自动调用 `syncOnLogin`。手动登录动作（`loginByEmail`、`verifyEmailOtp`、`registerByEmail`）中也内联了调用。以下代码仅供参考：
 
 ```ts
 import { syncOnLogin } from './syncEngine';
@@ -117,7 +138,7 @@ import { manualSync } from '@/store/syncEngine';
 
 | 需要 | 不需要 |
 |------|--------|
-| `authStore.ts` — 手机号/微信/登出 | 任何 Screen（HomeScreen 等 8 个页面不改） |
+| `authStore.ts` — 邮箱/验证码/密码/登出 | 任何 Screen（HomeScreen 等 8 个页面不改） |
 | `syncEngine.ts` — 上传/下载合并 | 任何课程数据文件（`src/data/` 不改） |
 | `LoginScreen.tsx` — 登录 UI | `useProgressStore` 接口（只多导出了一个类型） |
 | `App.tsx` — `initialize()`（已有） | 导航结构（Login 路由早已注册） |
@@ -152,7 +173,7 @@ import { manualSync } from '@/store/syncEngine';
 第2步：创建 user_progress 表 + 设置 RLS（SQL 在 supabase-auth-plan.md Phase 3）
 第3步：npx expo install @supabase/supabase-js
 第4步：新建 src/lib/supabase.ts（SDK 初始化）
-第5步：新建 src/store/authStore.ts（替换 no-op，手机号/微信登录）
+第5步：新建 src/store/authStore.ts（替换 no-op，邮箱/验证码/密码登录）
 第6步：新建 src/store/syncEngine.ts（替换 no-op，上传/下载/合并）
 第7步：新建 src/screens/LoginScreen.tsx（替换占位 UI）
 第8步：app.json 加 "scheme": "codecard"
@@ -221,10 +242,12 @@ WHERE tablename = 'user_progress';
 
 ```
 [ ] 未登录 → App 正常打开，所有课程可学（保持离线可用）
-[ ] Settings → 点击登录 → LoginScreen 显示手机号输入
-[ ] 输入手机号 → 发送验证码 → 收到短信 → 填入 → 登录成功
-[ ] 登录后 → Settings 显示用户头像/昵称/退出登录按钮
-[ ] 学完几张卡 → 点同步按钮 → 提示"同步成功"
+[ ] Settings → 点击登录 → LoginScreen 显示邮箱输入
+[ ] 邮箱+密码 → 注册 → 自动登录 → Settings 显示用户信息
+[ ] 或邮箱+验证码 → 发送 → 收邮件 → 填入 → 登录成功
+[ ] 忘记密码 → 发送验证码 → 设新密码 → 登录成功
+[ ] 登录后 → Settings 显示用户邮箱/昵称/退出登录按钮
+[ ] 学完几张卡 → 点同步按钮 → 同步成功
 [ ] 清除 App 数据（系统设置→App→清除数据）→ 重新登录 → 进度恢复
 [ ] 两台设备登录同一账号 → 各学不同卡片 → 分别同步 → 进度取并集
 [ ] 退出登录 → 学习功能不受影响（仍可离线学）
@@ -313,8 +336,8 @@ Supabase 控制台逐项确认后再发版：
 
 ```
 [ ] Auth → Settings → Site URL 已填（用于 OAuth 回调）
-[ ] Auth → Settings → 手机号登录已开启
-[ ] Auth → Providers → 微信登录已配置（如需）
+[ ] Auth → Settings → Email 登录已开启
+[ ] Auth → Settings → 邮箱确认按需开启/关闭
 [ ] SQL Editor → RLS 策略已执行且验证通过
 [ ] API Settings → anon key 已复制到 .env
 [ ] Database → user_progress 表存在
@@ -371,9 +394,11 @@ setDisplayId(v)        // 修改显示名（设置页）
 updateAvatar(url)      // 更新头像（设置页）
 
 // Actions（仅 LoginScreen 调用）
-loginByPhone(phone)    → { error? }
-verifyOtp(phone,token) → { error? }
-loginByWechat()        → { error? }
+loginByEmail(email, password)     → { error? }
+sendEmailOtp(email)               → { error? }
+verifyEmailOtp(email, token)      → { error? }
+registerByEmail(email, password)  → { error?, info? }
+setPassword(password)             → { error? }
 ```
 
 `updateAvatar` 尚未实现。需要时在 `authStore.ts` 加 no-op action 即可。
@@ -397,7 +422,7 @@ App.tsx          → authStore.initialize()
 SettingsScreen   → authStore (user, isLoggedIn, setDisplayId)
                    syncEngine.manualSync(userId)
                    navigation.navigate('Login')
-LoginScreen      → authStore.loginByPhone / verifyOtp / loginByWechat
+LoginScreen      → authStore.loginByEmail / sendEmailOtp / verifyEmailOtp / registerByEmail / setPassword
 AppNavigator     → <LoginScreen>
 ```
 
