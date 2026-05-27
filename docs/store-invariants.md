@@ -141,3 +141,40 @@ calcLevel(300) = 3
 6. 答错 → 错题集出现，答对 → 消失
 7. 数据管理 → 进入学科→模块→节点 → 逐层重置 → XP 和卡片数同步减少
 8. 数据管理 → 模块级重置 → 只扣该模块 XP，其他模块不受影响
+
+---
+
+## Store 拆分时机
+
+**当前状态：** `useProgressStore.ts` 329 行，刚过 300 行阈值。
+
+**但暂不建议拆。** 原因：
+
+1. **行数超线很轻微。** 329 行只比阈值多 29 行，且增长速度慢（课程数据加在 `src/data/` 下，不往 store 塞代码）。
+2. **社交功能加的是新 Store。** 排行榜/论坛会新增 `socialStore.ts`、`notificationStore.ts`，与 `useProgressStore` 零耦合，不往里面塞东西。
+3. **更重要的触发条件未满足。** 单人开发、零线上事故、Store 逻辑稳定。300 行阈值主要用来预警"复杂度增长需要测试兜底"，不是"必须拆"。
+
+**真正该拆的时候（满足任一）：**
+
+| 触发条件 | 说明 |
+|----------|------|
+| 有第二人改 Store | 多人改同一文件的冲突概率显著上升 |
+| Store 超 600 行 | 单个文件维护变得困难 |
+| 加后端同步后 merge 逻辑变复杂 | syncEngine 的合并策略独立成一个模块 |
+| 出了"改 store break 功能"的线上事故 | 说明当前结构已有 bug 风险 |
+
+**拆分方案（到时再执行）：**
+
+```
+src/store/
+├── useProgressStore.ts    ← 保持，但精简为 ~200 行
+├── xpStore.ts             ← 抽出 XP/level 计算
+├── cardStore.ts           ← 抽出 completedCards/wrongCards/nodePositions
+├── quizStore.ts           ← 抽出 quizScores
+├── persistEngine.ts       ← 抽出 hydrate/flush/migrate（当前 80 行）
+├── authStore.ts           ← 不变
+├── syncEngine.ts          ← 不变
+└── socialStore.ts         ← 将来新增，独立
+```
+
+抽取的 `xpStore`、`cardStore` 等通过 Zustand `set(get().otherSlice)` 模式共享状态，对外部 Screen 保持 selector 签名不变。Screen 不需要知道 Store 内部是否已拆分。

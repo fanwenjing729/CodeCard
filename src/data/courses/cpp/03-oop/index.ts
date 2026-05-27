@@ -1,6 +1,9 @@
 import type { CourseModule } from '@/types';
 import { classIntroNode } from './class-intro';
 import { accessControlNode } from './access-control';
+import { staticMembersNode } from './static-members';
+import { constructDestructNode } from './construct-destruct';
+import { copyControlNode } from './copy-control';
 
 export const oopModule: CourseModule = {
   moduleId: 'oop',
@@ -8,5 +11,8 @@ export const oopModule: CourseModule = {
   nodes: [
     classIntroNode,
     accessControlNode,
+    staticMembersNode,
+    constructDestructNode,
+    copyControlNode,
   ],
 };

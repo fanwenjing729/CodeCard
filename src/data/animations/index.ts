@@ -18,6 +18,8 @@ import BranchPlayer from '@/components/animations/BranchPlayer';
 import LoopPlayer from '@/components/animations/LoopPlayer';
 import BreakContinuePlayer from '@/components/animations/BreakContinuePlayer';
 import WhileDoWhilePlayer from '@/components/animations/WhileDoWhilePlayer';
+import { shallowDeepCopyScenario } from './scenarios/shallowDeepCopy';
+import ShallowDeepCopyPlayer from '@/components/animations/ShallowDeepCopyPlayer';
 // Lottie 示例（取消注释并放入 lottie JSON 文件后即可用）:
 // import { lottieLoopFlow } from './scenarios/lottieLoopFlow';
 // import LottiePlayer from '@/components/animations/LottiePlayer';
@@ -75,6 +77,10 @@ export const animationRegistry: Record<string, AnimationEntry> = {
   'dynamic-memory': {
     scenario: dynamicMemoryScenario,
     Component: ScopeCodePlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
+  },
+  'shallow-vs-deep-copy': {
+    scenario: shallowDeepCopyScenario,
+    Component: ShallowDeepCopyPlayer as ComponentType<{ scenario: AnimScenario; step: number }>,
   },
   // Lottie 注册示例:
   // 'loop-flow': {

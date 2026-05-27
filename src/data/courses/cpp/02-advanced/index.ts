@@ -1,6 +1,7 @@
 import type { CourseModule } from '@/types';
 import { memoryFourRegionsNode } from './memory-four-regions';
 import { structIntroNode } from './struct-intro';
+import { enumNode } from './enum';
 import { pointerNode } from './pointer';
 import { pointerArrayNode } from './pointer-array';
 import { dynamicMemoryNode } from './dynamic-memory';
@@ -15,6 +16,7 @@ export const advancedModule: CourseModule = {
   nodes: [
     memoryFourRegionsNode,
     structIntroNode,
+    enumNode,
     pointerNode,
     pointerArrayNode,
     dynamicMemoryNode,

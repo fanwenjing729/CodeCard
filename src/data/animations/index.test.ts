@@ -6,6 +6,7 @@ vi.mock('@/components/animations/BranchPlayer', () => ({ default: () => null }))
 vi.mock('@/components/animations/LoopPlayer', () => ({ default: () => null }));
 vi.mock('@/components/animations/BreakContinuePlayer', () => ({ default: () => null }));
 vi.mock('@/components/animations/WhileDoWhilePlayer', () => ({ default: () => null }));
+vi.mock('@/components/animations/ShallowDeepCopyPlayer', () => ({ default: () => null }));
 
 import { getAnimScenario, getAnimComponent, animationRegistry } from './index';
 
