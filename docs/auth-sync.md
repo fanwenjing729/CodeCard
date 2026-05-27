@@ -1,6 +1,128 @@
 # Auth & Sync Interface
 
-> **接后端看这里。** 三个文件当前是 no-op（未登录也能用），接后端 = 替换这 3 个文件 + 新建 4 个文件。
+> **最后更新：2026-05-27**
+
+## 当前进度
+
+| # | 事项 | 状态 |
+|---|------|:--:|
+| 1 | `npx expo install @supabase/supabase-js` | ✅ |
+| 2 | 新建 `src/lib/supabase.ts` | ✅ |
+| 3 | 替换 `src/store/authStore.ts`（手机号+微信登录+登出+会话恢复） | ✅ |
+| 4 | 替换 `src/store/syncEngine.ts`（上传+下载合并+同步） | ✅ |
+| 5 | 替换 `src/screens/LoginScreen.tsx`（手机号+验证码+倒计时+微信按钮） | ✅ |
+| 6 | `app.json` 加 `scheme: "codecard"` | ✅ |
+| 7 | `App.tsx` 调用 `initialize()`（已有，无需改） | ✅ |
+| 8 | AppNavigator 注册 Login 路由（已有，无需改） | ✅ |
+
+## 下一步（Supabase 配置）
+
+代码侧已完成，以下是 Supabase 控制台需要做的事：
+
+| # | 事项 | 操作位置 |
+|---|------|----------|
+| 1 | 填真实的 anon key | 项目 `.env`，把 `你的anon_key` 换成真的 |
+| 2 | 开启 Phone Auth | Dashboard → Authentication → Phone → Enable |
+| 3 | 配置 SMS 提供商 | 需 Twilio 或阿里云短信服务（阿里云国内 ~¥0.045/条） |
+| 4 | 建 `user_progress` 表 | Dashboard → SQL Editor，执行建表 SQL（见下方） |
+| 5 | 重启 Expo | `npx expo start --clear` |
+| 6 | 真机验证 | 手机号登录 → 收验证码 → 登录成功 |
+
+### 建表 SQL
+
+```sql
+create table if not exists user_progress (
+  user_id text primary key references auth.users(id) on delete cascade,
+  data jsonb not null default '{}',
+  updated_at timestamptz default now()
+);
+
+ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "读取自己的进度" ON user_progress FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "写入自己的进度" ON user_progress FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+```
+
+### 不接 SMS 的替代方案
+
+如果暂时不想搞短信签名审核，可以先做微信登录——不需要 SMS，用户点一下授权即可。但微信登录需要**微信开放平台**账号（个体工商户 + 300 元/年认证）。
+
+---
+
+## 登录跑通后的路线
+
+按顺序，每步做完再进下一步。
+
+### 第 1 步：验证登录流程
+
+- [ ] 填真实 anon key 到 `.env`
+- [ ] Supabase 开启 Phone Auth + 配置 SMS
+- [ ] 建 user_progress 表（执行上面 SQL）
+- [ ] `npx expo start --clear` 重启
+- [ ] 真机输入手机号 → 收验证码 → 登录成功 → 自动跳回首页
+- [ ] 杀掉 App 重开 → 仍保持登录态（`initialize()` 恢复 session）
+
+### 第 2 步：接入同步
+
+当前的 `syncEngine.ts` 写好了但还没接入 UI。需要改两处：
+
+**2a. 登录成功后自动同步**
+
+在 `authStore.ts` 的 `verifyOtp` 和 `onAuthStateChange` 里，登录成功后调：
+
+```ts
+import { syncOnLogin } from './syncEngine';
+
+// 在 set({ user, isLoggedIn: true }) 之后加：
+syncOnLogin(user.id).catch(() => {});
+```
+
+**2b. SettingsScreen 加手动同步按钮**
+
+SettingsScreen 已有 `manualSync` 的调用预留。找到对应的 TouchableOpacity，把 no-op 换成真实调用：
+
+```ts
+import { manualSync } from '@/store/syncEngine';
+// onClick: manualSync(userId).then(res => setLastSync(res.lastSyncedAt))
+```
+
+### 第 3 步：SettingsScreen 接入真实用户信息
+
+当前 SettingsScreen 的 avatar + phone + displayId 读的是 `useAuthStore`。authStore 已实现，取消注释即可：
+
+- `user?.phone` 显示手机号
+- `user?.displayId` 显示用户 ID
+- 头像用 `user?.phone` 首字符做占位
+
+### 第 4 步：错误处理兜底
+
+- [ ] 同步失败不阻塞 UI——`syncOnLogin` 已有 try/catch，静默失败
+- [ ] 网络断开时 `supabase` 调用会抛异常——LoginScreen 已有 Alert 提示
+- [ ] Token 过期自动刷新——`autoRefreshToken: true` 已配，Supabase 自动处理
+
+### 第 5 步：生产环境准备
+
+- [ ] `.env` 的 anon key 换成生产环境的（Supabase → Settings → API）
+- [ ] Supabase RLS 确认生效（用另一个用户 ID 测试，应该读不到别人的进度）
+- [ ] App 签名打包后验证 OAuth 回调（`codecard://` scheme）
+- [ ] 考虑把 SMS 切换到生产签名（阿里云短信模板去掉"测试"字样）
+
+### 架构备忘
+
+改了什么、没改什么：
+
+| 需要 | 不需要 |
+|------|--------|
+| `authStore.ts` — 手机号/微信/登出 | 任何 Screen（HomeScreen 等 8 个页面不改） |
+| `syncEngine.ts` — 上传/下载合并 | 任何课程数据文件（`src/data/` 不改） |
+| `LoginScreen.tsx` — 登录 UI | `useProgressStore` 接口（只多导出了一个类型） |
+| `App.tsx` — `initialize()`（已有） | 导航结构（Login 路由早已注册） |
+
+---
 
 ## 方案选择
 
