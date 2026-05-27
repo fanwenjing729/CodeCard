@@ -1,33 +1,56 @@
-import { useState, useLayoutEffect, useRef, useCallback } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import {
+  StyleSheet, Text, View, TextInput, TouchableOpacity,
+  Alert, ActivityIndicator,
+} from 'react-native';
 import { Colors, useColors } from '@/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useAuthStore } from '@/store/authStore';
 
+type Mode = 'password' | 'code' | 'reset';
+
 export default function LoginScreen() {
   const C = useColors();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { loginByPhone, verifyOtp, loginByWechat, isLoggedIn } = useAuthStore();
+  const {
+    loginByEmail, registerByEmail,
+    sendEmailOtp, verifyEmailOtp,
+    setPassword,
+    isLoggedIn,
+  } = useAuthStore();
 
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
+  // 共享
+  const [email, setEmail] = useState('');
+  const [mode, setMode] = useState<Mode>('password');
+  const [loading, setLoading] = useState(false);
+
+  // 密码 / 注册
+  const [password, setPasswordLocal] = useState('');
+
+  // 验证码 / 重置
+  const [code, setCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetStep, setResetStep] = useState(1);
   const [countdown, setCountdown] = useState(0);
   const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useLayoutEffect(() => {
     navigation.setOptions({ contentStyle: { backgroundColor: C.bgTertiary } });
   }, [navigation, C.bgTertiary]);
 
-  // 登录成功后自动返回
-  if (isLoggedIn) {
-    navigation.goBack();
-    return null;
-  }
+  useEffect(() => {
+    if (isLoggedIn) navigation.goBack();
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
 
   const startCountdown = useCallback(() => {
     setCountdown(60);
@@ -42,13 +65,49 @@ export default function LoginScreen() {
     }, 1000);
   }, []);
 
-  const handleSendOtp = async () => {
-    if (!phone || phone.length < 11) {
-      Alert.alert('请输入正确的手机号');
+  const validateEmail = () => {
+    const t = email.trim().toLowerCase();
+    if (!t || !t.includes('@')) {
+      Alert.alert('请输入正确的邮箱地址');
+      return null;
+    }
+    return t;
+  };
+
+  // ── 密码模式：登录 ──
+  const handleContinue = async () => {
+    const e = validateEmail();
+    if (!e) return;
+    if (password.length < 6) {
+      Alert.alert('密码至少需要 6 位');
       return;
     }
+    setLoading(true);
+    const { error } = await loginByEmail(e, password);
+    setLoading(false);
+    if (error) Alert.alert('登录失败', error);
+  };
+
+  // ── 密码模式：注册 ──
+  const handleRegister = async () => {
+    const e = validateEmail();
+    if (!e) return;
+    if (password.length < 6) {
+      Alert.alert('密码至少需要 6 位');
+      return;
+    }
+    setLoading(true);
+    const { error } = await registerByEmail(e, password);
+    setLoading(false);
+    if (error) Alert.alert('注册失败', error);
+  };
+
+  // ── 验证码模式：发送 ──
+  const handleSendCode = async () => {
+    const e = validateEmail();
+    if (!e) return;
     setSending(true);
-    const { error } = await loginByPhone(phone);
+    const { error } = await sendEmailOtp(e);
     setSending(false);
     if (error) {
       Alert.alert('发送失败', error);
@@ -57,25 +116,71 @@ export default function LoginScreen() {
     startCountdown();
   };
 
-  const handleVerify = async () => {
-    if (!otp) {
-      Alert.alert('请输入验证码');
+  // ── 验证码模式：验证 ──
+  const handleVerifyCode = async () => {
+    const e = validateEmail();
+    if (!e) return;
+    if (!code || code.length < 6) {
+      Alert.alert('请输入 6 位验证码');
       return;
     }
-    setVerifying(true);
-    const { error } = await verifyOtp(phone, otp);
-    setVerifying(false);
-    if (error) {
-      Alert.alert('验证失败', error);
-    }
-    // 成功后 isLoggedIn 会自动触发 goBack
+    setLoading(true);
+    const { error } = await verifyEmailOtp(e, code);
+    setLoading(false);
+    if (error) Alert.alert('验证失败', error);
   };
 
-  const handleWechat = async () => {
-    const { error } = await loginByWechat();
+  // ── 重置第一步：发验证码 → 进第二步 ──
+  const handleResetSend = async () => {
+    const e = validateEmail();
+    if (!e) return;
+    setSending(true);
+    const { error } = await sendEmailOtp(e);
+    setSending(false);
     if (error) {
-      Alert.alert('微信登录失败', error);
+      Alert.alert('发送失败', error);
+      return;
     }
+    setResetStep(2);
+    startCountdown();
+  };
+
+  // ── 重置第二步：验证码 + 设新密码 ──
+  const handleResetConfirm = async () => {
+    const e = validateEmail();
+    if (!e) return;
+    if (!code || code.length < 6) {
+      Alert.alert('请输入 6 位验证码');
+      return;
+    }
+    if (newPassword.length < 6) {
+      Alert.alert('新密码至少需要 6 位');
+      return;
+    }
+    setLoading(true);
+    const { error: verifyError } = await verifyEmailOtp(e, code);
+    if (verifyError) {
+      setLoading(false);
+      Alert.alert('验证失败', verifyError);
+      return;
+    }
+    const { error: pwError } = await setPassword(newPassword);
+    setLoading(false);
+    if (pwError) {
+      Alert.alert('修改密码失败', pwError);
+    }
+    // 成功后 isLoggedIn 会触发 goBack
+  };
+
+  // ── 模式切换 ──
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setPasswordLocal('');
+    setCode('');
+    setNewPassword('');
+    setCountdown(0);
+    setResetStep(1);
+    if (countdownRef.current) clearInterval(countdownRef.current);
   };
 
   return (
@@ -93,81 +198,191 @@ export default function LoginScreen() {
         <Text style={[styles.title, { color: C.text }]}>登录</Text>
         <Text style={[styles.subtitle, { color: C.textMuted }]}>登录后可跨设备同步学习进度</Text>
 
-        {/* 手机号输入 */}
-        <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
-          <Text style={[styles.prefix, { color: C.textSecondary }]}>+86</Text>
-          <TextInput
-            style={[styles.input, { color: C.text }]}
-            placeholder="手机号"
-            placeholderTextColor={C.textPlaceholder}
-            keyboardType="phone-pad"
-            maxLength={11}
-            value={phone}
-            onChangeText={setPhone}
-          />
-        </View>
+        {/* 邮箱 — 始终显示（reset step 2 除外，因为此时已通过 step1 发过验证码） */}
+        {!(mode === 'reset' && resetStep === 2) && (
+          <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+            <TextInput
+              style={[styles.input, { color: C.text }]}
+              placeholder="邮箱"
+              placeholderTextColor={C.textPlaceholder}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
+        )}
 
-        {/* 验证码输入 */}
-        <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
-          <TextInput
-            style={[styles.input, { color: C.text }]}
-            placeholder="验证码"
-            placeholderTextColor={C.textPlaceholder}
-            keyboardType="number-pad"
-            maxLength={6}
-            value={otp}
-            onChangeText={setOtp}
-          />
+        {/* ═══ 密码模式 ═══ */}
+        {mode === 'password' && (
+          <>
+            <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+              <TextInput
+                style={[styles.input, { color: C.text }]}
+                placeholder="密码"
+                placeholderTextColor={C.textPlaceholder}
+                secureTextEntry
+                value={password}
+                onChangeText={setPasswordLocal}
+              />
+            </View>
+
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.halfBtn, { backgroundColor: C.primary }]}
+                onPress={handleContinue}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.btnText}>登录</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.halfBtn, styles.outlineBtn, { borderColor: C.primary }]}
+                onPress={handleRegister}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.btnText, { color: C.primary }]}>注册</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+
+        {/* ═══ 验证码模式 ═══ */}
+        {mode === 'code' && (
+          <>
+            <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+              <TextInput
+                style={[styles.input, { color: C.text }]}
+                placeholder="验证码"
+                placeholderTextColor={C.textPlaceholder}
+                keyboardType="number-pad"
+                maxLength={6}
+                value={code}
+                onChangeText={setCode}
+              />
+              <TouchableOpacity
+                style={[styles.otpBtn, { backgroundColor: countdown > 0 ? C.disabledBg : C.primary }]}
+                onPress={handleSendCode}
+                disabled={countdown > 0 || sending}
+                activeOpacity={0.7}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.otpBtnText}>
+                    {countdown > 0 ? `${countdown}s` : '发送'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.fullBtn, { backgroundColor: C.primary }]}
+              onPress={handleVerifyCode}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>验证</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* ═══ 重置 Step 1：发验证码 ═══ */}
+        {mode === 'reset' && resetStep === 1 && (
+          <>
+            <TouchableOpacity
+              style={[styles.fullBtn, { backgroundColor: C.primary }]}
+              onPress={handleResetSend}
+              disabled={sending}
+              activeOpacity={0.8}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>发送验证码</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* ═══ 重置 Step 2：验证码 + 新密码 ═══ */}
+        {mode === 'reset' && resetStep === 2 && (
+          <>
+            <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+              <TextInput
+                style={[styles.input, { color: C.text }]}
+                placeholder="验证码"
+                placeholderTextColor={C.textPlaceholder}
+                keyboardType="number-pad"
+                maxLength={6}
+                value={code}
+                onChangeText={setCode}
+              />
+            </View>
+
+            <View style={[styles.inputRow, { borderColor: C.border, backgroundColor: C.bg }]}>
+              <TextInput
+                style={[styles.input, { color: C.text }]}
+                placeholder="新密码"
+                placeholderTextColor={C.textPlaceholder}
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.fullBtn, { backgroundColor: C.primary }]}
+              onPress={handleResetConfirm}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.btnText}>确认修改</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* ── 底部链接 ── */}
+        {mode === 'password' && (
+          <View style={styles.linkBlock}>
+            <TouchableOpacity onPress={() => switchMode('code')} activeOpacity={0.6}>
+              <Text style={[styles.link, { color: C.textMuted }]}>验证码登录</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => switchMode('reset')} activeOpacity={0.6}>
+              <Text style={[styles.link, { color: C.textMuted }]}>忘记密码？</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {mode !== 'password' && (
           <TouchableOpacity
-            style={[styles.otpBtn, { backgroundColor: countdown > 0 ? C.disabledBg : C.primary }]}
-            onPress={handleSendOtp}
-            disabled={countdown > 0 || sending}
-            activeOpacity={0.7}
+            onPress={() => switchMode('password')}
+            activeOpacity={0.6}
+            style={styles.switchLink}
           >
-            {sending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.otpBtnText}>
-                {countdown > 0 ? `${countdown}s` : '获取验证码'}
-              </Text>
-            )}
+            <Text style={[styles.link, { color: C.textMuted }]}>← 使用密码登录</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* 登录按钮 */}
-        <TouchableOpacity
-          style={[styles.loginBtn, { backgroundColor: C.primary }]}
-          onPress={handleVerify}
-          disabled={verifying}
-          activeOpacity={0.8}
-        >
-          {verifying ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.loginBtnText}>登录</Text>
-          )}
-        </TouchableOpacity>
-
-        {/* 分割线 */}
-        <View style={styles.divider}>
-          <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
-          <Text style={[styles.dividerText, { color: C.textMuted }]}>或</Text>
-          <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
-        </View>
-
-        {/* 微信登录 */}
-        <TouchableOpacity
-          style={[styles.wechatBtn, { borderColor: '#07C160' }]}
-          onPress={handleWechat}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons name="wechat" size={20} color="#07C160" />
-          <Text style={styles.wechatBtnText}>微信登录</Text>
-        </TouchableOpacity>
+        )}
       </View>
     </View>
   );
 }
+
+const btnH = 48;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -177,25 +392,32 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, color: Colors.textMuted, marginTop: 8, marginBottom: 32 },
   inputRow: {
     flexDirection: 'row', alignItems: 'center',
-    width: '100%', height: 48,
+    width: '100%', height: btnH,
     borderWidth: 1, borderRadius: 10,
     marginBottom: 12, paddingHorizontal: 14,
   },
-  prefix: { fontSize: 15, marginRight: 8 },
   input: { flex: 1, fontSize: 15, height: '100%' },
-  otpBtn: { borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  otpBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  loginBtn: {
-    width: '100%', height: 48, borderRadius: 10,
+  buttonRow: {
+    flexDirection: 'row', width: '100%', gap: 12, marginTop: 8,
+  },
+  halfBtn: {
+    flex: 1, height: btnH, borderRadius: 10,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  outlineBtn: {
+    backgroundColor: 'transparent', borderWidth: 1.5,
+  },
+  fullBtn: {
+    width: '100%', height: btnH, borderRadius: 10,
     justifyContent: 'center', alignItems: 'center', marginTop: 8,
   },
-  loginBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  divider: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 24 },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: { fontSize: 13, marginHorizontal: 12 },
-  wechatBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    width: '100%', height: 48, borderRadius: 10, borderWidth: 1.5, gap: 8,
+  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  otpBtn: { borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
+  otpBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  linkBlock: {
+    flexDirection: 'row', width: '100%', marginTop: 20,
+    justifyContent: 'space-between', paddingHorizontal: 4,
   },
-  wechatBtnText: { fontSize: 15, fontWeight: '600', color: '#07C160' },
+  link: { fontSize: 14 },
+  switchLink: { marginTop: 20, paddingVertical: 4 },
 });

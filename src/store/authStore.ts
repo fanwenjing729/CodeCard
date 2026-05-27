@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
+import { syncOnLogin } from './syncEngine';
 
 export interface User {
   id: string;
   phone?: string;
+  email?: string;
   name?: string;
   avatar?: string;
   displayId?: string;
@@ -15,19 +17,27 @@ interface AuthStore {
   isMounted: boolean;
 
   initialize: () => Promise<void>;
-  loginByPhone: (phone: string) => Promise<{ error?: string }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ error?: string }>;
-  loginByWechat: () => Promise<{ error?: string }>;
+  loginByEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  sendEmailOtp: (email: string) => Promise<{ error?: string }>;
+  verifyEmailOtp: (email: string, token: string) => Promise<{ error?: string }>;
+  registerByEmail: (email: string, password: string) => Promise<{ error?: string }>;
+  setPassword: (password: string) => Promise<{ error?: string }>;
+  // loginByWechat: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   setDisplayId: (displayId: string) => void;
 }
 
-function toUser(phone?: string): User {
+function toUser(user: { id: string; email?: string; phone?: string; user_metadata?: Record<string, any> }): User {
   return {
-    id: phone ?? 'local',
-    phone,
+    id: user.id,
+    email: user.email,
+    phone: user.phone,
+    name: user.user_metadata?.full_name,
+    avatar: user.user_metadata?.avatar_url,
   };
 }
+
+let _unsubscribeAuth: (() => void) | null = null;
 
 export const useAuthStore = create<AuthStore>()((set) => ({
   user: null,
@@ -35,56 +45,110 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   isMounted: false,
 
   initialize: async () => {
+    // 清理上次注册的监听器
+    if (_unsubscribeAuth) _unsubscribeAuth();
+
     // 监听登录状态变化（登录/登出/过期自动更新）
-    supabase.auth.onAuthStateChange((_event, session) => {
-      const phone = session?.user?.phone;
+    const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
       set({
-        user: phone ? toUser(phone) : null,
+        user: session?.user ? toUser(session.user) : null,
         isLoggedIn: session !== null,
       });
+      if (event === 'SIGNED_IN' && session?.user) {
+        syncOnLogin(session.user.id).catch(() => {});
+      }
     });
+    _unsubscribeAuth = authData.subscription.unsubscribe;
 
     // 恢复上次登录状态
     const { data } = await supabase.auth.getSession();
-    const phone = data.session?.user?.phone;
     set({
-      user: phone ? toUser(phone) : null,
+      user: data.session?.user ? toUser(data.session.user) : null,
       isLoggedIn: data.session !== null,
       isMounted: true,
     });
   },
 
-  loginByPhone: async (phone: string) => {
+  loginByEmail: async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      const msg = error.message.includes('Invalid login credentials')
+        ? '邮箱或密码错误'
+        : error.message;
+      return { error: msg };
+    }
+    if (data.session?.user) {
+      set({
+        user: toUser(data.session.user),
+        isLoggedIn: true,
+      });
+      syncOnLogin(data.session.user.id).catch(() => {});
+    }
+    return {};
+  },
+
+  sendEmailOtp: async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
-      phone,
+      email,
       options: { shouldCreateUser: true },
     });
     return error ? { error: error.message } : {};
   },
 
-  verifyOtp: async (phone: string, token: string) => {
+  verifyEmailOtp: async (email: string, token: string) => {
     const { data, error } = await supabase.auth.verifyOtp({
-      phone,
+      email,
       token,
-      type: 'sms',
+      type: 'email',
     });
     if (error) return { error: error.message };
-    set({
-      user: toUser(data.session?.user?.phone ?? phone),
-      isLoggedIn: true,
-    });
+    if (data.session?.user) {
+      set({
+        user: toUser(data.session.user),
+        isLoggedIn: true,
+      });
+      syncOnLogin(data.session.user.id).catch(() => {});
+    }
     return {};
   },
 
-  loginByWechat: async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'wechat' as any,
-      options: { redirectTo: 'codecard://auth/callback', skipBrowserRedirect: true },
+  registerByEmail: async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
     });
-    if (error) return { error: error.message };
-    // OAuth 跳转后通过 onAuthStateChange 更新状态
+    if (error) {
+      if (error.message.includes('already registered')) {
+        return { error: '该账号已存在' };
+      }
+      return { error: error.message };
+    }
+    if (data.session?.user) {
+      set({
+        user: toUser(data.session.user),
+        isLoggedIn: true,
+      });
+      syncOnLogin(data.session.user.id).catch(() => {});
+    }
     return {};
   },
+
+  setPassword: async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return error ? { error: error.message } : {};
+  },
+
+  // loginByWechat: async () => {
+  //   const { error } = await supabase.auth.signInWithOAuth({
+  //     provider: 'wechat' as any,
+  //     options: { redirectTo: 'codecard://auth/callback', skipBrowserRedirect: true },
+  //   });
+  //   if (error) return { error: error.message };
+  //   return {};
+  // },
 
   logout: async () => {
     await supabase.auth.signOut();

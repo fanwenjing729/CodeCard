@@ -20,7 +20,7 @@ function mergeWrongCards(
 
 export async function uploadProgress(userId: string): Promise<void> {
   const local = useProgressStore.getState();
-  const data = { global: local.global, courses: local.courses };
+  const data = { version: local.version, global: local.global, courses: local.courses };
 
   const { error } = await supabase.from('user_progress').upsert({
     user_id: userId,
@@ -85,6 +85,11 @@ export async function syncOnLogin(userId: string): Promise<void> {
   await uploadProgress(userId);
 }
 
-export async function manualSync(_userId: string): Promise<{ lastSyncedAt: Date | null }> {
-  return { lastSyncedAt: null };
+export async function manualSync(userId: string): Promise<{ lastSyncedAt: Date | null }> {
+  try {
+    await syncOnLogin(userId);
+    return { lastSyncedAt: new Date() };
+  } catch {
+    return { lastSyncedAt: null };
+  }
 }

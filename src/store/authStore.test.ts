@@ -4,9 +4,11 @@ vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
+      signInWithPassword: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      signUp: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
       signInWithOtp: vi.fn().mockResolvedValue({ error: null }),
       verifyOtp: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      signInWithOAuth: vi.fn().mockResolvedValue({ data: {}, error: null }),
+      updateUser: vi.fn().mockResolvedValue({ error: null }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
       onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
     },
@@ -18,6 +20,10 @@ vi.mock('@/lib/supabase', () => ({
       single: vi.fn().mockResolvedValue({ data: null, error: null }),
     })),
   },
+}));
+
+vi.mock('./syncEngine', () => ({
+  syncOnLogin: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { useAuthStore } from './authStore';

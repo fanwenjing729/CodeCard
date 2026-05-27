@@ -30,9 +30,9 @@ vi.mock('@/lib/xp', () => ({
 import { manualSync, uploadProgress, syncOnLogin } from './syncEngine';
 
 describe('manualSync', () => {
-  it('returns { lastSyncedAt: null }', async () => {
+  it('returns { lastSyncedAt: Date }', async () => {
     const result = await manualSync('user-1');
-    expect(result).toEqual({ lastSyncedAt: null });
+    expect(result.lastSyncedAt).toBeInstanceOf(Date);
   });
 });
 

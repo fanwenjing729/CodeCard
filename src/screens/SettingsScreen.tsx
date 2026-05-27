@@ -106,7 +106,7 @@ export default function SettingsScreen() {
                 <MaterialCommunityIcons name="pencil" size={14} color={C.textMuted} />
               </View>
             </TouchableOpacity>
-            <Text style={[styles.phoneText, { color: C.textMuted }]}>{user?.phone ?? user?.name ?? ''}</Text>
+            <Text style={[styles.phoneText, { color: C.textMuted }]}>{user?.phone ?? user?.email ?? user?.name ?? ''}</Text>
 
             <Text style={[styles.syncText, { color: C.textPlaceholder }]}>上次同步：{lastSync ? formatTime(lastSync) : '暂未同步'}</Text>
 
