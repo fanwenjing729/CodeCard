@@ -1,24 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
-      signInWithPassword: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      signUp: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      signInWithOtp: vi.fn().mockResolvedValue({ error: null }),
-      verifyOtp: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      updateUser: vi.fn().mockResolvedValue({ error: null }),
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
-    },
-    from: vi.fn(() => ({
-      upsert: vi.fn().mockResolvedValue({ error: null }),
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-      single: vi.fn().mockResolvedValue({ data: null, error: null }),
-    })),
+vi.mock('@/lib/api', () => ({
+  apiGet: vi.fn().mockResolvedValue({}),
+  apiPost: vi.fn().mockResolvedValue({}),
+  apiPut: vi.fn().mockResolvedValue({}),
+  loadTokens: vi.fn().mockResolvedValue(null),
+  setTokens: vi.fn(),
+  clearTokens: vi.fn(),
+  setOnTokenRefreshed: vi.fn(),
+  ApiError: class extends Error {
+    constructor(public status: number, message: string) {
+      super(message);
+      this.name = 'ApiError';
+    }
   },
 }));
 
@@ -55,7 +49,7 @@ describe('setDisplayId', () => {
     getState().setDisplayId('new-id');
 
     expect(getState().user?.displayId).toBe('new-id');
-    expect(getState().user?.id).toBe('user-1'); // other fields preserved
+    expect(getState().user?.id).toBe('user-1');
   });
 
   it('does not crash when user is null', () => {

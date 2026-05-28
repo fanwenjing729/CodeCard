@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { apiGet, apiPut } from '@/lib/api';
 import { useProgressStore } from '@/store/useProgressStore';
 import { calcLevel } from '@/lib/xp';
 import type { CourseProgress } from '@/store/useProgressStore';
@@ -22,71 +22,62 @@ export async function uploadProgress(userId: string): Promise<void> {
   const local = useProgressStore.getState();
   const data = { version: local.version, global: local.global, courses: local.courses };
 
-  const { error } = await supabase.from('user_progress').upsert({
-    user_id: userId,
-    data,
-    updated_at: new Date().toISOString(),
-  });
-
-  if (error) {
-    console.warn('[syncEngine] upload failed:', error.message);
+  try {
+    await apiPut('/progress', { data, version: local.version });
+  } catch (e: any) {
+    console.warn('[syncEngine] upload failed:', e.message);
   }
 }
 
 export async function syncOnLogin(userId: string): Promise<void> {
-  const { data: row, error } = await supabase
-    .from('user_progress')
-    .select('data')
-    .eq('user_id', userId)
-    .maybeSingle();
+  try {
+    const remote = await apiGet<any>('/progress');
+    const hasRemoteData = remote && remote.data && Object.keys(remote.data).length > 0;
 
-  if (error) {
-    console.warn('[syncEngine] download failed:', error.message);
-    return;
-  }
+    if (!hasRemoteData) {
+      await uploadProgress(userId);
+      return;
+    }
 
-  // 远程无数据 → 上传本地
-  if (!row) {
+    const remoteData = remote.data as {
+      global: { totalXP: number; level: number };
+      courses: Record<string, CourseProgress>;
+    };
+    const local = useProgressStore.getState();
+
+    // 合并 courses
+    const mergedCourses: Record<string, CourseProgress> = { ...local.courses };
+    for (const [cid, rp] of Object.entries(remoteData.courses ?? {})) {
+      const lp = mergedCourses[cid];
+      if (!lp) {
+        mergedCourses[cid] = rp as CourseProgress;
+        continue;
+      }
+      // 本地已重置（completedCards 为空且 xp=0），跳过远程合并，防止恢复已重置的数据
+      if (Object.keys(lp.completedCards ?? {}).length === 0 && (lp.xp ?? 0) === 0) {
+        continue;
+      }
+      mergedCourses[cid] = {
+        completedCards: { ...(lp.completedCards ?? {}), ...(rp.completedCards as any ?? {}) },
+        wrongCards: mergeWrongCards(lp.wrongCards as any, (rp as any).wrongCards),
+        xp: Math.max(lp.xp ?? 0, (rp as any).xp ?? 0),
+        quizScores: mergeMax(lp.quizScores, (rp as any).quizScores),
+        nodePositions: mergeMax(lp.nodePositions, (rp as any).nodePositions),
+      } as CourseProgress;
+    }
+
+    // 重新计算全局 XP
+    const totalXP = Object.values(mergedCourses).reduce((sum, c) => sum + (c.xp ?? 0), 0);
+    useProgressStore.setState({
+      global: { totalXP, level: calcLevel(totalXP) },
+      courses: mergedCourses,
+    });
+
+    // 回写合并结果
     await uploadProgress(userId);
-    return;
+  } catch (e: any) {
+    console.warn('[syncEngine] sync failed:', e.message);
   }
-
-  const remote = (row as any).data as {
-    global: { totalXP: number; level: number };
-    courses: Record<string, CourseProgress>;
-  };
-  const local = useProgressStore.getState();
-
-  // 合并 courses
-  const mergedCourses: Record<string, CourseProgress> = { ...local.courses };
-  for (const [cid, rp] of Object.entries(remote.courses ?? {})) {
-    const lp = mergedCourses[cid];
-    if (!lp) {
-      mergedCourses[cid] = rp as CourseProgress;
-      continue;
-    }
-    // 本地已重置（completedCards 为空且 xp=0），跳过远程合并，防止恢复已重置的数据
-    if (Object.keys(lp.completedCards ?? {}).length === 0 && (lp.xp ?? 0) === 0) {
-      continue;
-    }
-    mergedCourses[cid] = {
-      completedCards: { ...(lp.completedCards ?? {}), ...(rp.completedCards as any ?? {}) },
-      wrongCards: mergeWrongCards(lp.wrongCards as any, (rp as any).wrongCards),
-      xp: Math.max(lp.xp ?? 0, (rp as any).xp ?? 0),
-      quizScores: mergeMax(lp.quizScores, (rp as any).quizScores),
-      nodePositions: mergeMax(lp.nodePositions, (rp as any).nodePositions),
-    } as CourseProgress;
-  }
-
-  // 重新计算全局 XP
-  const totalXP = Object.values(mergedCourses).reduce((sum, c) => sum + (c.xp ?? 0), 0);
-  useProgressStore.setState({
-    global: { totalXP, level: calcLevel(totalXP) },
-    courses: mergedCourses,
-  });
-
-  // 回写合并结果
-  await uploadProgress(userId);
 }
 
 export async function manualSync(userId: string): Promise<{ lastSyncedAt: Date | null }> {

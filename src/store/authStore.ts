@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '@/lib/supabase';
+import { apiPost, apiGet, apiPut, loadTokens, setTokens, clearTokens, getRefreshToken } from '@/lib/api';
 import { syncOnLogin } from './syncEngine';
 
 export interface User {
@@ -25,7 +25,6 @@ interface AuthStore {
   verifyPhoneOtp: (phone: string, token: string) => Promise<{ error?: string; isNewUser?: boolean }>;
   registerByEmail: (email: string, password: string) => Promise<{ error?: string; info?: string }>;
   setPassword: (password: string) => Promise<{ error?: string }>;
-  // loginByWechat: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   setDisplayId: (displayId: string) => Promise<void>;
   updateAvatar: (uri: string) => void;
@@ -33,18 +32,25 @@ interface AuthStore {
 
 const AVATAR_KEY = 'codecard-avatar';
 
-function toUser(user: { id: string; email?: string; phone?: string; user_metadata?: Record<string, any> }): User {
+interface ApiUser {
+  id: string;
+  email?: string;
+  phone?: string;
+  displayId?: string;
+  avatarUrl?: string;
+}
+
+function toUser(apiUser: ApiUser): User {
   return {
-    id: user.id,
-    email: user.email,
-    phone: user.phone,
-    name: user.user_metadata?.full_name,
-    avatar: user.user_metadata?.avatar_url,
-    displayId: user.user_metadata?.displayId,
+    id: apiUser.id,
+    email: apiUser.email,
+    phone: apiUser.phone,
+    name: undefined,
+    avatar: apiUser.avatarUrl,
+    displayId: apiUser.displayId,
   };
 }
 
-let _unsubscribeAuth: (() => void) | null = null;
 let _initialized = false;
 
 export const useAuthStore = create<AuthStore>()((set) => ({
@@ -53,170 +59,132 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   isMounted: false,
 
   initialize: async () => {
-    if (_unsubscribeAuth) _unsubscribeAuth();
-
-    const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
-      let u = session?.user ? toUser(session.user) : null;
-      // 恢复本地头像（user_metadata 无头像时兜底）
-      if (u && !u.avatar) {
-        AsyncStorage.getItem(AVATAR_KEY).then((v) => {
-          if (v) set((s) => ({ user: s.user ? { ...s.user, avatar: v } : null }));
-        }).catch(() => {});
-      }
-      set({
-        user: u,
-        isLoggedIn: session !== null,
-      });
-      // 仅新登录（非初始化恢复）时触发同步
-      // 初始化恢复的同步在下方 getSession 中处理
-      if (event === 'SIGNED_IN' && _initialized) {
-        if (session?.user) syncOnLogin(session.user.id).catch(() => {});
-      }
-    });
-    _unsubscribeAuth = authData.subscription.unsubscribe;
-
-    const { data } = await supabase.auth.getSession();
-    const hasSession = data.session !== null;
-    let user = data.session?.user ? toUser(data.session.user) : null;
-
-    // 从 AsyncStorage 恢复本地头像（user_metadata 无头像时兜底）
-    if (user && !user.avatar) {
-      try {
-        const localAvatar = await AsyncStorage.getItem(AVATAR_KEY);
-        if (localAvatar) user = { ...user, avatar: localAvatar };
-      } catch {}
+    const tokens = await loadTokens();
+    if (!tokens) {
+      set({ isMounted: true });
+      return;
     }
 
-    set({
-      user,
-      isLoggedIn: hasSession,
-      isMounted: true,
-    });
+    try {
+      const profile: ApiUser = await apiGet('/auth/me');
+      let user = toUser(profile);
 
-    if (hasSession && data.session?.user) {
-      syncOnLogin(data.session.user.id).catch(() => {});
+      // 恢复本地头像
+      if (!user.avatar) {
+        try {
+          const localAvatar = await AsyncStorage.getItem(AVATAR_KEY);
+          if (localAvatar) user = { ...user, avatar: localAvatar };
+        } catch {}
+      }
+
+      set({
+        user,
+        isLoggedIn: true,
+        isMounted: true,
+      });
+
+      syncOnLogin(profile.id).catch(() => {});
+    } catch {
+      await clearTokens();
+      set({ isMounted: true });
     }
     _initialized = true;
   },
 
   loginByEmail: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      const msg = error.message.includes('Invalid login credentials')
-        ? '邮箱或密码错误'
-        : error.message;
-      return { error: msg };
-    }
-    if (data.session?.user) {
+    try {
+      const data = await apiPost<any>('/auth/login', { email, password });
+      setTokens(data.accessToken, data.refreshToken);
       set({
-        user: toUser(data.session.user),
+        user: toUser(data.user),
         isLoggedIn: true,
       });
-      syncOnLogin(data.session.user.id).catch(() => {});
+      syncOnLogin(data.user.id).catch(() => {});
+      return {};
+    } catch (e: any) {
+      const msg = e.status === 401 ? '邮箱或密码错误' : (e.message || '登录失败');
+      return { error: msg };
     }
-    return {};
   },
 
   sendEmailOtp: async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
-    return error ? { error: error.message } : {};
+    try {
+      await apiPost('/auth/send-otp', { target: email, purpose: 'login' });
+      return {};
+    } catch (e: any) {
+      return { error: e.message || '发送失败' };
+    }
   },
 
   verifyEmailOtp: async (email: string, token: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'email',
-    });
-    if (error) return { error: error.message };
-    if (data.session?.user) {
+    try {
+      const data = await apiPost<any>('/auth/verify-otp', { target: email, code: token, purpose: 'login' });
+      setTokens(data.accessToken, data.refreshToken);
       set({
-        user: toUser(data.session.user),
+        user: toUser(data.user),
         isLoggedIn: true,
       });
-      syncOnLogin(data.session.user.id).catch(() => {});
+      syncOnLogin(data.user.id).catch(() => {});
+      return {};
+    } catch (e: any) {
+      return { error: e.message || '验证失败' };
     }
-    return {};
   },
 
   sendPhoneOtp: async (phone: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      phone,
-      options: { shouldCreateUser: true },
-    });
-    return error ? { error: error.message } : {};
+    try {
+      await apiPost('/auth/send-otp', { target: phone, purpose: 'login' });
+      return {};
+    } catch (e: any) {
+      return { error: e.message || '发送失败' };
+    }
   },
 
   verifyPhoneOtp: async (phone: string, token: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone,
-      token,
-      type: 'sms',
-    });
-    if (error) return { error: error.message };
-    if (data.session?.user) {
-      const u = data.session.user;
-      const isNewUser = Math.abs(
-        new Date(u.created_at ?? '').getTime() - new Date(u.updated_at ?? '').getTime(),
-      ) < 1000;
+    try {
+      const data = await apiPost<any>('/auth/verify-otp', { target: phone, code: token, purpose: 'login' });
+      setTokens(data.accessToken, data.refreshToken);
       set({
-        user: toUser(u),
+        user: toUser(data.user),
         isLoggedIn: true,
       });
-      syncOnLogin(u.id).catch(() => {});
-      return { isNewUser };
+      syncOnLogin(data.user.id).catch(() => {});
+      return { isNewUser: data.isNewUser ?? false };
+    } catch (e: any) {
+      return { error: e.message || '验证失败' };
     }
-    return {};
   },
 
   registerByEmail: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    if (error) {
-      if (error.message.includes('already registered')) {
-        return { error: '该账号已存在' };
-      }
-      return { error: error.message };
-    }
-    // 邮箱确认已开启 → 提示查收邮件
-    if (!data.session) {
-      return { info: '注册成功！请查收验证邮件并点击确认链接，然后返回登录。' };
-    }
-    // 邮箱确认未开启 → 直接登录
-    if (data.session?.user) {
+    try {
+      const data = await apiPost<any>('/auth/register', { email, password });
+      setTokens(data.accessToken, data.refreshToken);
       set({
-        user: toUser(data.session.user),
+        user: toUser(data.user),
         isLoggedIn: true,
       });
-      syncOnLogin(data.session.user.id).catch(() => {});
+      syncOnLogin(data.user.id).catch(() => {});
+      return {};
+    } catch (e: any) {
+      return { error: e.message || '注册失败' };
     }
-    return {};
   },
 
   setPassword: async (password: string) => {
-    const { error } = await supabase.auth.updateUser({ password });
-    return error ? { error: error.message } : {};
+    try {
+      await apiPost('/auth/set-password', { password });
+      return {};
+    } catch (e: any) {
+      return { error: e.message || '修改失败' };
+    }
   },
 
-  // loginByWechat: async () => {
-  //   const { error } = await supabase.auth.signInWithOAuth({
-  //     provider: 'wechat' as any,
-  //     options: { redirectTo: 'codecard://auth/callback', skipBrowserRedirect: true },
-  //   });
-  //   if (error) return { error: error.message };
-  //   return {};
-  // },
-
   logout: async () => {
-    await supabase.auth.signOut();
+    const rt = getRefreshToken();
+    try {
+      await apiPost('/auth/logout', { refreshToken: rt });
+    } catch {}
+    await clearTokens();
     set({ user: null, isLoggedIn: false });
   },
 
@@ -224,7 +192,9 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     set((s) => ({
       user: s.user ? { ...s.user, displayId } : null,
     }));
-    supabase.auth.updateUser({ data: { displayId } }).catch(() => {});
+    try {
+      await apiPut('/auth/profile', { displayId });
+    } catch {}
   },
 
   updateAvatar: (uri) => {

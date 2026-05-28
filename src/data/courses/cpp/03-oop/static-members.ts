@@ -221,7 +221,7 @@ export const staticMembersNode: PathNode = {
       },
     },
     {
-      id: 'cpp-03-static-members-c7',
+      id: 'cpp-03-static-members-c8',
       cardType: 'concept',
       content: {
         title: ':: 作用域解析——"谁家的成员"',
@@ -261,7 +261,7 @@ export const staticMembersNode: PathNode = {
       },
     },
     {
-      id: 'cpp-03-static-members-c8',
+      id: 'cpp-03-static-members-c9',
       cardType: 'concept',
       content: {
         title: ':: 命名空间——"哪个包的"',
@@ -298,7 +298,7 @@ export const staticMembersNode: PathNode = {
       },
     },
     {
-      id: 'cpp-03-static-members-c9',
+      id: 'cpp-03-static-members-c10',
       cardType: 'concept',
       content: {
         title: ':: 全局作用域 + 三种用途串讲',
