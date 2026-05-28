@@ -111,7 +111,7 @@ export default function ProgressScreen() {
       }
     }
     return counts;
-  }, [coursesProgress]);
+  }, [coursesProgress, courses]);
 
   const currentLevelStart = useMemo(() => xpForLevelStart(global.level), [global.level]);
   const nextLevelXP = xpForNextLevel(global.level);

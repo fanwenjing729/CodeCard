@@ -250,7 +250,8 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
 
   resetCourse: (courseId) => {
     set((s) => {
-      const course = getOrCreateCourse(s.courses, courseId);
+      const course = s.courses[courseId];
+      if (!course) return s;
       return {
         global: {
           ...s.global,

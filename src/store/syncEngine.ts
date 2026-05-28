@@ -65,6 +65,10 @@ export async function syncOnLogin(userId: string): Promise<void> {
       mergedCourses[cid] = rp as CourseProgress;
       continue;
     }
+    // 本地已重置（completedCards 为空且 xp=0），跳过远程合并，防止恢复已重置的数据
+    if (Object.keys(lp.completedCards ?? {}).length === 0 && (lp.xp ?? 0) === 0) {
+      continue;
+    }
     mergedCourses[cid] = {
       completedCards: { ...(lp.completedCards ?? {}), ...(rp.completedCards as any ?? {}) },
       wrongCards: mergeWrongCards(lp.wrongCards as any, (rp as any).wrongCards),

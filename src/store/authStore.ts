@@ -140,7 +140,9 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     if (error) return { error: error.message };
     if (data.session?.user) {
       const u = data.session.user;
-      const isNewUser = u.created_at === u.updated_at;
+      const isNewUser = Math.abs(
+        new Date(u.created_at ?? '').getTime() - new Date(u.updated_at ?? '').getTime(),
+      ) < 1000;
       set({
         user: toUser(u),
         isLoggedIn: true,

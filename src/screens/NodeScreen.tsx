@@ -133,7 +133,7 @@ export default function NodeScreen({ route, navigation }: Props) {
             <TouchableOpacity
               style={[
                 styles.nextBtn,
-                { backgroundColor: (isLast && animStep >= totalAnimSteps - 1) ? C.success : C.primary },
+                { backgroundColor: isLast && (isContinuous || animStep >= totalAnimSteps - 1) ? C.success : C.primary },
                 isLast && animStep >= totalAnimSteps - 1 && styles.nextBtnDone,
               ]}
               onPress={handleAdvance}
