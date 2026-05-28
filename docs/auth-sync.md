@@ -2,6 +2,44 @@
 
 > **最后更新：2026-05-28**
 
+## 测试覆盖
+
+14 个测试文件，145 个用例全部通过（vitest v4.1）。
+
+| 文件 | 用例 | 覆盖范围 |
+|------|:--:|------|
+| `lib/xp.test.ts` | 14 | `calcLevel`, `xpForLevelStart`, `xpForNextLevel` 边界值 |
+| `lib/courseProgress.test.ts` | 7 | `countCards`, `countNodeCards` 空/部分/全部完成 |
+| `screens/quizReducer.test.ts` | 14 | SELECT/FILL/SUBMIT/SCORE/NEXT/DONE/RESET 全部 action |
+| `components/cards/QuestionRenderer.test.ts` | 18 | `normalize`, `isCorrectAnswer` 大小写/空格/边界 |
+| `components/cards/ConceptCard.test.tsx` | 3 | 空标题、空正文、完整渲染 |
+| `components/cards/CodeCard.test.tsx` | 6 | 代码行、高亮、空代码、多行 |
+| `components/cards/renderCard.test.tsx` | 6 | concept/code/animation/practice 分发 + 未知动画回退 |
+| `components/shared/ErrorBoundary.test.tsx` | 5 | getDerivedStateFromError, flush on crash, retry |
+| `store/useProgressStore.test.ts` | 38 | rewardCard 去重/addXP/saveQuizScore/wrongCard 增删/resetCourse/removeCompletedCards/hydrate |
+| `store/authStore.test.ts` | 6 | logout/setDisplayId/updateAvatar/initialize |
+| `store/syncEngine.test.ts` | 2 | 合并策略核心场景 |
+| `data/courses/validate.test.ts` | 18 | 所有课程卡片 ID 唯一性、节点完整性 |
+| `data/animations/index.test.ts` | 4 | 5 种动画场景 + 6 个组件注册 |
+| `theme/ThemeContext.test.tsx` | 4 | Provider 创建、默认值、context 结构 |
+
+### 运行测试
+
+```bash
+npm test              # 单次运行（14 文件 / 145 用例）
+npm run test:watch    # watch 模式
+```
+
+### 覆盖缺口
+
+| 层 | 未测 | 原因 |
+|-----|------|------|
+| Screen（12个） | HomeScreen, CourseScreen, ModuleScreen, NodeScreen, QuizScreen, ProgressScreen, SettingsScreen, AccountScreen, LoginScreen, RegisterScreen, WrongCardsScreen, DataScreen | 需 `@testing-library/react-native` |
+| Hooks（4个） | useNodeScreen, usePhoneAuth, useAutoSync, useCourses | 同上 |
+| AppNavigator | 路由配置 | 需 navigation mock |
+
+当前策略：纯函数/类方法不依赖测试库即可覆盖；Screen/Hook 测试待以后引入 `@testing-library/react-native` 统一补。commit 前运行 `npm test` 即可防止回归。
+
 ## 当前进度
 
 | # | 事项 | 状态 |
@@ -34,6 +72,9 @@
 | 26 | 用户名持久化：`displayId` → Supabase `user_metadata`，跨设备同步 | ✅ |
 | 27 | 头像持久化：`avatar` → AsyncStorage 本地，换设备不支持（见下方说明） | ✅ |
 | 28 | SettingsScreen 精简：用户名编辑/退出登录移至 AccountScreen，右上角"账户"入口 | ✅ |
+| 29 | 修复：`onAuthStateChange` 里补本地头像恢复，避免 SIGNED_IN 覆盖 | ✅ |
+| 30 | 修复：AccountScreen 未用导入 + SettingsScreen 字体硬编码 → theme token | ✅ |
+| 31 | 测试补充：ThemeContext (3) + authStore.updateAvatar (3) → 145 用例全过 | ✅ |
 
 ## 下一步（Supabase 配置）
 

@@ -437,3 +437,86 @@ Two-level navigation: `WrongCards` (course list) → `WrongCards { courseId }` (
 - Colors: `import { Colors } from '@/theme'`, never hardcoded hex
 - `theme.ts` is single source of truth — change a token, entire app updates
 - `ScreenHeader` compact variant: `paddingTop: insets.top + 33`
+
+## 已知风险：课程导入链断裂
+
+### 问题
+
+`src/data/courses/index.ts` 是课程数据的**唯一入口**，所有课程通过静态 `import` 聚合：
+
+```ts
+import { cppCourse } from './cpp';
+export const courses: Course[] = [cppCourse];
+```
+
+任意一个子文件有**语法错误**（如少了一个逗号、类型不匹配）→ 整个 `import` 链断裂 → `courses` 全部加载失败 → HomeScreen 白屏。
+
+**只有这个地方有蝴蝶效应，其他层都有独立容错。**
+
+### 为什么现在不修
+
+1. **用户碰不到**：语法错误在 Metro bundler **构建阶段**就报错，APK 打不出来
+2. **已有安全网**：`npm test` 里的 `validate.test.ts` 遍历所有卡片验证完整性，提交前必跑
+3. **当前只有 1 门课程、1 个编辑者**：变更频率低，影响范围小
+
+### 什么时候修
+
+满足以下**任意一条**就重构：
+
+| 触发条件 | 原因 |
+|----------|------|
+| 课程 ≥ 3 门 | import 链变长，概率上升 |
+| 多人同时编辑课程文件 | 合并冲突 + 语法错风险叠加 |
+| 需要运行时热加载（如 CDN 下发课程） | 静态 import 根本不支持 |
+| 用户侧报告过因课程加载导致白屏 | 实际发生过的 bug 优先修 |
+
+### 怎么修（方案 B：动态 import + 容错加载）
+
+**一次改 2 个文件，consumer 不受影响。**
+
+**1. `src/lib/useCourses.ts` — 改为异步容错加载**
+
+```ts
+// getCourses() 改为 async，每个课程独立 try-catch
+export async function getCourses(): Promise<Course[]> {
+  const modules = [
+    () => import('@/data/courses/cpp'),
+    // 新课程在此加一行
+  ];
+
+  const results = await Promise.allSettled(modules.map(fn => fn()));
+  const courses: Course[] = [];
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      courses.push(r.value.cppCourse); // 导出名需统一
+    } else {
+      console.warn('[useCourses] 课程加载失败，已跳过', r.reason);
+    }
+  }
+  return courses;
+}
+
+// hook 也改为 async
+export function useCourse(courseId: string): Course | undefined {
+  const [courses, setCourses] = useState<Course[]>([]);
+  useEffect(() => { getCourses().then(setCourses); }, []);
+  return useMemo(() => courses.find(c => c.id === courseId), [courses, courseId]);
+}
+```
+
+**2. 所有课程 `index.ts` — 统一导出名 `xxxCourse`**
+
+```ts
+// 每个课程目录的 index.ts 统一 export const xxxCourse: Course = {...}
+export const cppCourse: Course = { ... };
+```
+
+**改完后效果：**
+
+- 一门课语法错了 → 仅那门课不加载，其他课正常
+- 控制台 warn 提示具体是哪门课加载失败
+- Screen 用 `useCourse` 找不到课程时显示"课程未找到"兜底 UI（已有）
+
+**成本：** 实际改动 ~30 行，只改 `src/lib/useCourses.ts` 一个文件，8 个 screen 零改动。
+
+**Screen 为什么不动：** `useCourse` / `useCourses` 的接口签名不变——`useCourse(courseId)` 依然返回 `Course | undefined`（初始返回 `undefined`，异步加载完成后自动更新）。每个 screen 已有 `if (!course) return <课程未找到>` 兜底 UI，天然兼容加载中状态。只有接口层 `getCourses` 内部从同步切异步。
