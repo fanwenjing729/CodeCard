@@ -9,7 +9,7 @@ import {
   Image,
   Switch,
 } from 'react-native';
-import { Colors, useColors, useTheme, Spacing, Radius } from '@/theme';
+import { Colors, useColors, useTheme, FontFamily, Spacing, Radius } from '@/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     height: 96,
   },
   displayName: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: FontFamily.sansBold,
     fontSize: 20,
     fontWeight: '600',
     color: Colors.text,

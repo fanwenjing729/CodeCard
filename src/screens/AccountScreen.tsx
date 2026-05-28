@@ -3,8 +3,7 @@ import {
   StyleSheet, Text, View, TouchableOpacity,
   Alert, Image, Modal, TextInput,
 } from 'react-native';
-import { Colors, useColors, FontFamily, Spacing, Radius } from '@/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Colors, useColors, Spacing, Radius } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/AppNavigator';
@@ -15,7 +14,6 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function AccountScreen() {
   const C = useColors();
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const user = useAuthStore((s) => s.user);

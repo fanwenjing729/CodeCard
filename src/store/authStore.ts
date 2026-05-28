@@ -56,8 +56,15 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     if (_unsubscribeAuth) _unsubscribeAuth();
 
     const { data: authData } = supabase.auth.onAuthStateChange((event, session) => {
+      let u = session?.user ? toUser(session.user) : null;
+      // 恢复本地头像（user_metadata 无头像时兜底）
+      if (u && !u.avatar) {
+        AsyncStorage.getItem(AVATAR_KEY).then((v) => {
+          if (v) set((s) => ({ user: s.user ? { ...s.user, avatar: v } : null }));
+        }).catch(() => {});
+      }
       set({
-        user: session?.user ? toUser(session.user) : null,
+        user: u,
         isLoggedIn: session !== null,
       });
       // 仅新登录（非初始化恢复）时触发同步

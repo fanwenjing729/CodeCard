@@ -66,6 +66,22 @@ describe('setDisplayId', () => {
   });
 });
 
+describe('updateAvatar', () => {
+  it('updates user.avatar', () => {
+    getState().updateAvatar('file:///avatar.png');
+
+    expect(getState().user?.avatar).toBe('file:///avatar.png');
+    expect(getState().user?.id).toBe('user-1');
+  });
+
+  it('does not crash when user is null', () => {
+    useAuthStore.setState({ user: null, isLoggedIn: false });
+
+    expect(() => getState().updateAvatar('file:///x.png')).not.toThrow();
+    expect(getState().user).toBeNull();
+  });
+});
+
 describe('initialize', () => {
   it('sets isMounted to true', async () => {
     await getState().initialize();
