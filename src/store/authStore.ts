@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { syncOnLogin } from './syncEngine';
 
@@ -26,8 +27,11 @@ interface AuthStore {
   setPassword: (password: string) => Promise<{ error?: string }>;
   // loginByWechat: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
-  setDisplayId: (displayId: string) => void;
+  setDisplayId: (displayId: string) => Promise<void>;
+  updateAvatar: (uri: string) => void;
 }
+
+const AVATAR_KEY = 'codecard-avatar';
 
 function toUser(user: { id: string; email?: string; phone?: string; user_metadata?: Record<string, any> }): User {
   return {
@@ -36,6 +40,7 @@ function toUser(user: { id: string; email?: string; phone?: string; user_metadat
     phone: user.phone,
     name: user.user_metadata?.full_name,
     avatar: user.user_metadata?.avatar_url,
+    displayId: user.user_metadata?.displayId,
   };
 }
 
@@ -65,8 +70,18 @@ export const useAuthStore = create<AuthStore>()((set) => ({
 
     const { data } = await supabase.auth.getSession();
     const hasSession = data.session !== null;
+    let user = data.session?.user ? toUser(data.session.user) : null;
+
+    // 从 AsyncStorage 恢复本地头像（user_metadata 无头像时兜底）
+    if (user && !user.avatar) {
+      try {
+        const localAvatar = await AsyncStorage.getItem(AVATAR_KEY);
+        if (localAvatar) user = { ...user, avatar: localAvatar };
+      } catch {}
+    }
+
     set({
-      user: data.session?.user ? toUser(data.session.user) : null,
+      user,
       isLoggedIn: hasSession,
       isMounted: true,
     });
@@ -198,9 +213,17 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     set({ user: null, isLoggedIn: false });
   },
 
-  setDisplayId: (displayId) => {
+  setDisplayId: async (displayId) => {
     set((s) => ({
       user: s.user ? { ...s.user, displayId } : null,
     }));
+    supabase.auth.updateUser({ data: { displayId } }).catch(() => {});
+  },
+
+  updateAvatar: (uri) => {
+    set((s) => ({
+      user: s.user ? { ...s.user, avatar: uri } : null,
+    }));
+    AsyncStorage.setItem(AVATAR_KEY, uri).catch(() => {});
   },
 }));

@@ -1,6 +1,6 @@
 # Auth & Sync Interface
 
-> **最后更新：2026-05-27**
+> **最后更新：2026-05-28**
 
 ## 当前进度
 
@@ -27,6 +27,13 @@
 | 19 | 新增：手机号登录 + 注册（`sendPhoneOtp` / `verifyPhoneOtp` / LoginScreen phone 模式 / RegisterScreen 邮箱/手机号切换） | ✅ |
 | 20 | 配置 SMTP（Resend）+ Supabase Email Template → `{{ .Token }}` | ✅ |
 | 21 | 关闭 Supabase Confirm email | ✅ |
+| 22 | 6 个 bug 修复（isNewUser 时间戳、syncOnLogin 重置检测、ProgressScreen 依赖、ThemeContext 冗余读、resetCourse 空条目、连续动画按钮） | ✅ |
+| 23 | 手机号登录接口：`usePhoneAuth` hook + `docs/phone-login-setup.md` | ✅ |
+| 24 | 账户管理：`AccountScreen`（换头像/改用户名/退出登录）+ AppNavigator 路由 | ✅ |
+| 25 | `user_progress` 表建表 + RLS（列类型改为 UUID + GRANT 权限） | ✅ |
+| 26 | 用户名持久化：`displayId` → Supabase `user_metadata`，跨设备同步 | ✅ |
+| 27 | 头像持久化：`avatar` → AsyncStorage 本地，换设备不支持（见下方说明） | ✅ |
+| 28 | SettingsScreen 精简：用户名编辑/退出登录移至 AccountScreen，右上角"账户"入口 | ✅ |
 
 ## 下一步（Supabase 配置）
 
@@ -37,7 +44,7 @@
 | 1 | 填真实的 anon key | 项目 `.env` | ✅ 已完成 |
 | 2 | 开启 Email Auth | Dashboard → Authentication → Email → Enable | ✅ 已开启 |
 | 3 | **关闭邮箱确认** | Dashboard → Authentication → Email → 关闭 "Confirm email" | ✅ 已关闭 |
-| 4 | 建 `user_progress` 表 | Dashboard → SQL Editor，执行建表 SQL（见下方） | 待确认 |
+| 4 | 建 `user_progress` 表 | Dashboard → SQL Editor，执行建表 SQL（见下方） | ✅ 已完成 |
 | 5 | 配置 SMTP（Resend） | Dashboard → Authentication → Email → SMTP | ✅ 已配置 |
 | 6 | 邮件模板改为 `{{ .Token }}` | Dashboard → Authentication → Email Templates | ✅ 已改 |
 | 7 | **开启 Phone Auth + 配置 SMS 提供商** | Dashboard → Authentication → Phone → Enable + 配 Twilio/MessageBird | ⬜ 手机号登录必做 |
@@ -134,6 +141,77 @@ Supabase 免费额度每小时 3-4 封邮件，开发测试容易触发 `email r
 - [ ] RLS 确认生效（用另一个账号测试不能读到别人的进度）
 - [ ] `.env` 换生产环境 anon key
 - [ ] App 签名打包后验证 OAuth 回调（`codecard://` scheme）
+
+## 头像跨设备同步
+
+### 当前状态
+
+头像通过 AsyncStorage 本地持久化，**换设备不显示**——`expo-image-picker` 返回的是本地文件路径：
+
+```
+file:///data/user/0/com.codecard/cache/ImagePicker/abc.jpg
+```
+
+这个路径在另一台设备上不存在，换设备后头像为空。
+
+### 解决方案：Supabase Storage
+
+完整链路：
+
+```
+ImagePicker → 本地 URI → Supabase Storage.upload() → 公开 URL → user_metadata
+```
+
+**Step 1：建 Storage bucket**
+
+Supabase Dashboard → Storage → New Bucket：
+
+| 配置项 | 值 |
+|--------|-----|
+| Name | `avatars` |
+| Public | ✅ 公开（头像不需要鉴权） |
+| File size limit | 2MB |
+
+**Step 2：配 RLS**
+
+```sql
+CREATE POLICY "读取自己的头像" ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "上传自己的头像" ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+```
+
+**Step 3：代码改动（仅 `authStore.ts`）**
+
+```ts
+updateAvatar: async (uri) => {
+  // 1. 乐观更新本地
+  set((s) => ({ user: s.user ? { ...s.user, avatar: uri } : null }));
+
+  // 2. 上传到 Storage
+  const ext = uri.split('.').pop() ?? 'jpg';
+  const path = `${user.id}/avatar.${ext}`;
+  const blob = await fetch(uri).then(r => r.blob());
+  const { data } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true });
+  if (data?.path) {
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    // 3. 公开 URL 写入 user_metadata（跨设备同步）
+    supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
+  }
+
+  // 4. 本地也存一份（离线兜底）
+  AsyncStorage.setItem(AVATAR_KEY, uri);
+},
+```
+
+**Step 4：`toUser()` 无需改** — 已经读了 `user_metadata?.avatar_url`，上传完成后的 JWT 刷新自动带回新 URL。
+
+### 为什么现在不做
+
+- 涉及新服务（Supabase Storage）、新权限配置（storage RLS）、Blob 上传
+- 当前单设备使用场景下 AsyncStorage 够用
+- 后续配合 `user_progress` 同步一起升级，一次改动覆盖全部跨设备场景
 
 ### 架构备忘
 

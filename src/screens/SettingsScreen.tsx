@@ -4,15 +4,12 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Alert,
   ScrollView,
   ActivityIndicator,
   Image,
-  Modal,
-  TextInput,
   Switch,
 } from 'react-native';
-import { Colors, useColors, useTheme, FontFamily, Gradient, Spacing, Radius } from '@/theme';
+import { Colors, useColors, useTheme, Spacing, Radius } from '@/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -33,23 +30,9 @@ export default function SettingsScreen() {
 
   const user = useAuthStore((s) => s.user);
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
-  const setDisplayId = useAuthStore((s) => s.setDisplayId);
 
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingDisplayId, setEditingDisplayId] = useState('');
-
-  const handleLogout = () => {
-    Alert.alert('退出登录', '退出后学习数据保留在本地，不会丢失。', [
-      { text: '取消', style: 'cancel' },
-      {
-        text: '退出',
-        style: 'destructive',
-        onPress: () => useAuthStore.getState().logout(),
-      },
-    ]);
-  };
 
   const handleSync = async () => {
     if (!user) return;
@@ -62,18 +45,18 @@ export default function SettingsScreen() {
     }
   };
 
-  const openEditDisplayId = () => {
-    setEditingDisplayId(user?.displayId ?? '');
-    setEditModalVisible(true);
-  };
-
-  const confirmEditDisplayId = () => {
-    setDisplayId(editingDisplayId.trim());
-    setEditModalVisible(false);
-  };
-
   return (
-    <ScrollView style={[styles.container, { backgroundColor: C.bgTertiary }]} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
+    <View style={{ flex: 1, backgroundColor: C.bgTertiary }}>
+      {/* 右上角账户按钮 */}
+      <TouchableOpacity
+        style={[styles.accountBtn, { top: insets.top + 16 }]}
+        onPress={() => navigation.navigate(isLoggedIn ? 'Account' : 'Login')}
+        activeOpacity={0.7}
+      >
+        <Text style={[styles.accountBtnText, { color: C.primary }]}>账户</Text>
+      </TouchableOpacity>
+
+      <ScrollView style={[styles.container, { backgroundColor: C.bgTertiary }]} contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}>
       {/* 头像区域 */}
       <LinearGradient
         colors={[C.bgTertiary, C.bg, C.bgTertiary]}
@@ -98,39 +81,25 @@ export default function SettingsScreen() {
 
         {isLoggedIn ? (
           <>
-            <TouchableOpacity onPress={openEditDisplayId} activeOpacity={0.6}>
-              <View style={styles.displayIdRow}>
-                <Text style={[styles.displayIdText, { color: C.text }]} numberOfLines={1}>
-                  {user?.displayId || '设置用户名'}
-                </Text>
-                <MaterialCommunityIcons name="pencil" size={14} color={C.textMuted} />
-              </View>
-            </TouchableOpacity>
+            <Text style={[styles.displayName, { color: C.text }]} numberOfLines={1}>
+              {user?.displayId || '未设置用户名'}
+            </Text>
             <Text style={[styles.phoneText, { color: C.textMuted }]}>{user?.phone ?? user?.email ?? user?.name ?? ''}</Text>
 
             <Text style={[styles.syncText, { color: C.textPlaceholder }]}>上次同步：{lastSync ? formatTime(lastSync) : '暂未同步'}</Text>
 
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: C.primary }]}
-                onPress={handleSync}
-                disabled={syncing}
-                activeOpacity={0.7}
-              >
-                {syncing ? (
-                  <ActivityIndicator size="small" color={C.textInverse} />
-                ) : (
-                  <Text style={styles.actionButtonText}>立即同步</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.actionButtonOutline]}
-                onPress={handleLogout}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.actionButtonOutlineText}>退出登录</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.syncBtn, { backgroundColor: C.primary }]}
+              onPress={handleSync}
+              disabled={syncing}
+              activeOpacity={0.7}
+            >
+              {syncing ? (
+                <ActivityIndicator size="small" color={C.textInverse} />
+              ) : (
+                <Text style={styles.syncBtnText}>立即同步</Text>
+              )}
+            </TouchableOpacity>
           </>
         ) : (
           <>
@@ -145,37 +114,6 @@ export default function SettingsScreen() {
           </>
         )}
       </LinearGradient>
-
-      {/* 编辑 displayId 弹窗 */}
-      <Modal visible={editModalVisible} transparent animationType="fade">
-        <View style={[styles.modalBackdrop, { backgroundColor: C.backdrop }]}>
-          <View style={[styles.modalCard, { backgroundColor: C.bg }]}>
-            <Text style={[styles.modalTitle, { color: C.text }]}>修改用户名</Text>
-            <TextInput
-              style={[styles.modalInput, { color: C.text, borderColor: C.inputBorder }]}
-              value={editingDisplayId}
-              onChangeText={setEditingDisplayId}
-              placeholder="输入用户名"
-              maxLength={20}
-              autoFocus
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={() => setEditModalVisible(false)}
-              >
-                <Text style={[styles.modalButtonCancel, { color: C.textMuted }]}>取消</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonConfirm, { backgroundColor: C.primary }]}
-                onPress={confirmEditDisplayId}
-              >
-                <Text style={styles.modalButtonConfirmText}>确认</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* 数据管理 */}
       <View style={[styles.section, { backgroundColor: C.bg }]}>
@@ -207,6 +145,7 @@ export default function SettingsScreen() {
         </View>
       </View>
     </ScrollView>
+    </View>
   );
 }
 
@@ -216,6 +155,13 @@ function formatTime(d: Date): string {
 }
 
 const styles = StyleSheet.create({
+  accountBtn: {
+    position: 'absolute', right: 16, zIndex: 10,
+    paddingHorizontal: 12, paddingVertical: 8,
+  },
+  accountBtnText: {
+    fontSize: 15, fontWeight: '600',
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.bgTertiary,
@@ -284,18 +230,13 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
   },
-  displayIdRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.base,
-    gap: 6,
-  },
-  displayIdText: {
-    fontFamily: FontFamily.sansBold,
+  displayName: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 20,
     fontWeight: '600',
     color: Colors.text,
     maxWidth: 220,
+    marginTop: Spacing.base,
   },
   phoneText: {
     fontSize: 14,
@@ -307,30 +248,16 @@ const styles = StyleSheet.create({
     color: Colors.textPlaceholder,
     marginTop: Spacing.md,
   },
-  actionRow: {
-    flexDirection: 'row',
-    marginTop: Spacing.base,
-    gap: Spacing.md,
-  },
-  actionButton: {
+  syncBtn: {
+    marginTop: Spacing.md,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.xl,
     borderRadius: Radius.sm,
     backgroundColor: Colors.primary,
   },
-  actionButtonText: {
+  syncBtnText: {
     fontSize: 15,
     color: Colors.textInverse,
-    fontWeight: '600',
-  },
-  actionButtonOutline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: Colors.danger,
-  },
-  actionButtonOutlineText: {
-    fontSize: 15,
-    color: Colors.danger,
     fontWeight: '600',
   },
   notLoggedInText: {
@@ -351,56 +278,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // 编辑弹窗
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: Colors.backdrop,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalCard: {
-    backgroundColor: Colors.bg,
-    borderRadius: 14,
-    padding: Spacing.xxl,
-    width: 280,
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: Colors.text,
-    textAlign: 'center',
-    marginBottom: Spacing.lg,
-  },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: Colors.text,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    marginTop: 18,
-    gap: Spacing.md,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-  },
-  modalButtonConfirm: {
-    backgroundColor: Colors.primary,
-  },
-  modalButtonCancel: {
-    fontSize: 16,
-    color: Colors.textMuted,
-  },
-  modalButtonConfirmText: {
-    fontSize: 16,
-    color: Colors.textInverse,
-    fontWeight: '600',
-  },
 });

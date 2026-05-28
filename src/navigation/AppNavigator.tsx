@@ -16,6 +16,7 @@ import ProgressScreen from '@/screens/ProgressScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import RegisterScreen from '@/screens/RegisterScreen';
+import AccountScreen from '@/screens/AccountScreen';
 import WrongCardsScreen from '@/screens/WrongCardsScreen';
 import DataScreen from '@/screens/DataScreen';
 
@@ -27,6 +28,7 @@ export type RootStackParamList = {
   Quiz: { courseId: string; nodeId: string };
   Login: undefined;
   Register: undefined;
+  Account: undefined;
   WrongCards: { courseId?: string; moduleId?: string } | undefined;
   Data: undefined;
 };
@@ -122,6 +124,7 @@ export default function AppNavigator() {
           <RootStack.Screen name="Quiz" component={QuizScreen} />
           <RootStack.Screen name="Login" component={LoginScreen} />
           <RootStack.Screen name="Register" component={RegisterScreen} />
+          <RootStack.Screen name="Account" component={AccountScreen} />
           <RootStack.Screen name="WrongCards" component={WrongCardsScreen} />
           <RootStack.Screen name="Data" component={DataScreen} />
         </RootStack.Navigator>
