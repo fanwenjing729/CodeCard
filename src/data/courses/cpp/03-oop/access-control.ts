@@ -108,7 +108,7 @@ export const accessControlNode: PathNode = {
           '  double balance = 0;',
           '',
           'public:',
-          '  // 构造函数，: owner(name) 叫初始化列表，3.4 节详细讲',
+          '  // 构造函数，: owner(name) 叫初始化列表，3.5 节详细讲',
           '  BankAccount(const std::string& name) : owner(name) {}',
           '',
           '  void deposit(double amount) {',

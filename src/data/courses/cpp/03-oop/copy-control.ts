@@ -148,7 +148,7 @@ export const copyControlNode: PathNode = {
           '  int* data;',
           '  int len;',
           'public:',
-          '  // 构造 + 析构（3.4 讲的 RAII）',
+          '  // 构造 + 析构（3.5 讲的 RAII）',
           '  IntArray(int n) : len(n) { data = new int[len]; }',
           '  ~IntArray() { delete[] data; }',
           '',
