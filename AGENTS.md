@@ -601,11 +601,11 @@ OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register
 - **影响**：新人看文档会误以为需要配 Supabase
 - **修复**：重写为 Spring Boot 版本，或保留作为"方案 A（未采用）"归档
 
-#### 6. Screen 层零测试
+#### 6. Screen 层零测试 → 部分修复
 
-12 个 Screen、AppNavigator、hooks 全部无测试。当前 145 个测试全是纯函数/组件单元测试。
+12 个 Screen、AppNavigator 仍无集成测试。hooks 层已补 18 条测试（`useNodeScreen.test.ts` + `useAutoSync.test.ts`），全量 163 条。Screen 集成测试补充条件见 `docs/testing.md`。
 
-- **修复时机**：引入 `@testing-library/react-native` 后补关键流程（登录→同步→学卡→登出）
+- **修复时机**：新增卡片类型 或 报告 Screen 层 bug 时补
 
 #### 7. `registerByEmail` 无 UI 入口
 
@@ -619,8 +619,22 @@ OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register
 
 - **修复**：配 Spring Boot logging 输出 JSON 格式 + traceId 字段，或接入 ELK/Loki
 
-#### 9. 无 CI/CD
+#### 9. 无 CI/CD → 已修复
 
-前后端测试都是本地手动跑。没有 GitHub Actions 或其他 CI 流程。
+前后端 CI workflow 已上线（`.github/workflows/test-frontend.yml` + `test-backend.yml`），push 到 master 自动跑测试。CD（自动部署）方案见 `docs/ci-cd.md`。
 
-- **修复时机**：多人协作或频繁发版前配置
+### 架构风险
+
+#### 10. store 间隐式依赖（authStore ↔ syncEngine ↔ useProgressStore）
+
+`authStore.initialize`、`loginByEmail`、`verifyEmailOtp` 等 5 处直接调用 `syncOnLogin()`；`syncEngine.ts` 通过 `useProgressStore.getState()` / `setState()` 读写进度数据。两个 store 没有正式接口契约，改 store 结构需要同步检查另一边。
+
+- **当前影响**：try-catch 吞错误，失败静默。不会白屏但可能不同步
+- **修复时机**：出"登录后进度没同步"bug 时加接口契约或事件总线
+
+#### 11. token 全局单例（`api.ts` 模块级可变状态）
+
+`accessToken` / `refreshToken` 是模块顶层 `let` 变量。多个 tab 同时登录会竞争写入（虽然实际场景不会发生）。
+
+- **当前影响**：单 tab 场景零风险
+- **修复时机**：支持多窗口或 Web 端时重写为沙箱化 token
