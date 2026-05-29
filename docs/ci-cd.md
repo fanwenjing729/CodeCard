@@ -431,6 +431,149 @@ jobs:
 
 ---
 
+---
+
+## Railway 部署指南
+
+### Railway 是什么
+
+PaaS（平台即服务）——代码给它，它帮你跑。自动搞定服务器、JDK、数据库、HTTPS、自动重启。
+
+### 架构变化
+
+```
+现在（本地开发）：
+  APK → http://10.0.2.2:8080 → 你电脑上的 Spring Boot → 你电脑上的 PostgreSQL
+
+上线后（Railway）：
+  APK → https://codecard.up.railway.app → Railway 上的 Spring Boot → Railway 上的 PostgreSQL
+```
+
+### Step 0：准备 — 让后端适配 Railway
+
+#### 0.1 schema 自动建表
+
+当前 `application.yml` 用 `ddl-auto: validate`（只验证不建表）。Railway 上 PostgreSQL 是空的，需要改为 `update` 或通过 `schema.sql` 初始化。
+
+**改法**：加一个 Railway profile 或直接用 `update`：
+
+```yaml
+# application.yml
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update  # Railway 上自动建表（开发环境可以用 validate）
+```
+
+> 安全提示：`ddl-auto: update` 在生产环境不如 flyway/liquibase 严谨，但对个人项目完全够用。
+
+#### 0.2 CORS（不是问题）
+
+APK 发 `fetch()` 不走浏览器 CORS 策略。CORS 只影响网页访问 API。**不需要改 CORS 配置。**
+
+#### 0.3 端口
+
+已有 `server.port: ${PORT:8080}`，Railway 自动设 `PORT` 环境变量。**不需要改。**
+
+---
+
+### Step 1：Railway 注册 + 建项目
+
+1. 打开 [railway.com](https://railway.com) → **Sign in with GitHub**（用你的 GitHub 账号）
+2. 点 **New Project** → **Deploy from GitHub** → 选 `fanwenjing729/CodeCard`
+3. Railway 自动识别 `backend/pom.xml`，配置 Maven + Java 21 构建
+
+### Step 2：加 PostgreSQL
+
+1. 在项目里点 **+ New Service** → **Database** → **PostgreSQL**
+2. Railway 自动生成 `DATABASE_URL`、`DB_USER`、`DB_PASSWORD` 等环境变量
+3. 把 PostgreSQL 的变量绑定到后端 service
+
+### Step 3：设环境变量
+
+在 Railway 后端的 service → **Variables** 里加：
+
+| 变量名 | 值 | 说明 |
+|--------|-----|------|
+| `DB_URL` | `${{ Postgres.DATABASE_URL }}` | Railway 自动引用 PG 的 URL |
+| `JWT_SECRET` | `openssl rand -base64 64` 生成的随机串 | JWT 签名密钥，不要用默认值 |
+| `SMTP_HOST` | `smtp.resend.com` | 邮件服务，你现在用的 |
+| `SMTP_PORT` | `587` | |
+| `SMTP_USER` | `你的 Resend API Key` | |
+| `SMTP_PASS` | `你的 Resend SMTP 密码` | |
+
+Railway 会自动注入 `DB_URL` 拼接格式（如果它叫 `DATABASE_URL`）。如果不行，手动拼：
+
+```
+DB_URL = jdbc:postgresql://<host>:<port>/<database>
+DB_USER = <user>
+DB_PASSWORD = <password>
+```
+
+### Step 4：首次部署
+
+1. push 代码到 GitHub → Railway 自动触发构建
+2. 或者 Railway 里点 **Deploy**
+3. 构建日志里看到 `Started CodeCardApplication in X seconds` → 成功
+4. Railway 生成一个 URL：`https://codecard.up.railway.app`
+
+### Step 5：改前端连上 Railway
+
+在 APK 打包前设环境变量：
+
+```bash
+EXPO_PUBLIC_API_URL=https://codecard.up.railway.app/api/v1
+```
+
+当前 `api.ts` 的 `getBaseUrl()` 已经支持这个变量：
+
+```ts
+if (process.env.EXPO_PUBLIC_API_URL) {
+  return process.env.EXPO_PUBLIC_API_URL;  // ← 生产环境走这行
+}
+```
+
+打 APK 时带上：
+
+```bash
+EXPO_PUBLIC_API_URL=https://codecard.up.railway.app/api/v1 npx expo run:android
+```
+
+或者在 EAS Build 配置里写死。
+
+---
+
+### 成本汇总
+
+| 项 | 费用 |
+|----|------|
+| Railway 后端（512MB） | $5/月 免费额度覆盖（不超额 = ¥0） |
+| Railway PostgreSQL（256MB） | $5/月 免费额度覆盖 |
+| 域名 | 不需要，Railway 给 `xxx.up.railway.app` |
+
+**如果免费额度不够**：升级到 $5/月起步计划，约 ¥36/月。
+
+### 和 GitHub 的关系
+
+```
+你写代码 → git push → GitHub（存代码）
+                        ├─ GitHub Actions（跑测试）
+                        └─ Railway 监听 push → 自动部署后端
+```
+
+三者串联：GitHub 是代码仓库 + 测试站，Railway 是运行站。
+
+### 当前不需要做的
+
+| 不做 | 理由 |
+|------|------|
+| 买域名 | Railway 自带 HTTPS 域名 |
+| 配 Nginx | Railway 自带反向代理 + SSL |
+| 配 CDN | 单体应用，用户规模小不需要 |
+| 配监控 | 等用户 >100 再加 |
+
+---
+
 ## 后续扩展
 
 | 时机 | 加什么 |
