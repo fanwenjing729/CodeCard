@@ -1,4 +1,4 @@
-name: Frontend Tests
+name: 前端测试模块
 
 on:
   push:
