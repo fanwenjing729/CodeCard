@@ -1,6 +1,29 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8080/api/v1';
+const API_PATH = '/api/v1';
+
+function getBaseUrl(): string {
+  // 生产环境：强制使用环境变量
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+
+  // 开发环境：按平台自动选择
+  if (__DEV__) {
+    if (Platform.OS === 'android') {
+      return `http://10.0.2.2:8080${API_PATH}`;
+    }
+    return `http://localhost:8080${API_PATH}`;
+  }
+
+  throw new Error(
+    'EXPO_PUBLIC_API_URL must be set in production.\n' +
+    'Example: EXPO_PUBLIC_API_URL=https://api.codecard.app/api/v1'
+  );
+}
+
+const BASE_URL = getBaseUrl();
 
 const ACCESS_KEY = 'codecard-access-token';
 const REFRESH_KEY = 'codecard-refresh-token';
