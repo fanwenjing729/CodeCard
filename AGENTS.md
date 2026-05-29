@@ -24,22 +24,28 @@ This document IS the source of truth. Do NOT read source files unless listed bel
 | Data migration / store structure change | `useProgressStore.ts` + `docs/store-invariants.md` | Other store files, screens |
 | Future architecture / scaling change | `docs/scaling.md` — do NOT read source | All source files |
 | Add payment / permissions / IAP | `docs/scaling.md` (付费与权限系统) — do NOT read source | All source files |
+| Modify backend auth/progress | `backend/src/main/java/com/codecard/` 对应包 — 只读目标 Service | 其他 Service |
+| Modify backend security/JWT | `backend/src/main/java/com/codecard/config/SecurityConfig.java` | 其他 config |
+| Add backend endpoint | AGENTS.md + 现有 Controller 模板 — 不要读其他 Controller | 其他 Controller |
 
 # Project Architecture
 
-Local-first Android learning app. Card-based micro-learning, no backend.
+Local-first Android learning app. Card-based micro-learning. Spring Boot backend for auth + progress sync.
 
 ## Tech stack
 
 | Layer | Stack |
 |-------|-------|
-| Framework | React Native 0.83.6 + Expo SDK 55 |
+| Frontend | React Native 0.83.6 + Expo SDK 55 |
 | Language | TypeScript 5.9, strict mode |
 | Navigation | @react-navigation/native 7 + bottom-tabs + native-stack |
 | State | Zustand 5 + manual AsyncStorage persist |
 | Animation | react-native-reanimated 4.1.7 + react-native-svg 15 |
 | Icons | @expo/vector-icons (MaterialCommunityIcons) |
 | Theme | `src/theme.ts` — single source of truth for colors/fonts/spacing |
+| Backend | Spring Boot 3.4.1 + Java 21 + PostgreSQL + JWT |
+| Auth | BCrypt + HMAC-SHA JWT (access 15min / refresh 30d) + email OTP |
+| Sync | REST `/api/v1/progress` — JSONB upsert + client-side merge |
 
 ## Theme rules
 
@@ -56,12 +62,17 @@ src/
 ├── theme.ts                   ← Design tokens
 ├── types/index.ts            ← All shared TypeScript interfaces
 ├── lib/
+│   ├── api.ts                 ← HTTP client, JWT tokens, auto-refresh on 401
 │   └── xp.ts                 ← XP 等级公式（calcLevel / xpForLevelStart / xpForNextLevel）
 ├── navigation/AppNavigator.tsx ← Root stack + bottom tabs
+├── hooks/
+│   ├── useAutoSync.ts        ← 进度变化 3s 防抖自动上传
+│   ├── usePhoneAuth.ts       ← 手机 OTP 流程封装
+│   └── useCourses.ts         ← 课程数据加载
 ├── store/
 │   ├── useProgressStore.ts ← Zustand store (progress, XP, cards)
-│   ├── authStore.ts        ← Auth interface (no-op)
-│   └── syncEngine.ts       ← Sync interface (no-op)
+│   ├── authStore.ts        ← JWT 认证（email/phone + password/OTP）
+│   └── syncEngine.ts       ← 进度云端同步（登录合并 + 手动上传）
 ├── screens/
 │   ├── HomeScreen.tsx         ← Course list
 │   ├── CourseScreen.tsx       ← Module list
@@ -72,7 +83,9 @@ src/
 │   ├── SettingsScreen.tsx     ← Avatar + sync + reset + about
 │   ├── DataScreen.tsx         ← Data management
 │   ├── WrongCardsScreen.tsx   ← Wrong answer review
-│   └── LoginScreen.tsx        ← Login placeholder
+│   ├── LoginScreen.tsx        ← 密码/邮箱OTP/手机OTP/找回密码
+│   ├── RegisterScreen.tsx     ← 两步注册（OTP验证 → 设密码）
+│   └── AccountScreen.tsx      ← 换头像/改用户名/退出登录
 ├── components/
 │   ├── cards/
 │   │   ├── renderCard.tsx     ← Card type dispatcher
@@ -90,6 +103,18 @@ src/
     ├── courses/index.ts       ← Course registry
     ├── courses/cpp/           ← C++ course
     └── animations/index.ts    ← Animation registry
+
+backend/
+├── pom.xml                    ← Spring Boot 3.4.1 + Java 21
+├── src/main/java/com/codecard/
+│   ├── auth/                  ← 认证（register/login/OTP/refresh/logout）
+│   ├── config/                ← SecurityConfig, JwtService, JwtAuthFilter, CORS
+│   ├── progress/              ← 进度同步（JSONB upsert/merge）
+│   └── user/                  ← 用户实体
+├── src/main/resources/
+│   ├── application.yml        ← DB/JWT/SMTP 配置
+│   └── schema.sql             ← PostgreSQL DDL
+└── src/test/                  ← 13 个集成测试（auth + progress）
 ```
 
 ## Data model (src/types/index.ts)
@@ -155,7 +180,7 @@ RootStack (NativeStack, headerShown: false)
   ├── MainTabs (BottomTab: Learn / Progress / Settings)
   ├── Course(courseId) → Module(courseId, moduleId)
   ├── Node(courseId, nodeId) → Quiz(courseId, nodeId)
-  ├── WrongCards(courseId?) → Data → Login
+  ├── WrongCards(courseId?) → Data → Login → Register → Account
 ```
 
 ## Error Boundary
@@ -519,4 +544,65 @@ export const cppCourse: Course = { ... };
 
 **成本：** 实际改动 ~30 行，只改 `src/lib/useCourses.ts` 一个文件，8 个 screen 零改动。
 
-**Screen 为什么不动：** `useCourse` / `useCourses` 的接口签名不变——`useCourse(courseId)` 依然返回 `Course | undefined`（初始返回 `undefined`，异步加载完成后自动更新）。每个 screen 已有 `if (!course) return <课程未找到>` 兜底 UI，天然兼容加载中状态。只有接口层 `getCourses` 内部从同步切异步。
+---
+
+## 已知问题
+
+### 后端
+
+#### 1. SMS 未实现（已有降级方案，见 `docs/sms-defer.md`）
+
+`OtpService.sendCode()` 对手机号抛异常提示"请使用邮箱验证码"。前端 LoginScreen / RegisterScreen 在手机号发送失败时弹出 Alert 引导切换到邮箱流程。
+
+- **当前**：手机号入口保留，用户使用时会收到明确提示并自动切换到邮箱验证码
+- **何时接 SMS**：拿到企业营业执照后，改 3 处即可（`OtpService` + `LoginScreen` + `RegisterScreen`），详见 `docs/sms-defer.md`
+
+#### 2. 无登录/注册限流
+
+OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register` 无任何限流保护。
+
+- **修复**：加 Spring 拦截器或在 Nginx/网关层配 rate limit
+
+#### 3. 进度同步无版本冲突检测
+
+`POST /progress/sync` 的同步是弱一致性——服务端有数据就返回服务端的，客户端自行合并。客户端传了 `version` 字段但后端不校验。
+
+- **当前影响**：单设备场景零风险；多设备同时 sync 时依赖客户端合并逻辑的正确性
+- **修复时机**：多设备用户出现后再加固（加乐观锁 `WHERE version < :clientVersion`）
+
+#### 4. 后端测试依赖 Java 21
+
+`E:\JDK` 是 Java 25，集成测试因 Mockito 不兼容 Java 25 绕过 `@SpringBootTest` 手工启动应用。如果改用 Java 21 可直接用标准 Spring Boot Test 框架。
+
+### 前端
+
+#### 5. docs/auth-sync.md 过时
+
+整篇文档描述 Supabase 方案，但实际代码用 Spring Boot JWT。文档和代码不匹配。
+
+- **影响**：新人看文档会误以为需要配 Supabase
+- **修复**：重写为 Spring Boot 版本，或保留作为"方案 A（未采用）"归档
+
+#### 6. Screen 层零测试
+
+12 个 Screen、AppNavigator、hooks 全部无测试。当前 145 个测试全是纯函数/组件单元测试。
+
+- **修复时机**：引入 `@testing-library/react-native` 后补关键流程（登录→同步→学卡→登出）
+
+#### 7. `registerByEmail` 无 UI 入口
+
+`authStore.registerByEmail(email, password)` 直接调 `POST /auth/register`，一步完成注册+登录。但 RegisterScreen 只用 OTP 两步流程（验证码→设密码），`registerByEmail` 没暴露给用户。
+
+### 基础设施
+
+#### 8. 后端无请求日志持久化
+
+`TraceIdFilter` 给每个请求加了 traceId，但没有写入日志文件或输出到 stdout。生产排障需要。
+
+- **修复**：配 Spring Boot logging 输出 JSON 格式 + traceId 字段，或接入 ELK/Loki
+
+#### 9. 无 CI/CD
+
+前后端测试都是本地手动跑。没有 GitHub Actions 或其他 CI 流程。
+
+- **修复时机**：多人协作或频繁发版前配置

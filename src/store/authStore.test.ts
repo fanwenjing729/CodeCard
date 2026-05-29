@@ -7,7 +7,7 @@ vi.mock('@/lib/api', () => ({
   loadTokens: vi.fn().mockResolvedValue(null),
   setTokens: vi.fn(),
   clearTokens: vi.fn(),
-  setOnTokenRefreshed: vi.fn(),
+  getRefreshToken: vi.fn(() => 'mock-refresh-token'),
   ApiError: class extends Error {
     constructor(public status: number, message: string) {
       super(message);

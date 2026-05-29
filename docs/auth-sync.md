@@ -1,6 +1,14 @@
 # Auth & Sync Interface
 
-> **最后更新：2026-05-28**
+> **最后更新：2026-05-29**
+>
+> **架构说明：本文档描述 Supabase 方案（方案 A，未采用）。实际实现采用方案 B（Spring Boot JWT），见 `AGENTS.md` 末尾"已知问题"。**
+>
+> 当前实际架构：
+> - 认证：Spring Boot `/api/v1/auth/*` + BCrypt + JWT (access/refresh)
+> - 同步：Spring Boot `/api/v1/progress/*` + PostgreSQL JSONB
+> - 前端：`src/lib/api.ts` JWT 管理 + 自动 401 刷新
+> - Supabase SDK：未安装，未使用
 
 ## 测试覆盖
 

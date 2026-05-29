@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiPost, apiGet, apiPut, loadTokens, setTokens, clearTokens, getRefreshToken } from '@/lib/api';
+import { apiPost, apiGet, apiPut, loadTokens, setTokens, clearTokens } from '@/lib/api';
 import { syncOnLogin } from './syncEngine';
 
 export interface User {
@@ -51,8 +51,6 @@ function toUser(apiUser: ApiUser): User {
   };
 }
 
-let _initialized = false;
-
 export const useAuthStore = create<AuthStore>()((set) => ({
   user: null,
   isLoggedIn: false,
@@ -88,7 +86,6 @@ export const useAuthStore = create<AuthStore>()((set) => ({
       await clearTokens();
       set({ isMounted: true });
     }
-    _initialized = true;
   },
 
   loginByEmail: async (email: string, password: string) => {
@@ -180,9 +177,8 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   },
 
   logout: async () => {
-    const rt = getRefreshToken();
     try {
-      await apiPost('/auth/logout', { refreshToken: rt });
+      await apiPost('/auth/logout');
     } catch {}
     await clearTokens();
     set({ user: null, isLoggedIn: false });
