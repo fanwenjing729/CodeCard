@@ -1,0 +1,26 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+
+      - run: cd backend && ./mvnw test
