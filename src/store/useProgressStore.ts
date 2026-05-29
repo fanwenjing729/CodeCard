@@ -19,13 +19,14 @@ function getOrCreateCourse(
 }
 
 const STORAGE_KEY = 'codecard-progress';
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
 interface PersistedData {
   version: number;
   global: {
     totalXP: number;
     level: number;
+    hasEverPlayed: boolean;
   };
   courses: Record<string, CourseProgress>;
 }
@@ -63,6 +64,14 @@ const MIGRATIONS: Record<number, (data: any) => any> = {
       ]),
     ),
   }),
+  3: (data) => ({
+    ...data,
+    version: 4,
+    global: {
+      ...data.global,
+      hasEverPlayed: (data.global?.totalXP ?? 0) > 0,
+    },
+  }),
 };
 
 function migrate(data: any): PersistedData {
@@ -97,6 +106,7 @@ const initialState: PersistedData = {
   global: {
     totalXP: 0,
     level: 1,
+    hasEverPlayed: false,
   },
   courses: {},
 };
@@ -105,7 +115,7 @@ const initialState: PersistedData = {
 function pickData(s: ProgressStore): PersistedData {
   return {
     version: CURRENT_VERSION,
-    global: { totalXP: s.global.totalXP, level: s.global.level },
+    global: { totalXP: s.global.totalXP, level: s.global.level, hasEverPlayed: s.global.hasEverPlayed },
     courses: s.courses,
   };
 }
@@ -131,6 +141,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
           ...s.global,
           totalXP: newTotalXP,
           level: calcLevel(newTotalXP),
+          hasEverPlayed: true,
         },
         courses: {
           ...s.courses,
@@ -152,6 +163,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
           ...s.global,
           totalXP: newTotalXP,
           level: calcLevel(newTotalXP),
+          hasEverPlayed: true,
         },
         courses: {
           ...s.courses,

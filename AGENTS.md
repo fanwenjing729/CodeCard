@@ -124,7 +124,7 @@ Course { id, title, icon, color, nodes: PathNode[] }
 
 PathNode {
   id, courseId, type: 'knowledge' | 'quiz',
-  moduleId: 'basics' | 'advanced' | 'oop' | 'stl' | 'generics' | 'modern',
+  moduleId: 'basics' | 'advanced' | 'oop' | 'streams' | 'stl' | 'generics' | 'modern' | 'engineering',
   module: string, title: string, cards: Card[]
 }
 
@@ -309,11 +309,12 @@ export const advancedModule: CourseModule = {
 |--------|----------|--------|
 | 01-basics | `basics` | 基础 |
 | 02-advanced | `advanced` | 进阶 |
-| 03-streams | `streams` | 流与文件 |
-| 04-oop | `oop` | 面向对象 |
+| 03-oop | `oop` | 面向对象 |
+| 04-streams | `streams` | 流与文件 |
 | 05-stl | `stl` | STL |
 | 06-generics | `generics` | 泛型 |
 | 07-modern | `modern` | 现代 C++ |
+| 08-engineering | `engineering` | 工程化 |
 
 其他课程用各自的 moduleId 体系，新增课程自由定义。
 
@@ -547,6 +548,23 @@ export const cppCourse: Course = { ... };
 ---
 
 ## 已知问题
+
+### 最近修复 (2026-05-29)
+
+| # | 文件 | 修复内容 |
+|---|------|----------|
+| B1 | `OtpService.java` | OTP 先发邮件/短信再入库，发送失败不残留无效 code |
+| B2 | `AuthService.java` | `register` 加 email/phone 必填校验 |
+| B3 | `authStore.ts` | `setDisplayId` API 失败时回滚乐观更新；`updateAvatar` 同步上传服务器 |
+| B4 | `SecurityConfig.java` | 启用 `.cors()` + `CorsConfigurationSource`，读取 `cors.allowed-origins` |
+| B5 | `AuthService.java` | `setPassword` 加长度 ≥6 校验 |
+| B6 | `authStore.ts` | `verifyEmailOtp` 补上 `isNewUser` 返回值 |
+| B7 | `QuizScreen.tsx` | `scoreRef.current = score` 移入 `useEffect` |
+| O1 | `api.ts` | token 刷新加互斥锁，并发 401 共享同一次刷新 |
+| O2 | `OtpService.java` | OTP 范围改为 100000–999999，不再出 `000000` |
+| O3 | `syncEngine.ts` + `useProgressStore.ts` | 新增 `hasEverPlayed` 标记，新设备首次同步以服务端为准 |
+| O4 | `authStore.ts` | `initialize` 恢复本地 avatar 时同步上传服务器 |
+| O5 | `ProgressScreen.tsx` | 课程进度计算用 `useMemo` 缓存 |
 
 ### 后端
 

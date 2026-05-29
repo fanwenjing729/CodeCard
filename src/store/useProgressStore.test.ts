@@ -27,7 +27,7 @@ import { useProgressStore, XP_PER_CARD, XP_PER_PRACTICE } from './useProgressSto
 
 const FRESH_STATE = {
   version: 3,
-  global: { totalXP: 0, level: 1 },
+  global: { totalXP: 0, level: 1, hasEverPlayed: false },
   courses: {} as Record<string, any>,
   hydrated: false,
 };
@@ -321,7 +321,7 @@ describe('resetCourse', () => {
     s.addXP('cpp', 50);
     // manually corrupt global.totalXP below course.xp
     useProgressStore.setState({
-      global: { totalXP: 30, level: 1 },
+      global: { totalXP: 30, level: 1, hasEverPlayed: false },
       courses: {
         cpp: { completedCards: {}, xp: 50, quizScores: {}, nodePositions: {}, wrongCards: {} },
       },
@@ -357,7 +357,7 @@ describe('hydrate', () => {
   it('restores valid data from AsyncStorage', async () => {
     store['codecard-progress'] = JSON.stringify({
       version: 3,
-      global: { totalXP: 250, level: 1 },
+      global: { totalXP: 250, level: 1, hasEverPlayed: false },
       courses: {
         cpp: { completedCards: { 'c1': true }, xp: 250, quizScores: {}, nodePositions: {}, wrongCards: {} },
       },
@@ -396,7 +396,7 @@ describe('migrations', () => {
   it('v1 → v3: adds wrongCards array', async () => {
     store['codecard-progress'] = JSON.stringify({
       version: 1,
-      global: { totalXP: 50, level: 1 },
+      global: { totalXP: 50, level: 1, hasEverPlayed: false },
       courses: {
         cpp: { completedCards: {}, xp: 50, quizScores: {}, nodePositions: {} },
       },
@@ -412,7 +412,7 @@ describe('migrations', () => {
   it('v2 → v3: converts array-format completedCards/wrongCards to Record', async () => {
     store['codecard-progress'] = JSON.stringify({
       version: 2,
-      global: { totalXP: 100, level: 1 },
+      global: { totalXP: 100, level: 1, hasEverPlayed: false },
       courses: {
         cpp: {
           completedCards: ['card-a', 'card-b'],
@@ -434,7 +434,7 @@ describe('migrations', () => {
   it('v1 with completedCards array also migrates correctly', async () => {
     store['codecard-progress'] = JSON.stringify({
       version: 1,
-      global: { totalXP: 5, level: 1 },
+      global: { totalXP: 5, level: 1, hasEverPlayed: false },
       courses: {
         cpp: { completedCards: ['old-card'], xp: 5, quizScores: {}, nodePositions: {} },
       },
@@ -462,7 +462,7 @@ describe('flush', () => {
     const written = JSON.parse(
       (AsyncStorage.default.setItem as ReturnType<typeof vi.fn>).mock.calls.at(-1)?.[1] ?? '{}',
     );
-    expect(written.version).toBe(3);
+    expect(written.version).toBe(4);
     expect(written.global).toBeDefined();
     expect(written.courses).toBeDefined();
     expect(written.hydrated).toBeUndefined();

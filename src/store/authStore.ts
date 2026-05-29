@@ -27,7 +27,7 @@ interface AuthStore {
   setPassword: (password: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
   setDisplayId: (displayId: string) => Promise<void>;
-  updateAvatar: (uri: string) => void;
+  updateAvatar: (uri: string) => Promise<void>;
 }
 
 const AVATAR_KEY = 'codecard-avatar';
@@ -51,7 +51,7 @@ function toUser(apiUser: ApiUser): User {
   };
 }
 
-export const useAuthStore = create<AuthStore>()((set) => ({
+export const useAuthStore = create<AuthStore>()((set, get) => ({
   user: null,
   isLoggedIn: false,
   isMounted: false,
@@ -71,7 +71,10 @@ export const useAuthStore = create<AuthStore>()((set) => ({
       if (!user.avatar) {
         try {
           const localAvatar = await AsyncStorage.getItem(AVATAR_KEY);
-          if (localAvatar) user = { ...user, avatar: localAvatar };
+          if (localAvatar) {
+            user = { ...user, avatar: localAvatar };
+            apiPut('/auth/profile', { avatarUrl: localAvatar }).catch(() => {});
+          }
         } catch {}
       }
 
@@ -122,7 +125,7 @@ export const useAuthStore = create<AuthStore>()((set) => ({
         isLoggedIn: true,
       });
       syncOnLogin(data.user.id).catch(() => {});
-      return {};
+      return { isNewUser: data.isNewUser ?? false };
     } catch (e: any) {
       return { error: e.message || '验证失败' };
     }
@@ -185,18 +188,27 @@ export const useAuthStore = create<AuthStore>()((set) => ({
   },
 
   setDisplayId: async (displayId) => {
+    const prev = get().user;
     set((s) => ({
       user: s.user ? { ...s.user, displayId } : null,
     }));
     try {
       await apiPut('/auth/profile', { displayId });
-    } catch {}
+    } catch {
+      set({ user: prev });
+    }
   },
 
-  updateAvatar: (uri) => {
+  updateAvatar: async (uri) => {
+    const prev = get().user;
     set((s) => ({
       user: s.user ? { ...s.user, avatar: uri } : null,
     }));
-    AsyncStorage.setItem(AVATAR_KEY, uri).catch(() => {});
+    try {
+      await AsyncStorage.setItem(AVATAR_KEY, uri);
+      await apiPut('/auth/profile', { avatarUrl: uri });
+    } catch {
+      set({ user: prev });
+    }
   },
 }));

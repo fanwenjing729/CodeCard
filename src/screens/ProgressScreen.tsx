@@ -93,6 +93,16 @@ export default function ProgressScreen() {
   const coursesProgress = useProgressStore((s) => s.courses);
   const courses = useCourses();
 
+  const courseStats = useMemo(
+    () =>
+      courses.map((c) => {
+        const progress = coursesProgress[c.id];
+        const stats = countNodeCards(c.nodes, progress?.completedCards ?? {});
+        return { course: c, progress, ...stats };
+      }),
+    [courses, coursesProgress],
+  );
+
   const totalWrongCards = useMemo(
     () =>
       Object.values(coursesProgress).reduce(
@@ -172,11 +182,7 @@ export default function ProgressScreen() {
       {/* 各学科进度 */}
       <View style={[styles.section, { backgroundColor: C.bg }]}>
         <Text style={[styles.sectionTitle, { color: C.textMuted }]}>学科进度</Text>
-        {courses.map((c) => {
-          const progress = coursesProgress[c.id];
-          const { total, done, pct } = countNodeCards(c.nodes, progress?.completedCards ?? {});
-
-          return (
+        {courseStats.map(({ course: c, total, done, pct }) => (
             <View key={c.id} style={styles.courseRow}>
               <View style={styles.courseInfo}>
                 <View style={[styles.courseDot, { backgroundColor: c.color }]} />
@@ -196,8 +202,7 @@ export default function ProgressScreen() {
                 </Text>
               </View>
             </View>
-          );
-        })}
+          ))}
 
       </View>
     </ScrollView>

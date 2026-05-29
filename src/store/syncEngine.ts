@@ -54,7 +54,9 @@ export async function syncOnLogin(userId: string): Promise<void> {
         continue;
       }
       // 本地已重置（completedCards 为空且 xp=0），跳过远程合并，防止恢复已重置的数据
-      if (Object.keys(lp.completedCards ?? {}).length === 0 && (lp.xp ?? 0) === 0) {
+      // 但新设备首次同步（hasEverPlayed=false）时以服务端为准
+      if (Object.keys(lp.completedCards ?? {}).length === 0 && (lp.xp ?? 0) === 0
+          && local.global.hasEverPlayed !== false) {
         continue;
       }
       mergedCourses[cid] = {
@@ -69,7 +71,7 @@ export async function syncOnLogin(userId: string): Promise<void> {
     // 重新计算全局 XP
     const totalXP = Object.values(mergedCourses).reduce((sum, c) => sum + (c.xp ?? 0), 0);
     useProgressStore.setState({
-      global: { totalXP, level: calcLevel(totalXP) },
+      global: { totalXP, level: calcLevel(totalXP), hasEverPlayed: true },
       courses: mergedCourses,
     });
 

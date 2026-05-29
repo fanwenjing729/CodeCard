@@ -31,13 +31,13 @@ describe('ThemeContext', () => {
   describe('ThemeProvider', () => {
     it('accepts initialDark and creates provider', () => {
       // Test that component is a valid React element
-      const el = React.createElement(ThemeProvider, { initialDark: true });
+      const el = React.createElement(ThemeProvider, { initialDark: true, children: null });
       expect(el.type).toBe(ThemeProvider);
       expect(el.props.initialDark).toBe(true);
     });
 
     it('defaults initialDark to false', () => {
-      const el = React.createElement(ThemeProvider, {});
+      const el = React.createElement(ThemeProvider, { children: null });
       expect(el.props.initialDark).toBeFalsy();
     });
   });

@@ -53,9 +53,11 @@ export default function QuizScreen({ route, navigation }: Props) {
   const card = cards[index];
 
   const scoreRef = useRef(score);
-  scoreRef.current = score;
   const doneRef = useRef(done);
-  doneRef.current = done;
+  useEffect(() => {
+    scoreRef.current = score;
+    doneRef.current = done;
+  });
   const hasSubmittedRef = useRef(false);
 
   // 退出时保存测验分数（仅已提交过答案时保存，防止空退出覆盖历史成绩）
