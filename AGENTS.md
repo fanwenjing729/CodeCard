@@ -575,18 +575,21 @@ export const cppCourse: Course = { ... };
 - **当前**：手机号入口保留，用户使用时会收到明确提示并自动切换到邮箱验证码
 - **何时接 SMS**：拿到企业营业执照后，改 3 处即可（`OtpService` + `LoginScreen` + `RegisterScreen`），详见 `docs/sms-defer.md`
 
-#### 2. 无登录/注册限流
+#### 2. 无登录/注册限流 → 部分完成（2026-05-30）
 
-OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register` 无任何限流保护。
+OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register` 无任何 IP 级别限流保护。
 
-- **修复**：加 Spring 拦截器或在 Nginx/网关层配 rate limit
+- **已完成**：Bucket4j 8.10.1 依赖 + `RateLimitProperties` 配置绑定 + `application.yml` 限流规则
+- **待补**：`RateLimitFilter.java` + `SecurityConfig` 注册（~80 行，详见 `docs/backend-rate-limit-design.md`）
+- **补的时机**：上架应用商店 或 用户过千 或 加 Web 端
 
-#### 3. 进度同步无版本冲突检测
+#### 3. 进度同步无版本冲突检测 → 方案已设计（2026-05-30）
 
 `POST /progress/sync` 的同步是弱一致性——服务端有数据就返回服务端的，客户端自行合并。客户端传了 `version` 字段但后端不校验。
 
-- **当前影响**：单设备场景零风险；多设备同时 sync 时依赖客户端合并逻辑的正确性
-- **修复时机**：多设备用户出现后再加固（加乐观锁 `WHERE version < :clientVersion`）
+- **当前影响**：单设备场景零风险；多设备同时 sync 时可能丢离线进度
+- **修复**：改 `ProgressService.syncProgress` 加版本比较（1 个文件 ~10 行，详见 `docs/backend-sync-version-conflict.md`）
+- **修复时机**：多设备用户出现 或 用户量 > 500
 
 #### 4. 后端测试依赖 Java 21
 
@@ -613,11 +616,9 @@ OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register
 
 ### 基础设施
 
-#### 8. 后端无请求日志持久化
+#### 8. 后端无请求日志持久化 → 已修复（2026-05-30）
 
-`TraceIdFilter` 给每个请求加了 traceId，但没有写入日志文件或输出到 stdout。生产排障需要。
-
-- **修复**：配 Spring Boot logging 输出 JSON 格式 + traceId 字段，或接入 ELK/Loki
+`TraceIdFilter` 给每个请求加 traceId，已配 JSON 格式控制台日志输出 method + path + status + duration + traceId。
 
 #### 9. 无 CI/CD → 已修复
 
