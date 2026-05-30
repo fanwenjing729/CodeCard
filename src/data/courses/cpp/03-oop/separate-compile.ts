@@ -188,7 +188,7 @@ export const separateCompileNode: PathNode = {
           '    何时销毁：程序退出时',
           '    作用范围：只在那个函数里能用',
           '    见过的地方：02 内存四区、',
-          '                3.5 c10 局部 static 对象',
+          '                3.3 c10 局部 static 对象',
           '',
           '  类 static 成员（在类里）',
           '    何时初始化：程序启动时',
