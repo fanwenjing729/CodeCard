@@ -620,6 +620,8 @@ OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register
 
 `TraceIdFilter` 给每个请求加 traceId，已配 JSON 格式控制台日志输出 method + path + status + duration + traceId。
 
+- **已知瑕疵**：若 `chain.doFilter()` 内部抛异常且未设 status，日志会记录 200 而非最终 500。这是 access log 通病，不影响排障（异常栈在后续日志中可见）
+
 #### 9. 无 CI/CD → 已修复
 
 前后端 CI workflow 已上线（`.github/workflows/test-frontend.yml` + `test-backend.yml`），push 到 master 自动跑测试。CD（自动部署）方案见 `docs/ci-cd.md`。

@@ -275,6 +275,37 @@ done
 # application.yml
 rate-limit:
   enabled: false   # ← 临时关闭
+```
+
+### 实现注意事项（代码审查 2026-05-30）
+
+以下两点在实际写 `RateLimitFilter` 时需要注意：
+
+**1. `paths` 为 null 的防御性处理**
+
+`RateLimitProperties` 是 record，如果 yml 中未配置 `rate-limit.paths` 段，`paths` 会被绑定为 `null`。`findLimit()` 中调用 `properties.paths().stream()` 会 NPE。
+
+```java
+// findLimit 要防御 null
+private RateLimitProperties.PathLimit findLimit(String path) {
+    if (properties.paths() == null) return null;
+    return properties.paths().stream()
+        .filter(p -> p.path().equals(path))
+        .findFirst()
+        .orElse(null);
+}
+```
+
+**2. 本地开发时关闭限流**
+
+`application-local.yml` 未覆盖 `rate-limit.enabled`，会继承主 yml 的 `enabled: true`。RateLimitFilter 实现后，本地开发连点测试会被 429 拦截。
+
+修复：在 `application-local.yml` 加一行：
+
+```yaml
+rate-limit:
+  enabled: false
+```
 
 ---
 
