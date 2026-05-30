@@ -74,7 +74,7 @@ npm run test:watch    # watch 模式
 | 20 | 配置 SMTP（Resend）+ Supabase Email Template → `{{ .Token }}` | ✅ |
 | 21 | 关闭 Supabase Confirm email | ✅ |
 | 22 | 6 个 bug 修复（isNewUser 时间戳、syncOnLogin 重置检测、ProgressScreen 依赖、ThemeContext 冗余读、resetCourse 空条目、连续动画按钮） | ✅ |
-| 23 | 手机号登录接口：`usePhoneAuth` hook + `docs/phone-login-setup.md` | ✅ |
+| 23 | 手机号登录接口：`usePhoneAuth` hook | ✅ |
 | 24 | 账户管理：`AccountScreen`（换头像/改用户名/退出登录）+ AppNavigator 路由 | ✅ |
 | 25 | `user_progress` 表建表 + RLS（列类型改为 UUID + GRANT 权限） | ✅ |
 | 26 | 用户名持久化：`displayId` → Supabase `user_metadata`，跨设备同步 | ✅ |
@@ -294,13 +294,13 @@ updateAvatar: async (uri) => {
 
 ## 方案 A：Supabase
 
-详细代码见 `docs/supabase-auth-plan.md`。
+> Supabase 方案已归档，当前项目使用自建 Spring Boot 后端（见 `backend-architecture.md`）。
 
 ### 操作顺序
 
 ```
 第1步：阿里云开 Supabase 实例，获取 URL + anon key
-第2步：创建 user_progress 表 + 设置 RLS（SQL 在 supabase-auth-plan.md Phase 3）
+第2步：创建 user_progress 表 + 设置 RLS（SQL 见 `G:\CodeCard\backend\src\main\resources\schema.sql`）
 第3步：npx expo install @supabase/supabase-js
 第4步：新建 src/lib/supabase.ts（SDK 初始化）
 第5步：新建 src/store/authStore.ts（替换 no-op，邮箱/验证码/密码登录）
@@ -313,7 +313,7 @@ updateAvatar: async (uri) => {
 第12步：验证：登录 → 学几张卡 → 同步 → 清数据 → 重登 → 进度恢复
 ```
 
-每步的具体代码在 `docs/supabase-auth-plan.md`，复制即可。
+每步的具体实现见 `backend-architecture.md`。
 
 ---
 
@@ -347,7 +347,7 @@ echo ".env" >> .gitignore
 
 ### 第 3 步：建表 + 开 RLS
 
-打开 Supabase Dashboard → 左侧"SQL Editor" → 粘贴并执行 `docs/supabase-auth-plan.md` Phase 3 的 SQL：
+打开 Supabase Dashboard → 左侧"SQL Editor" → 粘贴并执行 `G:\CodeCard\backend\src\main\resources\schema.sql` 的建表 SQL：
 
 1. 先执行 `CREATE TABLE user_progress`
 2. 再执行 `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
@@ -364,7 +364,7 @@ WHERE tablename = 'user_progress';
 
 ### 第 4-12 步
 
-按操作顺序清单执行。每个文件的完整代码在 `docs/supabase-auth-plan.md` 对应 Phase 里。
+按操作顺序清单执行。每个文件的实现见 `backend-architecture.md`。
 
 ### 验证清单
 
@@ -558,7 +558,7 @@ AppNavigator     → <LoginScreen>
 
 ## 方案 A 详细实现（Supabase）
 
-> 完整代码见 `docs/supabase-auth-plan.md`（每个文件的具体代码，复制即可）。下面是架构层面的要点。
+> 完整实现见 `backend-architecture.md`。下面是架构层面的要点。
 
 **不改现有文件代码。** 替换 3 个 no-op 实现 + 新建几个文件。
 
@@ -946,3 +946,32 @@ CloudBase 没有 SQL 级别的 RLS，安全通过以下方式实现：
   lib/supabase.ts → lib/cloudbase.ts  ← 替换 import 源
   LoginScreen.tsx ← UI 结构不变，登录按钮的调用方式微调
 ```
+
+
+---
+
+## 附录：接口抽象层设计
+
+（原 `auth-interface-plan.md`，Supabase 方案已归档，接口抽象原则仍适用）
+
+### 核心原则
+
+将认证和同步拆成两层：
+- **接口层** — Stable public API + no-op 实现 + 现有代码对接
+- **实现层** — 替换 no-op 为真实实现，不改任何现有文件
+
+```
+authStore 对外承诺（stable）：
+  - export useAuthStore: ZustandStore<AuthStore>
+  - selector: s => s.user         返回 User | null
+  - selector: s => s.isLoggedIn   返回 boolean
+  - action:   initialize()        返回 Promise<void>
+  - action:   logout()            返回 Promise<void>
+
+syncEngine 对外承诺（stable）：
+  - export uploadProgress(userId: string): Promise<void>
+  - export syncOnLogin(userId: string): Promise<void>
+  - export manualSync(userId: string): Promise<{ lastSyncedAt: Date | null }>
+```
+
+只要接口不变，实现可以随意换（从 Supabase 换成 Spring Boot 就是这个原则的实践）。

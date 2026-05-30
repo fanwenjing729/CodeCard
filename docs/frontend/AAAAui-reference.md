@@ -621,3 +621,56 @@
 - 改角标颜色 → 改 `countBadge.backgroundColor` 和 `wrongBadge.backgroundColor`
 
 全部颜色集中在一个地方：`src/theme.ts` 的 `Colors` 对象。不需要进组件文件改。
+
+
+---
+
+## 附录 A：字体配置
+
+（原 `font-guide.md`）
+
+### 当前状态
+
+所有文字使用系统默认字体。`src/theme.ts` 已预留 `FontFamily` 常量，但尚未使用。
+
+### 换字体方法
+
+**方法 1：系统字体（最轻量）**
+
+```ts
+export const FontFamily = {
+  sans: 'sans-serif',
+  serif: 'serif',
+  mono: 'monospace',
+} as const;
+```
+
+**方法 2：加载自定义字体文件（推荐）**
+
+1. 把 `.ttf` 放到 `assets/fonts/`
+2. `App.tsx` 入口用 `useFonts` 加载
+3. `theme.ts` 注册字体名
+
+### 注意事项
+
+- 微软雅黑是商用字体，不能直接打包进 App
+- 免费替代：Noto Sans SC、Source Han Sans、阿里巴巴普惠体
+- 字体文件通常 5-15 MB，会增加包体积
+
+---
+
+## 附录 B：页面间距记录
+
+（原 `layout-spacing.md`）
+
+| 页面 | 元素 | 值 |
+|------|------|-----|
+| Home "选择学科" | marginTop | `insets.top + 42` |
+| Home 课程列表 | marginTop | `21` |
+| Course header | paddingTop | `insets.top + 42` |
+| Course 模块列表 | paddingTop | `32` |
+| Module header | paddingTop | `insets.top + 43` |
+| Module 节点列表 | paddingTop | `36` |
+| Module 节点间距 | marginBottom | `20` |
+| Node/Quiz header | paddingTop | `insets.top + 8` |
+| Progress/Settings | paddingTop | `insets.top + 16` |

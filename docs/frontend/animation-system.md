@@ -459,3 +459,112 @@ When none of the existing types fit. Reference `ScopeCodePlayer.tsx` for impleme
 2. **`src/components/animations/`** — create new component: `{ scenario, step }` props
 3. **Registry** — add one entry
 4. **Done.** No changes to `renderCard.tsx`, `NodeScreen.tsx`, or registry structure.
+
+
+---
+
+## 附录 A：动画设计原则
+
+（原 `animation-design-thinking.md`）
+
+### 核心教训：先问"这个动画到底要展示什么关系"
+
+MemoryBox 擅长展示**"内存里有什么"**——格子大小代表类型宽度、颜色区分变量、地址列展示位置。但作用域的核心不是"内存里有什么"，而是**"代码执行到这一行时，哪些变量还活着"**。
+
+| 概念 | 本质关系 | 适合的工具 |
+|------|---------|-----------|
+| 变量内存布局 | 变量 ↔ 内存地址 | MemoryBox |
+| 变量作用域 | 代码位置 ↔ 变量存活状态 | ScopeCodePlayer |
+| 条件分支 | 条件值 ↔ 执行路径 | 分支对比组件 |
+
+**第一原则：不是所有可视化都适合用 MemoryBox。先想清楚这个概念的本质关系是什么。**
+
+### 动画设计决策链
+
+写一个新动画前，按顺序回答四个问题：
+
+1. **这个概念的"因"和"果"分别是什么？** 因和果都要在画面上能看到
+2. **"因"能不能可视化？** 因如果不能可视化，这个动画就不适合做
+3. **MemoryBox 够不够？** 不够就要新组件（ScopeCodePlayer 等）
+4. **新组件能不能复用？** 不要把特定课程内容写死在组件里
+
+### 颜色语义规范
+
+| 颜色 | hex | 语义 |
+|------|-----|------|
+| 绿 | `#2ed573` | 第一个变量，活着 |
+| 蓝 | `#4a9eff` | 第二个变量，活着 |
+| 灰 | `#666666` | 已销毁 / 离开作用域 |
+| 橙 | `#ff9f43` | 第三个变量 / 特殊标记 |
+| 紫 | `#a55eea` | double / 大类型 |
+
+每个颜色有固定的语义，不随机选色。绿色永远是"活着"，灰色永远是"死了"。
+
+### 回顾：教学原则
+
+```
+判断标准：这个变量还活着吗？
+    → 看代码执行到哪一行，在当前 {} 里面就是活着
+
+对照例子：
+    ✓ 内层 {} 里能访问外层 a（两个都绿）
+    ✗ 离开内层 {} 后 b 就死了（变灰）
+
+行为总结：
+    绿色 = 活着，灰色 = 死了。{} 决定生死。
+```
+
+动画不是替代教学，是**把教学原则变成视觉**。
+
+---
+
+## 附录 B：C++ 课程动画设计
+
+（原 `animations-design.md` 的精简版，完整 scenario 设计已保留）
+
+### 开发工作流
+
+```
+1. 创建 scenarios/{name}.ts     → 写步骤数据
+2. 在 animations/index.ts 注册  → 3 行
+3. 打开预览页切换到新动画       → 即时看效果
+4. 调整步骤、颜色、文案         → 回到第 1 步迭代
+5. 满意后在课程节点加一张 card  → animation 类型
+```
+
+### Scenario 模板
+
+```ts
+import type { MemoryBoxScenario } from '../../../types';
+
+export const myScenario: MemoryBoxScenario = {
+  id: 'my-anim',
+  title: '标题',
+  cellsPerRow: 8,
+  totalRows: 6,
+  steps: [
+    {
+      label: '步骤名称',
+      allocations: [{
+        name: '变量名', type: '类型', typeSize: 4,
+        value: '值', color: '#4a9eff',
+      }],
+      showAddresses: false,
+      annotation: '底部注释文字',
+    },
+  ],
+};
+```
+
+### 动画清单（6 个，预计 16h）
+
+| # | 动画 | 绑定模块 | 预计 |
+|---|------|---------|------|
+| 1 | 变量作用域生命周期 | Module 1.6 | 1h |
+| 2 | 指针与地址 | Module 1.8 | 3h |
+| 3 | 数组内存布局 | Module 1.7 | 2h |
+| 4 | 动态内存分配 | Module 2.1 | 3h |
+| 5 | 智能指针引用计数 | Module 4.5 | 3h |
+| 6 | 拷贝 vs 移动 | Module 6.1 | 4h |
+
+每个动画的详细 Step 设计见原 `animations-design.md`（已归档到此文件末尾的设计章节）。

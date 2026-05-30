@@ -28,7 +28,7 @@
 - `application.yml` — 限流规则（login 10/min, register 3/min, send-otp 3/min, verify-otp 5/min）
 
 **待补**：
-- 新建 `RateLimitFilter.java`（~80 行，完整代码见 `docs/backend-rate-limit-design.md`）
+- 新建 `RateLimitFilter.java`（~80 行，完整代码见 `../backend/backend-rate-limit-design.md`）
 - `SecurityConfig.java` 构造器注入 + 注册 filter
 
 **补的时机**：上架应用商店 / 用户过千 / 加 Web 端。
@@ -61,7 +61,7 @@ if (req.getVersion() > remote.getVersion()) {
 ```
 
 **时机**：多设备用户出现 / 用户量 > 500。
-**详细方案**：`docs/backend-sync-version-conflict.md`
+**详细方案**：`../backend/backend-improvements.md`（第三章）
 
 ---
 
@@ -93,7 +93,7 @@ if (req.getVersion() > remote.getVersion()) {
 
 **问题**：文档通篇描述 Supabase，实际代码用 Spring Boot JWT。新人会误以为需要配 Supabase。
 
-**修复**：重写 `docs/auth-sync.md`，按实际代码写：
+**修复**：重写 `../backend/auth-sync.md`，按实际代码写：
 
 ```
 # 认证与同步（Spring Boot JWT）
@@ -199,7 +199,7 @@ export const bus = new EventBus();
 
 **阻塞**：需要企业营业执照。
 
-**详细方案**：`docs/sms-defer.md`
+**详细方案**：`../backend/sms-defer.md`
 
 ---
 

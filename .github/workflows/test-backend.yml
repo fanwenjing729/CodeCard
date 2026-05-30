@@ -23,4 +23,4 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - run: cd backend && ./mvnw test
+      - run: cd backend && mvn test

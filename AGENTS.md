@@ -2,6 +2,14 @@
 
 所有项目文件必须放在 `G:\CodeCard\` 下。禁止写入 C 盘。
 
+# Docs placement
+
+| 目录 | 放什么 |
+|------|--------|
+| `docs/frontend/` | 前端（动画、UI、课程、Store） |
+| `docs/backend/` | 后端（Spring Boot、数据库、认证） |
+| `docs/project/` | 项目（规划、入门指南）；用户说"写给我的"放这里 |
+
 # Expo version
 
 Read https://docs.expo.dev/versions/v55.0.0/ before writing Expo-related code.
@@ -13,17 +21,17 @@ This document IS the source of truth. Do NOT read source files unless listed bel
 | Task type | What to read | What NOT to read |
 |-----------|-------------|------------------|
 | Add course / module / node / card | This doc + `hello-world.ts` (node template) + `01-basics/index.ts` (module template) | Any other file |
-| Add animation (any type) | `docs/animation-system.md` — do NOT read source | All source files |
+| Add animation (any type) | `docs/frontend/animation-system.md` — do NOT read source | All source files |
 | Fix store / progress bug | `useProgressStore.ts` + the screen reporting the bug | Other screens |
-| Change level formula | `src/lib/xp.ts` + `docs/store-invariants.md` | Component files |
+| Change level formula | `src/lib/xp.ts` + `docs/frontend/store-invariants.md` | Component files |
 | Fix card rendering bug | The specific card component + `renderCard.tsx` | Other components |
 | Modify SettingsScreen UI | This doc + `SettingsScreen.tsx` | Other screens |
 | Modify ProgressScreen | `ProgressScreen.tsx` only | Other screens |
-| Add login / cloud sync / avatar | `docs/auth-sync.md` — do NOT read source | All source files |
-| Theme / color / style change | `theme.ts` + `docs/AAAAui-reference.md` — do NOT read components | Component source files |
-| Data migration / store structure change | `useProgressStore.ts` + `docs/store-invariants.md` | Other store files, screens |
-| Future architecture / scaling change | `docs/scaling.md` — do NOT read source | All source files |
-| Add payment / permissions / IAP | `docs/scaling.md` (付费与权限系统) — do NOT read source | All source files |
+| Add login / cloud sync / avatar | `docs/backend/auth-sync.md` — do NOT read source | All source files |
+| Theme / color / style change | `theme.ts` + `docs/frontend/AAAAui-reference.md` — do NOT read components | Component source files |
+| Data migration / store structure change | `useProgressStore.ts` + `docs/frontend/store-invariants.md` | Other store files, screens |
+| Future architecture / scaling change | `docs/backend/scaling.md` — do NOT read source | All source files |
+| Add payment / permissions / IAP | `docs/backend/scaling.md` (付费与权限系统) — do NOT read source | All source files |
 | Modify backend auth/progress | `backend/src/main/java/com/codecard/` 对应包 — 只读目标 Service | 其他 Service |
 | Modify backend security/JWT | `backend/src/main/java/com/codecard/config/SecurityConfig.java` | 其他 config |
 | Add backend endpoint | AGENTS.md + 现有 Controller 模板 — 不要读其他 Controller | 其他 Controller |
@@ -36,15 +44,12 @@ Local-first Android learning app. Card-based micro-learning. Spring Boot backend
 
 | Layer | Stack |
 |-------|-------|
-| Frontend | React Native 0.83.6 + Expo SDK 55 |
-| Language | TypeScript 5.9, strict mode |
-| Navigation | @react-navigation/native 7 + bottom-tabs + native-stack |
+| Frontend | React Native 0.83.6 + Expo SDK 55 + TypeScript 5.9 strict |
 | State | Zustand 5 + manual AsyncStorage persist |
+| Navigation | @react-navigation/native 7 (bottom-tabs + native-stack) |
 | Animation | react-native-reanimated 4.1.7 + react-native-svg 15 |
-| Icons | @expo/vector-icons (MaterialCommunityIcons) |
-| Theme | `src/theme.ts` — single source of truth for colors/fonts/spacing |
-| Backend | Spring Boot 3.4.1 + Java 21 + PostgreSQL + JWT |
-| Auth | BCrypt + HMAC-SHA JWT (access 15min / refresh 30d) + email OTP |
+| Theme | `src/theme.ts` — Colors/FontSize/Spacing/Radius tokens |
+| Backend | Spring Boot 3.4.1 + Java 21 + PostgreSQL + JWT (BCrypt + HMAC-SHA) |
 | Sync | REST `/api/v1/progress` — JSONB upsert + client-side merge |
 
 ## Theme rules
@@ -60,61 +65,33 @@ import { Colors, FontSize, FontWeight, Radius, Spacing, Layout } from '@/theme';
 ```
 src/
 ├── theme.ts                   ← Design tokens
-├── types/index.ts            ← All shared TypeScript interfaces
-├── lib/
-│   ├── api.ts                 ← HTTP client, JWT tokens, auto-refresh on 401
-│   └── xp.ts                 ← XP 等级公式（calcLevel / xpForLevelStart / xpForNextLevel）
-├── navigation/AppNavigator.tsx ← Root stack + bottom tabs
-├── hooks/
-│   ├── useAutoSync.ts        ← 进度变化 3s 防抖自动上传
-│   ├── usePhoneAuth.ts       ← 手机 OTP 流程封装
-│   └── useCourses.ts         ← 课程数据加载
+├── types/index.ts            ← Shared interfaces
+├── lib/ (api.ts, xp.ts)      ← HTTP + JWT / 等级公式
+├── navigation/AppNavigator.tsx
+├── hooks/ (useAutoSync, usePhoneAuth, useCourses)
 ├── store/
-│   ├── useProgressStore.ts ← Zustand store (progress, XP, cards)
-│   ├── authStore.ts        ← JWT 认证（email/phone + password/OTP）
-│   └── syncEngine.ts       ← 进度云端同步（登录合并 + 手动上传）
-├── screens/
-│   ├── HomeScreen.tsx         ← Course list
-│   ├── CourseScreen.tsx       ← Module list
-│   ├── ModuleScreen.tsx       ← Node list
-│   ├── NodeScreen.tsx         ← Card swiping + useNodeScreen hook
-│   ├── QuizScreen.tsx         ← Quiz mode
-│   ├── ProgressScreen.tsx     ← Level ring + progress bars
-│   ├── SettingsScreen.tsx     ← Avatar + sync + reset + about
-│   ├── DataScreen.tsx         ← Data management
-│   ├── WrongCardsScreen.tsx   ← Wrong answer review
-│   ├── LoginScreen.tsx        ← 密码/邮箱OTP/手机OTP/找回密码
-│   ├── RegisterScreen.tsx     ← 两步注册（OTP验证 → 设密码）
-│   └── AccountScreen.tsx      ← 换头像/改用户名/退出登录
+│   ├── useProgressStore.ts    ← Zustand (XP, cards, progress)
+│   ├── authStore.ts           ← JWT 认证
+│   └── syncEngine.ts          ← 云端同步
+├── screens/ (12 files)        ← Home/Course/Module/Node/Quiz/Progress/Settings/Data/WrongCards/Login/Register/Account
 ├── components/
-│   ├── cards/
-│   │   ├── renderCard.tsx     ← Card type dispatcher
-│   │   ├── ConceptCard.tsx    ← TextContent
-│   │   ├── CodeCard.tsx       ← CodeContent
-│   │   ├── PracticeCard.tsx   ← Wraps QuestionRenderer
-│   │   └── QuestionRenderer.tsx ← Shared question UI
-│   ├── animations/
-│   │   ├── MemoryBox.tsx, ScopeCodePlayer.tsx, BranchPlayer.tsx
-│   │   ├── LoopPlayer.tsx, BreakContinuePlayer.tsx, WhileDoWhilePlayer.tsx
-│   │   ├── LottiePlayer.tsx
-│   │   └── shared/ (CodeBlock, GridRenderer, VarLabel, AddressColumn)
+│   ├── cards/ (renderCard, ConceptCard, CodeCard, PracticeCard, QuestionRenderer)
+│   ├── animations/ (MemoryBox, ScopeCodePlayer, BranchPlayer, LottiePlayer 等)
 │   └── shared/ (ScreenHeader, ErrorBoundary, ListItem)
 └── data/
-    ├── courses/index.ts       ← Course registry
-    ├── courses/cpp/           ← C++ course
-    └── animations/index.ts    ← Animation registry
+    ├── courses/index.ts       ← 课程注册入口
+    └── animations/index.ts    ← 动画注册入口
 
 backend/
-├── pom.xml                    ← Spring Boot 3.4.1 + Java 21
 ├── src/main/java/com/codecard/
-│   ├── auth/                  ← 认证（register/login/OTP/refresh/logout）
-│   ├── config/                ← SecurityConfig, JwtService, JwtAuthFilter, CORS
-│   ├── progress/              ← 进度同步（JSONB upsert/merge）
-│   └── user/                  ← 用户实体
+│   ├── auth/                  ← 认证 Controller + Service
+│   ├── config/                ← SecurityConfig, JwtService, Filter
+│   ├── progress/              ← 进度 Controller + Service
+│   └── user/                  ← User entity
 ├── src/main/resources/
-│   ├── application.yml        ← DB/JWT/SMTP 配置
+│   ├── application.yml        ← DB/JWT/SMTP/CORS 配置
 │   └── schema.sql             ← PostgreSQL DDL
-└── src/test/                  ← 13 个集成测试（auth + progress）
+└── src/test/                  ← 13 集成测试
 ```
 
 ## Data model (src/types/index.ts)
@@ -137,7 +114,7 @@ AnimationContent { animationId }  // key in animationRegistry
 PracticeContent { question, questionType: 'choice' | 'fill', options?, answer, explanation }
 ```
 
-Animation types: see `docs/animation-system.md` and `src/types/index.ts`.
+Animation types: see `docs/frontend/animation-system.md` and `src/types/index.ts`.
 
 ## Store (src/store/useProgressStore.ts)
 
@@ -160,18 +137,7 @@ CourseProgress: { completedCards: Record<string, true>, wrongCards: Record<strin
 
 ### Persistence
 
-- Zustand `subscribe()` debounced 500ms, `saveIfDirty()` skips unchanged writes
-- `AppState.addEventListener('change')` flush on background
-- Manual `JSON.parse/stringify`, no middleware (avoids Fabric compat)
-- Versioned: `CURRENT_VERSION` + `MIGRATIONS` chain in `hydrate()`
-
-### Data migration (3 steps)
-
-1. Bump `CURRENT_VERSION`
-2. Add migration function to `MIGRATIONS` table
-3. Update TypeScript types if needed
-
-Old user data auto-migrates on next `hydrate()`. See `useProgressStore.ts` for examples.
+Zustand subscribe debounced 500ms + `AppState` flush on background, manual JSON persist (no middleware), versioned with `CURRENT_VERSION` + `MIGRATIONS` chain. 详见 `docs/frontend/store-invariants.md`。
 
 ## Navigation
 
@@ -368,90 +334,23 @@ export const helloWorldNode: PathNode = {
 } }
 ```
 
-### 完整示例：python/01-basics/hello-world.ts
-
-```typescript
-import type { PathNode } from '@/types';
-
-export const helloWorldNode: PathNode = {
-  id: 'python-01-hello-world',
-  courseId: 'python',
-  type: 'knowledge',
-  moduleId: 'basics',
-  module: '基础',
-  title: '第一个程序',
-  cards: [
-    {
-      id: 'python-01-hello-world-c1',
-      cardType: 'concept',
-      content: {
-        title: 'Hello World 是什么',
-        body: [
-          'print() 是 Python 最常用的输出函数。',
-          '',
-          '  print("Hello World")  // 在屏幕上显示 Hello World',
-          '',
-          'Python 不需要 main 函数，代码从上到下直接执行。',
-        ].join('\n'),
-      },
-    },
-    {
-      id: 'python-01-hello-world-c2',
-      cardType: 'code',
-      content: {
-        title: '第一个 Python 程序',
-        code: 'print("Hello World")',
-        language: 'python',
-        highlights: [0],
-      },
-    },
-    {
-      id: 'python-01-hello-world-c3',
-      cardType: 'practice',
-      content: {
-        question: 'Python 中用于输出的函数是？',
-        questionType: 'fill',
-        answer: 'print',
-        explanation: 'print() 是 Python 的标准输出函数。',
-      },
-    },
-  ],
-};
-```
-
-### 逐个认识节点内容
-
-翻一两个已有节点文件就能掌握写法。推荐先看：
+### 参考文件
 
 | 想学的内容 | 看这个文件 |
 |-----------|-----------|
-| 概念卡（有列表、对比） | `01-basics/variables.ts` |
+| 概念卡（列表/对比） | `01-basics/variables.ts` |
 | 代码卡（多行高亮） | `02-advanced/pointer.ts` c5 |
 | 练习题（选择和填空） | `01-basics/function.ts` c7-c10 |
 | 动画卡 | `02-advanced/dynamic-memory.ts` c3 |
 | 完整节点结构 | `02-advanced/memory-four-regions.ts` |
 
-## SettingsScreen layout
+## SettingsScreen
 
-```
-┌─ Avatar (96px) + displayId + phone + sync status ─┐
-├─ Reset course per subject ─────────────────────────┤
-├─ ╔═ Danger zone: clear all data ═╗ ───────────────┤
-├─ About / version / tech ───────────────────────────┤
-└────────────────────────────────────────────────────┘
-```
-
-- Avatar tap → LoginScreen (if not logged in)
-- displayId tap → Modal edit
-- Reset/clear → confirmation dialog
-- Danger zone only renders when `hasProgress`
+Avatar + displayId + phone + sync status → Reset course per subject → Danger zone (clear all, only when `hasProgress`) → About.
 
 ## WrongCardsScreen
 
-Two-level navigation: `WrongCards` (course list) → `WrongCards { courseId }` (detail).
-- Stores only `cardId` in `wrongCards: Record<string, true>`
-- Content resolved at render time from static data — no stale copies
-- Auto-removes when answered correctly in NodeScreen/QuizScreen
+Two-level: course list → card detail. Stores only `cardId`, resolves content at render time.
 
 ## Conventions
 
@@ -464,122 +363,10 @@ Two-level navigation: `WrongCards` (course list) → `WrongCards { courseId }` (
 - `theme.ts` is single source of truth — change a token, entire app updates
 - `ScreenHeader` compact variant: `paddingTop: insets.top + 33`
 
-## 已知风险：课程导入链断裂
+## 已知风险
 
-### 问题
-
-`src/data/courses/index.ts` 是课程数据的**唯一入口**，所有课程通过静态 `import` 聚合：
-
-```ts
-import { cppCourse } from './cpp';
-export const courses: Course[] = [cppCourse];
-```
-
-任意一个子文件有**语法错误**（如少了一个逗号、类型不匹配）→ 整个 `import` 链断裂 → `courses` 全部加载失败 → HomeScreen 白屏。
-
-**只有这个地方有蝴蝶效应，其他层都有独立容错。**
-
-### 为什么现在不修
-
-1. **用户碰不到**：语法错误在 Metro bundler **构建阶段**就报错，APK 打不出来
-2. **已有安全网**：`npm test` 里的 `validate.test.ts` 遍历所有卡片验证完整性，提交前必跑
-3. **当前只有 1 门课程、1 个编辑者**：变更频率低，影响范围小
-
-### 什么时候修
-
-满足以下**任意一条**就重构：
-
-| 触发条件 | 原因 |
-|----------|------|
-| 课程 ≥ 3 门 | import 链变长，概率上升 |
-| 多人同时编辑课程文件 | 合并冲突 + 语法错风险叠加 |
-| 需要运行时热加载（如 CDN 下发课程） | 静态 import 根本不支持 |
-| 用户侧报告过因课程加载导致白屏 | 实际发生过的 bug 优先修 |
-
-### 怎么修（方案 B：动态 import + 容错加载）
-
-**一次改 2 个文件，consumer 不受影响。**
-
-**1. `src/lib/useCourses.ts` — 改为异步容错加载**
-
-```ts
-// getCourses() 改为 async，每个课程独立 try-catch
-export async function getCourses(): Promise<Course[]> {
-  const modules = [
-    () => import('@/data/courses/cpp'),
-    // 新课程在此加一行
-  ];
-
-  const results = await Promise.allSettled(modules.map(fn => fn()));
-  const courses: Course[] = [];
-  for (const r of results) {
-    if (r.status === 'fulfilled') {
-      courses.push(r.value.cppCourse); // 导出名需统一
-    } else {
-      console.warn('[useCourses] 课程加载失败，已跳过', r.reason);
-    }
-  }
-  return courses;
-}
-
-// hook 也改为 async
-export function useCourse(courseId: string): Course | undefined {
-  const [courses, setCourses] = useState<Course[]>([]);
-  useEffect(() => { getCourses().then(setCourses); }, []);
-  return useMemo(() => courses.find(c => c.id === courseId), [courses, courseId]);
-}
-```
-
-**2. 所有课程 `index.ts` — 统一导出名 `xxxCourse`**
-
-```ts
-// 每个课程目录的 index.ts 统一 export const xxxCourse: Course = {...}
-export const cppCourse: Course = { ... };
-```
-
-**改完后效果：**
-
-- 一门课语法错了 → 仅那门课不加载，其他课正常
-- 控制台 warn 提示具体是哪门课加载失败
-- Screen 用 `useCourse` 找不到课程时显示"课程未找到"兜底 UI（已有）
-
-**成本：** 实际改动 ~30 行，只改 `src/lib/useCourses.ts` 一个文件，8 个 screen 零改动。
-
----
+**课程导入链断裂**：`src/data/courses/index.ts` 静态 import 聚合所有课程，一门课语法错误会导致全部课程加载失败。触发条件（课程 ≥ 3 门 / 多人编辑 / 需要 CDN 热加载）满足时按 `docs/project/course-loading-fix.md` 方案修复（动态 import + 容错加载，~30 行）。
 
 ## 已知问题
 
-### 最近修复 (2026-05-29)
-
-| # | 文件 | 修复内容 |
-|---|------|----------|
-| B1 | `OtpService.java` | OTP 先发邮件/短信再入库，发送失败不残留无效 code |
-| B2 | `AuthService.java` | `register` 加 email/phone 必填校验 |
-| B3 | `authStore.ts` | `setDisplayId` API 失败时回滚乐观更新；`updateAvatar` 同步上传服务器 |
-| B4 | `SecurityConfig.java` | 启用 `.cors()` + `CorsConfigurationSource`，读取 `cors.allowed-origins` |
-| B5 | `AuthService.java` | `setPassword` 加长度 ≥6 校验 |
-| B6 | `authStore.ts` | `verifyEmailOtp` 补上 `isNewUser` 返回值 |
-| B7 | `QuizScreen.tsx` | `scoreRef.current = score` 移入 `useEffect` |
-| O1 | `api.ts` | token 刷新加互斥锁，并发 401 共享同一次刷新 |
-| O2 | `OtpService.java` | OTP 范围改为 100000–999999，不再出 `000000` |
-| O3 | `syncEngine.ts` + `useProgressStore.ts` | 新增 `hasEverPlayed` 标记，新设备首次同步以服务端为准 |
-| O4 | `authStore.ts` | `initialize` 恢复本地 avatar 时同步上传服务器 |
-| O5 | `ProgressScreen.tsx` | 课程进度计算用 `useMemo` 缓存 |
-
-## 已知问题
-
-> 所有未解决问题的详细方案在 `docs/ISSUES.md`，这里只写一行摘要。
-
-| # | 问题 | 状态 | 修复时机 |
-|---|------|------|----------|
-| 1 | SMS 短信验证 | 🔒 等营业执照 | 拿到后改 3 处 |
-| 2 | 登录/注册无 IP 限流 | ⏳ 基础设施已就绪 | 上架 / 用户过千 |
-| 3 | 进度同步无版本冲突 | 📋 方案已设计 | 多设备场景 |
-| 4 | 后端测试依赖 Java 21 | 📋 方案已设计 | 加后端测试时 |
-| 5 | `auth-sync.md` 写 Supabase | 📋 方案已设计 | 新人接手前 |
-| 6 | Screen 层 0 测试 | 📋 方案已设计 | 加卡片类型 / 报 bug |
-| 7 | `registerByEmail` 无 UI | 🔒 产品决定 | — |
-| 8 | 请求日志 | ✅ 已修复 | — |
-| 9 | CI/CD | ✅ 已修复 | — |
-| 10 | store 隐式依赖 | 📋 方案已设计 | bug 驱动 |
-| 11 | token 全局单例 | 📋 合入 #10 | — |
+所有问题追踪在 `docs/project/ISSUES.md`，这里不重复。

@@ -12,8 +12,8 @@
 
 | 文档 | 内容 |
 |------|------|
-| `docs/auth-sync.md` | 操作顺序、接口设计、合并策略、不改什么 |
-| `docs/supabase-auth-plan.md` | 每步完整代码（4 个 Phase，8 个文件） |
+| `auth-sync.md` | 操作顺序、接口设计、合并策略、不改什么 |
+| `backend-architecture.md` | 后端架构与环境搭建 |
 
 **核心原则：** 替换 3 个 no-op 文件 + 新建 4 个文件，不改任何现有 Screen 和课程数据。
 
@@ -54,7 +54,7 @@
 1. `npx expo install jest-expo jest`
 2. 先补纯函数用例：`calcLevel`（边界 0/99/100）、`rewardCard`（去重/原子性）、`merge`/`migrate`
 3. 纯函数通过后再考虑组件测试
-4. 参考 `docs/store-invariants.md` 的不变量写断言
+4. 参考 `../frontend/store-invariants.md` 的不变量写断言
 
 **不改什么：** 不引入 E2E 框架，不追求覆盖率。
 
@@ -98,7 +98,7 @@
 
 ## 5. 社交/社区/评论
 
-**前提依赖：** 必须先完成 `docs/auth-sync.md` 的真实登录接入（替换 `authStore.ts` + `syncEngine.ts` no-op）。所有社交功能依赖 `user.id`。
+**前提依赖：** 必须先完成 `auth-sync.md` 的真实登录接入（替换 `authStore.ts` + `syncEngine.ts` no-op）。所有社交功能依赖 `user.id`。
 
 **改动总览：**
 
@@ -243,7 +243,7 @@ ORDER BY (data->'courses'->'cpp'->>'xp')::int DESC
 LIMIT 100;
 ```
 
-如需显示用户名/头像，排行榜查询 JOIN `profiles` 表（见 `docs/supabase-auth-plan.md`）。
+如需显示用户名/头像，排行榜查询 JOIN `users` 表（见 `schema.sql`）。
 
 #### 类型（`src/types/index.ts` +15 行）
 

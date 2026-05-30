@@ -1,6 +1,72 @@
-# CodeCard Spring Boot 后端设计文档
+# CodeCard 后端架构文档
 
-> 版本 1.1.0 | 2026-05-28 | 代码审查 + 端到端修复后更新
+> 合并了入门指南 + 完整架构设计。日常操作看 §快速开始，架构细节看正文。
+
+---
+
+## 快速开始
+
+### 环境要求
+
+| 组件 | 版本 |
+|------|------|
+| JDK | 21+ |
+| PostgreSQL | 17+ |
+| Maven | 3.9+ |
+
+### 环境变量
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `PGDATA` | 数据目录 | `G:\CodeCard\posterSQL\data` |
+| `JWT_SECRET` | JWT 密钥 | 已有开发默认值 |
+| `DB_URL` | 数据库 URL | `jdbc:postgresql://localhost:5432/codecard` |
+| `DB_USER` | 数据库用户 | `codecard` |
+| `DB_PASSWORD` | 数据库密码 | `codecard` |
+
+### 日常命令
+
+```powershell
+# 1. 启动数据库
+pg_ctl start
+
+# 2. 启动后端
+cd G:\CodeCard\backend
+mvn spring-boot:run
+
+# 3. 连接数据库
+psql -U codecard -d codecard
+
+# 4. 停止数据库
+pg_ctl stop
+
+# 5. 跑测试
+mvn test
+```
+
+> 重启电脑后数据库不会自动启动，需手动 `pg_ctl start`。
+> 
+> 国内网络下载 Maven 依赖慢？在 `E:\Maven\apache-maven-3.9.16\conf\settings.xml` 的 `<mirrors>` 里配了阿里云镜像，新装环境记得加。
+
+### PostgreSQL 安装记录
+
+安装方式：ZIP 免安装版，路径 `G:\CodeCard\posterSQL\pgsql\`。
+
+首次初始化（已完成，无需重复）：
+```bash
+initdb -D G:\CodeCard\posterSQL\data -U postgres --encoding=UTF8
+pg_ctl -D G:\CodeCard\posterSQL\data -l G:\CodeCard\posterSQL\pg.log start
+psql -U postgres -d postgres
+  ALTER USER postgres WITH PASSWORD '你的密码';
+  CREATE USER codecard WITH PASSWORD 'codecard';
+  CREATE DATABASE codecard OWNER codecard;
+  \q
+psql -U codecard -d codecard -f G:\CodeCard\backend\src\main\resources\schema.sql
+```
+
+---
+
+> 版本 1.2.0 | 2026-05-30 | 合并入门指南
 
 ---
 
@@ -382,6 +448,16 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
 | 服务器错误 | 500（Spring Boot 默认） |
 | 空响应体 | 204 No Content（当前实现用 `{"ok": true}` 替代） |
 
+### 4.1.1 Swagger UI（在线调试）
+
+启动后端后访问 `http://localhost:8080/swagger-ui.html`，可以：
+
+- 查看所有 API 接口列表
+- 点 **Try it out** → 填参数 → **Execute**，直接在线调接口
+- 看到请求格式和返回结果，不需要写 curl
+
+所有接口分两组：**auth-controller**（认证，10 个）和 **progress-controller**（进度，3 个）。
+
 ### 4.2 公开端点（无需认证）
 
 白名单在 `SecurityConfig.filterChain()` 中声明：
@@ -392,7 +468,11 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
     "/api/v1/auth/login",
     "/api/v1/auth/send-otp",
     "/api/v1/auth/verify-otp",
-    "/api/v1/auth/refresh"
+    "/api/v1/auth/refresh",
+    "/swagger-ui.html",
+    "/swagger-ui/**",
+    "/api-docs/**",
+    "/v3/api-docs/**"
 ).permitAll()
 ```
 
