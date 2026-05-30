@@ -1,12 +1,7 @@
 import type { Course, CourseModule, ModuleMeta } from '@/types';
-import { linearModule } from './01-linear';
-import { treeModule } from './02-tree';
-import { graphModule } from './03-graph';
-import { searchModule } from './04-search';
-import { sortModule } from './05-sort';
-import { advancedModule } from './06-advanced';
+import { introModule } from './01-intro';
 
-const modules: CourseModule[] = [linearModule, treeModule, graphModule, searchModule, sortModule, advancedModule];
+const modules: CourseModule[] = [introModule];
 
 const modulesMeta: ModuleMeta[] = modules.map(m => ({
   moduleId: m.moduleId,

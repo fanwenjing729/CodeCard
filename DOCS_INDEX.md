@@ -22,6 +22,7 @@
 | `card-formatting-guide.md` | 卡片内容格式规范 | 写卡片内容时参考 |
 | `content-writing-guide.md` | 课程内容创作指南 — 抽象概念教学原则 + 卡片设计自检清单 | **写新节点前必读** |
 | `cpp-course-design.md` | C++ 课程内容设计（模块规划、卡片分布） | 给 C++ 课程加内容时参考结构 |
+| `ds-course-design.md` | 数据结构课程内容设计（学生视角，8 模块 35 节点） | 给 DS 课程填充内容时参考 |
 | `store-invariants.md` | useProgressStore 改动的回归清单 & 核心不变量 | 改 store 逻辑前必读，改完对着清单自检 |
 | `reward-system.md` | 奖励/反馈系统设计 | 修改奖励机制时参考 |
 | `branch-path-design.md` | 练习卡答对/答错导向不同结尾的分支路径设计 | 实现分支学习路径时参考 |
@@ -65,7 +66,7 @@
 
 1. **新接手项目** → `方案.md` → `AGENTS.md` → `docs/frontend/store-invariants.md`
 2. **日常开发** → 先搜 `AGENTS.md`，命中了就按指令做，不读源码
-3. **写新课程内容** → `docs/frontend/content-writing-guide.md` → `docs/frontend/cpp-course-design.md`
+3. **写新课程内容** → `docs/frontend/content-writing-guide.md` → `docs/frontend/课程-design.md`（C++: `cpp-course-design.md` / 数据结构: `ds-course-design.md`）
 4. **改 UI** → `AGENTS.md` + `docs/frontend/AAAAui-reference.md`
 5. **改 store** → `docs/frontend/store-invariants.md`
 6. **跑后端** → `docs/backend/backend-architecture.md` → `docs/backend/database-101.md` → `docs/project/swagger-guide.md`

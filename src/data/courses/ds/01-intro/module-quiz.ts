@@ -1,0 +1,92 @@
+import type { PathNode } from '@/types';
+
+export const moduleQuizNode: PathNode = {
+  id: 'ds-intro-module-quiz',
+  courseId: 'ds',
+  type: 'knowledge',
+  moduleId: 'intro',
+  module: '绪论',
+  title: '模块测验',
+  cards: [
+    {
+      id: 'ds-intro-module-quiz-c1',
+      cardType: 'practice',
+      content: {
+        question: '以下哪个属于逻辑结构而非存储结构？',
+        questionType: 'choice',
+        options: ['顺序表', '链表', '散列表', '栈'],
+        answer: '栈',
+        explanation: [
+          '栈定义了 LIFO 操作规则（push/pop），没有规定内部实现。',
+          '顺序表规定了用数组、链表规定了用指针、散列表规定了用哈希函数——它们都指定了存储方式。',
+          '栈是逻辑结构，你可以用数组实现（顺序栈），也可以用链表实现（链栈）。',
+          '[408 真题同类] 注意区分"是什么"和"怎么存"。',
+        ].join('\n'),
+      },
+    },
+    {
+      id: 'ds-intro-module-quiz-c2',
+      cardType: 'practice',
+      content: {
+        question: [
+          '以下代码的时间复杂度是？',
+          '',
+          'int s = 0;',
+          'for (int i = 0; i < n; i++)',
+          '    for (int j = 0; j < i; j++)',
+          '        s++;',
+        ].join('\n'),
+        questionType: 'choice',
+        options: ['O(n)', 'O(n log n)', 'O(n²)', 'O(n³)'],
+        answer: 'O(n²)',
+        explanation: [
+          '内层循环 j < i（不是 j < n），执行次数 = 0+1+2+...+(n-1) = n(n-1)/2。',
+          '展开为 (n²-n)/2，忽略低阶 n 和常数 1/2 → O(n²)。',
+          '408 爱考这种 j < i 变形，画三角形（第 1 轮 1 次…第 i 轮 i 次）就行。',
+        ].join('\n'),
+      },
+    },
+    {
+      id: 'ds-intro-module-quiz-c3',
+      cardType: 'practice',
+      content: {
+        question: [
+          '以下算法求数组中出现次数超过一半的元素（假设一定存在）。',
+          '分析时空复杂度，并说明 O/Ω/Θ 各是什么。',
+          '',
+          'int majorityElement(int arr[], int n) {',
+          '    int candidate = arr[0], count = 1;',
+          '    for (int i = 1; i < n; i++) {',
+          '        if (count == 0) {',
+          '            candidate = arr[i];',
+          '            count = 1;',
+          '        } else if (arr[i] == candidate) {',
+          '            count++;',
+          '        } else {',
+          '            count--;',
+          '        }',
+          '    }',
+          '    return candidate;',
+          '}',
+        ].join('\n'),
+        questionType: 'choice',
+        options: [
+          '时间 O(n)，空间 O(1)。上界 O(n)，下界 Ω(n)，紧确 Θ(n)',
+          '时间 O(n²)，空间 O(n)。上界 O(n²)',
+          '时间 O(n log n)，空间 O(1)',
+          '时间 O(n)，空间 O(n)',
+        ],
+        answer: '时间 O(n)，空间 O(1)。上界 O(n)，下界 Ω(n)，紧确 Θ(n)',
+        explanation: [
+          '这是 Boyer-Moore 投票算法。',
+          '时间：一次遍历 O(n)，不管输入如何都是 n 次比较 — 最好/最坏/平均都是 O(n)。',
+          '空间：只用了 candidate 和 count 两个变量 → O(1)。',
+          'O/Ω/Θ：因为任何输入下复杂度不变，所以上界 = 下界 = 紧确界，即 O(n) = Ω(n) = Θ(n)。',
+          '',
+          '核心技巧：用计数器抵消不同的元素，最后剩下的 candidate 就是多数元素。',
+          '一次遍历 + 两个变量，时空都达到了理论最优。',
+        ].join('\n'),
+      },
+    },
+  ],
+};
