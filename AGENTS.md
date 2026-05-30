@@ -566,75 +566,20 @@ export const cppCourse: Course = { ... };
 | O4 | `authStore.ts` | `initialize` 恢复本地 avatar 时同步上传服务器 |
 | O5 | `ProgressScreen.tsx` | 课程进度计算用 `useMemo` 缓存 |
 
-### 后端
+## 已知问题
 
-#### 1. SMS 未实现（已有降级方案，见 `docs/sms-defer.md`）
+> 所有未解决问题的详细方案在 `docs/ISSUES.md`，这里只写一行摘要。
 
-`OtpService.sendCode()` 对手机号抛异常提示"请使用邮箱验证码"。前端 LoginScreen / RegisterScreen 在手机号发送失败时弹出 Alert 引导切换到邮箱流程。
-
-- **当前**：手机号入口保留，用户使用时会收到明确提示并自动切换到邮箱验证码
-- **何时接 SMS**：拿到企业营业执照后，改 3 处即可（`OtpService` + `LoginScreen` + `RegisterScreen`），详见 `docs/sms-defer.md`
-
-#### 2. 无登录/注册限流 → 部分完成（2026-05-30）
-
-OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register` 无任何 IP 级别限流保护。
-
-- **已完成**：Bucket4j 8.10.1 依赖 + `RateLimitProperties` 配置绑定 + `application.yml` 限流规则
-- **待补**：`RateLimitFilter.java` + `SecurityConfig` 注册（~80 行，详见 `docs/backend-rate-limit-design.md`）
-- **补的时机**：上架应用商店 或 用户过千 或 加 Web 端
-
-#### 3. 进度同步无版本冲突检测 → 方案已设计（2026-05-30）
-
-`POST /progress/sync` 的同步是弱一致性——服务端有数据就返回服务端的，客户端自行合并。客户端传了 `version` 字段但后端不校验。
-
-- **当前影响**：单设备场景零风险；多设备同时 sync 时可能丢离线进度
-- **修复**：改 `ProgressService.syncProgress` 加版本比较（1 个文件 ~10 行，详见 `docs/backend-sync-version-conflict.md`）
-- **修复时机**：多设备用户出现 或 用户量 > 500
-
-#### 4. 后端测试依赖 Java 21 → 方案已设计（2026-05-30）
-
-`E:\JDK` 是 Java 25，集成测试因 Mockito 不兼容 Java 25 绕过 `@SpringBootTest` 手工启动应用。
-
-- **修复**：装 JDK 21 共存 或 等 Mockito 更新（详见 `docs/java25-test-fix.md`）
-
-### 前端
-
-#### 5. docs/auth-sync.md 过时 → 方案已设计（2026-05-30）
-
-整篇文档描述 Supabase 方案，但实际代码用 Spring Boot JWT。
-
-- **修复**：重写为 Spring Boot 版本 + Supabase 归档到附录（详见 `docs/auth-sync-rewrite-plan.md`）
-
-#### 6. Screen 层零测试 → 方案已设计（2026-05-30）
-
-12 个 Screen、AppNavigator 仍无集成测试。hooks 层已补 18 条测试，全量 163 条。
-
-- **测试策略**：按难度分三级（纯渲染 → 交互 → 认证），从 HomeScreen 开始（详见 `docs/frontend-remaining-work.md`）
-
-#### 7. `registerByEmail` 无 UI 入口 → 产品决定
-
-`authStore.registerByEmail(email, password)` 直接调 `POST /auth/register`。RegisterScreen 只用 OTP 两步流程。是否暴露给用户是产品决定（详见 `docs/frontend-remaining-work.md`）。
-
-### 基础设施
-
-#### 8. 后端无请求日志持久化 → 已修复（2026-05-30）
-
-`TraceIdFilter` 给每个请求加 traceId，已配 JSON 格式控制台日志输出 method + path + status + duration + traceId。
-
-- **已知瑕疵**：若 `chain.doFilter()` 内部抛异常且未设 status，日志会记录 200 而非最终 500。这是 access log 通病，不影响排障（异常栈在后续日志中可见）
-
-#### 9. 无 CI/CD → 已修复
-
-前后端 CI workflow 已上线（`.github/workflows/test-frontend.yml` + `test-backend.yml`），push 到 master 自动跑测试。CD（自动部署）方案见 `docs/ci-cd.md`。
-
-### 架构风险
-
-#### 10. store 间隐式依赖（authStore ↔ syncEngine ↔ useProgressStore）→ 方案已设计（2026-05-30）
-
-`authStore` 5 处直接调用 `syncOnLogin()`；`syncEngine.ts` 通过 `useProgressStore.getState()` / `setState()` 读写进度数据，无正式接口契约。
-
-- **修复**：事件总线解耦 + token 闭包化（详见 `docs/store-contract-plan.md`）
-
-#### 11. token 全局单例（`api.ts` 模块级可变状态）→ 合入 #10 一起修
-
-`accessToken` / `refreshToken` 是模块顶层 `let` 变量，与 #10 根因相同。方案已合并到 `docs/store-contract-plan.md`。
+| # | 问题 | 状态 | 修复时机 |
+|---|------|------|----------|
+| 1 | SMS 短信验证 | 🔒 等营业执照 | 拿到后改 3 处 |
+| 2 | 登录/注册无 IP 限流 | ⏳ 基础设施已就绪 | 上架 / 用户过千 |
+| 3 | 进度同步无版本冲突 | 📋 方案已设计 | 多设备场景 |
+| 4 | 后端测试依赖 Java 21 | 📋 方案已设计 | 加后端测试时 |
+| 5 | `auth-sync.md` 写 Supabase | 📋 方案已设计 | 新人接手前 |
+| 6 | Screen 层 0 测试 | 📋 方案已设计 | 加卡片类型 / 报 bug |
+| 7 | `registerByEmail` 无 UI | 🔒 产品决定 | — |
+| 8 | 请求日志 | ✅ 已修复 | — |
+| 9 | CI/CD | ✅ 已修复 | — |
+| 10 | store 隐式依赖 | 📋 方案已设计 | bug 驱动 |
+| 11 | token 全局单例 | 📋 合入 #10 | — |
