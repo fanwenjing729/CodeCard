@@ -12,10 +12,11 @@ import { whileLoopNode } from './while-loop';
 import { breakContinueNode } from './break-continue';
 import { arrayNode } from './array';
 import { array2dNode } from './array-2d';
+import { vectorIntroNode } from './vector-intro';
 import { stringNode } from './string';
 import { functionNode } from './function';
-import { overloadNode } from './overload';
 import { referenceNode } from './reference';
+import { overloadNode } from './overload';
 
 const nodes: PathNode[] = [
   helloWorldNode,
@@ -31,10 +32,11 @@ const nodes: PathNode[] = [
   breakContinueNode,
   arrayNode,
   array2dNode,
+  vectorIntroNode,
   stringNode,
   functionNode,
-  overloadNode,
   referenceNode,
+  overloadNode,
 ];
 
 export const basicsModule: CourseModule = { moduleId: 'basics', module: '基础', nodes };
