@@ -591,28 +591,29 @@ OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register
 - **修复**：改 `ProgressService.syncProgress` 加版本比较（1 个文件 ~10 行，详见 `docs/backend-sync-version-conflict.md`）
 - **修复时机**：多设备用户出现 或 用户量 > 500
 
-#### 4. 后端测试依赖 Java 21
+#### 4. 后端测试依赖 Java 21 → 方案已设计（2026-05-30）
 
-`E:\JDK` 是 Java 25，集成测试因 Mockito 不兼容 Java 25 绕过 `@SpringBootTest` 手工启动应用。如果改用 Java 21 可直接用标准 Spring Boot Test 框架。
+`E:\JDK` 是 Java 25，集成测试因 Mockito 不兼容 Java 25 绕过 `@SpringBootTest` 手工启动应用。
+
+- **修复**：装 JDK 21 共存 或 等 Mockito 更新（详见 `docs/java25-test-fix.md`）
 
 ### 前端
 
-#### 5. docs/auth-sync.md 过时
+#### 5. docs/auth-sync.md 过时 → 方案已设计（2026-05-30）
 
-整篇文档描述 Supabase 方案，但实际代码用 Spring Boot JWT。文档和代码不匹配。
+整篇文档描述 Supabase 方案，但实际代码用 Spring Boot JWT。
 
-- **影响**：新人看文档会误以为需要配 Supabase
-- **修复**：重写为 Spring Boot 版本，或保留作为"方案 A（未采用）"归档
+- **修复**：重写为 Spring Boot 版本 + Supabase 归档到附录（详见 `docs/auth-sync-rewrite-plan.md`）
 
-#### 6. Screen 层零测试 → 部分修复
+#### 6. Screen 层零测试 → 方案已设计（2026-05-30）
 
-12 个 Screen、AppNavigator 仍无集成测试。hooks 层已补 18 条测试（`useNodeScreen.test.ts` + `useAutoSync.test.ts`），全量 163 条。Screen 集成测试补充条件见 `docs/testing.md`。
+12 个 Screen、AppNavigator 仍无集成测试。hooks 层已补 18 条测试，全量 163 条。
 
-- **修复时机**：新增卡片类型 或 报告 Screen 层 bug 时补
+- **测试策略**：按难度分三级（纯渲染 → 交互 → 认证），从 HomeScreen 开始（详见 `docs/frontend-remaining-work.md`）
 
-#### 7. `registerByEmail` 无 UI 入口
+#### 7. `registerByEmail` 无 UI 入口 → 产品决定
 
-`authStore.registerByEmail(email, password)` 直接调 `POST /auth/register`，一步完成注册+登录。但 RegisterScreen 只用 OTP 两步流程（验证码→设密码），`registerByEmail` 没暴露给用户。
+`authStore.registerByEmail(email, password)` 直接调 `POST /auth/register`。RegisterScreen 只用 OTP 两步流程。是否暴露给用户是产品决定（详见 `docs/frontend-remaining-work.md`）。
 
 ### 基础设施
 
@@ -628,16 +629,12 @@ OTP 发送有 60s 频率限制，但 `POST /auth/login` 和 `POST /auth/register
 
 ### 架构风险
 
-#### 10. store 间隐式依赖（authStore ↔ syncEngine ↔ useProgressStore）
+#### 10. store 间隐式依赖（authStore ↔ syncEngine ↔ useProgressStore）→ 方案已设计（2026-05-30）
 
-`authStore.initialize`、`loginByEmail`、`verifyEmailOtp` 等 5 处直接调用 `syncOnLogin()`；`syncEngine.ts` 通过 `useProgressStore.getState()` / `setState()` 读写进度数据。两个 store 没有正式接口契约，改 store 结构需要同步检查另一边。
+`authStore` 5 处直接调用 `syncOnLogin()`；`syncEngine.ts` 通过 `useProgressStore.getState()` / `setState()` 读写进度数据，无正式接口契约。
 
-- **当前影响**：try-catch 吞错误，失败静默。不会白屏但可能不同步
-- **修复时机**：出"登录后进度没同步"bug 时加接口契约或事件总线
+- **修复**：事件总线解耦 + token 闭包化（详见 `docs/store-contract-plan.md`）
 
-#### 11. token 全局单例（`api.ts` 模块级可变状态）
+#### 11. token 全局单例（`api.ts` 模块级可变状态）→ 合入 #10 一起修
 
-`accessToken` / `refreshToken` 是模块顶层 `let` 变量。多个 tab 同时登录会竞争写入（虽然实际场景不会发生）。
-
-- **当前影响**：单 tab 场景零风险
-- **修复时机**：支持多窗口或 Web 端时重写为沙箱化 token
+`accessToken` / `refreshToken` 是模块顶层 `let` 变量，与 #10 根因相同。方案已合并到 `docs/store-contract-plan.md`。
