@@ -6,8 +6,8 @@
 |------|------|------|
 | Step 1: pom.xml 加依赖 | ✅ 完成 | 2026-05-30 |
 | Step 2: RateLimitProperties + application.yml | ✅ 完成 | 2026-05-30 |
-| Step 3: RateLimitFilter | ⏳ 以后补 | — |
-| Step 4: SecurityConfig 注册 | 依赖 Step 3 | — |
+| Step 3: RateLimitFilter | ✅ 完成 | 2026-05-31 |
+| Step 4: SecurityConfig 注册 | ✅ 完成 | 2026-05-31 |
 
 ## 环境
 

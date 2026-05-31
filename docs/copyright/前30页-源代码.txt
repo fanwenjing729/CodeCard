@@ -1,3 +1,4 @@
+// ===== 文件: src/theme/colors.ts =====
 // ===== 亮色 =====
 export const Colors = {
   primary: '#5B7FFF',
@@ -103,6 +104,8 @@ export const DarkColors = {
   animBadgeMuted: 'rgba(122,138,154,0.12)',
   textInverseSecondary: 'rgba(255,255,255,0.7)',
 } as const;
+
+// ===== 文件: src/theme/index.ts =====
 // ===== 字体 =====
 export const FontFamily = {
   sans: 'Inter_400Regular',
@@ -148,18 +151,8 @@ export const Gradient = {
 
 // ===== 字号 =====
 export const FontSize = {
-  xs: 12,
-  sm: 13,
-  md: 14,
-  base: 15,
-  lg: 16,
-  xl: 17,
-  xxl: 18,
-  title: 20,
-  heading: 22,
-  hero: 24,
-  xhero: 48,
-  code: 12,
+  xs: 12, sm: 13, md: 14, base: 15, lg: 16, xl: 17,
+  xxl: 18, title: 20, heading: 22, hero: 24, xhero: 48, code: 12,
 } as const;
 
 // ===== 字重 =====
@@ -173,23 +166,12 @@ export const FontWeight = {
 
 // ===== 圆角 =====
 export const Radius = {
-  sm: 8,
-  md: 10,
-  lg: 12,
-  xl: 16,
-  full: 999,
+  sm: 8, md: 10, lg: 12, xl: 16, full: 999,
 } as const;
 
 // ===== 间距 =====
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  base: 14,
-  lg: 16,
-  xl: 20,
-  xxl: 24,
-  xxxl: 32,
+  xs: 4, sm: 8, md: 12, base: 14, lg: 16, xl: 20, xxl: 24, xxxl: 32,
 } as const;
 
 export { useTheme, useColors } from './useTheme';
@@ -200,75 +182,19 @@ export const Layout = {
   tabBarHeight: 58,
   iconSize: 26,
 } as const;
-import { useContext } from 'react';
-import { ThemeContext } from './ThemeContext';
-import { Colors, DarkColors } from './colors';
 
-export function useTheme() {
-  return useContext(ThemeContext);
-}
-
-export function useColors() {
-  const { isDark } = useContext(ThemeContext);
-  return isDark ? DarkColors : Colors;
-}
-import { createContext, useCallback, useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { ReactNode } from 'react';
-
-const STORAGE_KEY = 'theme_mode';
-
-export interface ThemeCtx {
-  isDark: boolean;
-  toggle: () => void;
-}
-
-export const ThemeContext = createContext<ThemeCtx>({
-  isDark: false,
-  toggle: () => {},
-});
-
-export function ThemeProvider({ children, initialDark = false }: { children: ReactNode; initialDark?: boolean }) {
-  const [isDark, setIsDark] = useState(initialDark);
-
-  useEffect(() => {
-    // 确认存储值是否与初始值一致（理论上已一致，此处做兜底）
-    AsyncStorage.getItem(STORAGE_KEY).then((v) => {
-      if (v === 'dark' && !isDark) {
-        setIsDark(true);
-      } else if (v === 'light' && isDark) {
-        setIsDark(false);
-      }
-    }).catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const toggle = useCallback(() => {
-    setIsDark((prev) => {
-      const next = !prev;
-      AsyncStorage.setItem(STORAGE_KEY, next ? 'dark' : 'light').catch(() => {});
-      return next;
-    });
-  }, []);
-
-  return (
-    <ThemeContext.Provider value={{ isDark, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
+// ===== 文件: src/types/index.ts =====
 // ===== 学科层 =====
 export interface CourseModule {
   moduleId: string;
   module: string;
   nodes: PathNode[];
-  /** 模块标签，如"可跳过"、"选读"，透传至 ModuleMeta */
   note?: string;
 }
 
 export interface ModuleMeta {
   moduleId: string;
   module: string;
-  /** 模块标签，如"可跳过"、"选读"，显示在模块列表标题旁 */
   note?: string;
 }
 
@@ -297,9 +223,7 @@ export interface PathNode {
 }
 
 // ===== 卡片（判別联合） =====
-export interface CardBase {
-  id: string;
-}
+export interface CardBase { id: string; }
 
 export interface ConceptCardData extends CardBase {
   cardType: 'concept';
@@ -323,9 +247,7 @@ export interface PracticeCardData extends CardBase {
 
 export type Card = ConceptCardData | CodeCardData | AnimationCardData | PracticeCardData;
 
-export interface AnimationContent {
-  animationId: string;
-}
+export interface AnimationContent { animationId: string; }
 
 export interface PracticeContent {
   question: string;
@@ -335,10 +257,7 @@ export interface PracticeContent {
   explanation: string;
 }
 
-export interface TextContent {
-  title: string;
-  body: string;
-}
+export interface TextContent { title: string; body: string; }
 
 export interface CodeContent {
   title: string;
@@ -352,7 +271,6 @@ export interface AnimScenario {
   id: string;
   title: string;
   totalSteps: number;
-  /** true → 组件自动播放，NodeScreen 隐藏步进按钮。默认 false */
   continuous?: boolean;
 }
 
@@ -396,10 +314,10 @@ export interface ScopeCodeScenario extends AnimScenario {
 // ===== Loop 动画专用 =====
 export interface LoopStep {
   label: string;
-  highlightLines: number[];  // for 行
-  bodyLines: number[];       // 循环体行
-  iteration: number;         // 0=init, 1..n=第N轮, -1=跳出
-  entered: boolean;          // 本轮是否进入循环体
+  highlightLines: number[];
+  bodyLines: number[];
+  iteration: number;
+  entered: boolean;
   annotation: string;
 }
 
@@ -411,9 +329,9 @@ export interface LoopScenario extends AnimScenario {
 // ===== Branch 动画专用 =====
 export interface BranchStep {
   label: string;
-  highlightLines: number[];  // 条件行 / switch 行
-  takenLines: number[];      // 本次执行的行（绿色高亮）
-  skippedLines: number[];    // 本次跳过的行（灰色）
+  highlightLines: number[];
+  takenLines: number[];
+  skippedLines: number[];
   annotation: string;
 }
 
@@ -424,8 +342,8 @@ export interface BranchScenario extends AnimScenario {
 
 // ===== Lottie 动画专用 =====
 export interface LottieScenario extends AnimScenario {
-  source: any; // require('./file.json') 或 { uri: 'https://...' }
-  loop?: boolean; // 默认 true
+  source: any;
+  loop?: boolean;
 }
 
 // ===== BreakContinue 动画专用 =====
@@ -446,31 +364,6 @@ export interface BreakContinueScenario extends AnimScenario {
   steps: BreakContinueStep[];
 }
 
-// ===== 奖励 / 反馈系统 =====
-
-export type RewardEventType = 'xp_gain' | 'level_up';
-
-export interface XpGainReward {
-  type: 'xp_gain';
-  amount: number;
-  source: 'card' | 'practice' | 'quiz';
-}
-
-export interface LevelUpReward {
-  type: 'level_up';
-  from: number;
-  to: number;
-}
-
-export type RewardEvent = XpGainReward | LevelUpReward;
-
-export interface RewardState {
-  /** 当前正在展示的奖励事件，null 表示无事件 */
-  current: RewardEvent | null;
-  /** 关闭当前事件，播放下一个 */
-  dismiss: () => void;
-}
-
 export interface WhileDoWhileStep {
   label: string;
   whileLines: number[];
@@ -488,6 +381,29 @@ export interface WhileDoWhileScenario extends AnimScenario {
   steps: WhileDoWhileStep[];
 }
 
+// ===== 奖励 / 反馈系统 =====
+export type RewardEventType = 'xp_gain' | 'level_up';
+
+export interface XpGainReward {
+  type: 'xp_gain';
+  amount: number;
+  source: 'card' | 'practice' | 'quiz';
+}
+
+export interface LevelUpReward {
+  type: 'level_up';
+  from: number;
+  to: number;
+}
+
+export type RewardEvent = XpGainReward | LevelUpReward;
+
+export interface RewardState {
+  current: RewardEvent | null;
+  dismiss: () => void;
+}
+
+// ===== 文件: src/lib/xp.ts =====
 export const XP_PER_LEVEL = 100;
 
 export function calcLevel(totalXP: number): number {
@@ -511,74 +427,159 @@ export function xpForLevelStart(level: number): number {
 export function xpForNextLevel(level: number): number {
   return level * XP_PER_LEVEL;
 }
-export interface ProgressCount {
-  total: number;
-  done: number;
-  pct: number;
-}
 
-/** Count completed cards from a card list. `cards` only needs `id`. */
-export function countCards(
-  cards: { id: string }[],
-  completedCards: Record<string, true>,
-): ProgressCount {
-  const total = cards.length;
-  const done = cards.filter((c) => c.id in completedCards).length;
-  return { total, done, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
-}
+// ===== 文件: src/lib/api.ts =====
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-/** Count completed cards across all cards in a list of nodes. */
-export function countNodeCards(
-  nodes: { cards: { id: string }[] }[],
-  completedCards: Record<string, true>,
-): ProgressCount {
-  return countCards(
-    nodes.flatMap((n) => n.cards),
-    completedCards,
+const API_PATH = '/api/v1';
+
+function getBaseUrl(): string {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  if (__DEV__) {
+    if (Platform.OS === 'android') {
+      return `http://10.0.2.2:8080${API_PATH}`;
+    }
+    return `http://localhost:8080${API_PATH}`;
+  }
+  throw new Error(
+    'EXPO_PUBLIC_API_URL must be set in production.\n' +
+    'Example: EXPO_PUBLIC_API_URL=https://api.codecard.app/api/v1'
   );
 }
-// 课程数据访问层
-//
-// 设计约束（防止单点故障）：
-//   当前只有一门 C++ 课程，使用静态 import。当新增第二门课时，
-//   改为动态 import() + try-catch，使单门课程加载失败不影响其他课程。
-//   对外 API（useCourses / useCourse）保持不变，只改内部实现即可。
-//
-//   安全网：validate.test.ts 遍历所有卡片，提交前运行即可捕获断裂的 import 链。
 
-import { useMemo } from 'react';
-import type { Course } from '@/types';
-import { courses } from '@/data/courses';
+const BASE_URL = getBaseUrl();
+const ACCESS_KEY = 'codecard-access-token';
+const REFRESH_KEY = 'codecard-refresh-token';
 
-/** 所有已注册课程（同步，未来可切换为异步加载） */
-export function getCourses(): Course[] {
-  return courses;
+let accessToken: string | null = null;
+let refreshToken: string | null = null;
+
+export function setTokens(access: string, refresh: string) {
+  accessToken = access;
+  refreshToken = refresh;
+  AsyncStorage.setItem(ACCESS_KEY, access).catch(() => {});
+  AsyncStorage.setItem(REFRESH_KEY, refresh).catch(() => {});
 }
 
-/** 按 id 查找课程，找不到时打 warn 并返回 undefined */
-export function getCourse(courseId: string): Course | undefined {
-  const course = courses.find((c) => c.id === courseId);
-  if (!course) {
-    console.warn(`[useCourses] 课程未找到: courseId="${courseId}"`);
+export async function loadTokens(): Promise<{ accessToken: string; refreshToken: string } | null> {
+  try {
+    const [a, r] = await Promise.all([
+      AsyncStorage.getItem(ACCESS_KEY),
+      AsyncStorage.getItem(REFRESH_KEY),
+    ]);
+    if (a && r) {
+      accessToken = a;
+      refreshToken = r;
+      return { accessToken: a, refreshToken: r };
+    }
+  } catch {}
+  return null;
+}
+
+export async function clearTokens() {
+  accessToken = null;
+  refreshToken = null;
+  await Promise.all([
+    AsyncStorage.removeItem(ACCESS_KEY),
+    AsyncStorage.removeItem(REFRESH_KEY),
+  ]);
+}
+
+let refreshPromise: Promise<boolean> | null = null;
+
+async function refreshAccessToken(): Promise<boolean> {
+  if (!refreshToken) return false;
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) {
+        await clearTokens();
+        return false;
+      }
+      const data = await res.json();
+      setTokens(data.accessToken, data.refreshToken);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
   }
-  return course;
 }
 
-/** React hook — 获取全部课程列表 */
-export function useCourses(): Course[] {
-  return useMemo(() => getCourses(), []);
+async function tryParseError(res: Response): Promise<string> {
+  const text = await res.text();
+  try {
+    const json = JSON.parse(text);
+    if (json.error) return json.error;
+  } catch {}
+  return text || res.statusText || 'request failed';
 }
 
-/** React hook — 按 id 获取单门课程，找不到返回 undefined */
-export function useCourse(courseId: string): Course | undefined {
-  return useMemo(() => getCourse(courseId), [courseId]);
+async function request<T = any>(method: string, path: string, body?: any): Promise<T> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method, headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) {
+    const refreshed = await refreshAccessToken();
+    if (refreshed) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+      const retry = await fetch(`${BASE_URL}${path}`, {
+        method, headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (!retry.ok) throw new ApiError(retry.status, await tryParseError(retry));
+      return retry.headers.get('content-length') === '0' ? undefined as T : retry.json();
+    }
+    throw new ApiError(401, 'unauthorized');
+  }
+  if (!res.ok) throw new ApiError(res.status, await tryParseError(res));
+  if (res.headers.get('content-length') === '0') return undefined as T;
+  return res.json();
 }
+
+export function getRefreshToken(): string | null { return refreshToken; }
+
+export function apiGet<T = any>(path: string): Promise<T> {
+  return request<T>('GET', path);
+}
+
+export function apiPost<T = any>(path: string, body?: any): Promise<T> {
+  return request<T>('POST', path, body);
+}
+
+export function apiPut<T = any>(path: string, body: any): Promise<T> {
+  return request<T>('PUT', path, body);
+}
+
+// ===== 文件: src/store/useProgressStore.ts =====
 import { create } from 'zustand';
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { calcLevel } from '@/lib/xp';
 
-interface CourseProgress {
+export interface CourseProgress {
   completedCards: Record<string, true>;
   xp: number;
   quizScores: Record<string, number>;
@@ -590,18 +591,17 @@ function getOrCreateCourse(
   courses: Record<string, CourseProgress>,
   courseId: string,
 ): CourseProgress {
-  return courses[courseId] ?? { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} };
+  return courses[courseId] ?? {
+    completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {}
+  };
 }
 
 const STORAGE_KEY = 'codecard-progress';
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
 interface PersistedData {
   version: number;
-  global: {
-    totalXP: number;
-    level: number;
-  };
+  global: { totalXP: number; level: number; hasEverPlayed: boolean };
   courses: Record<string, CourseProgress>;
 }
 
@@ -615,28 +615,31 @@ function arrayToRecord(arr: string[] | Record<string, true>): Record<string, tru
 // 迁移链：每个 key 是"从该版本迁到下一版"的函数
 const MIGRATIONS: Record<number, (data: any) => any> = {
   1: (data) => ({
-    ...data,
-    version: 2,
+    ...data, version: 2,
     courses: Object.fromEntries(
       Object.entries(data.courses).map(([id, c]: [string, any]) => [
-        id,
-        { ...c, wrongCards: [] },
+        id, { ...c, wrongCards: [] },
       ]),
     ),
   }),
   2: (data) => ({
-    ...data,
-    version: 3,
+    ...data, version: 3,
     courses: Object.fromEntries(
       Object.entries(data.courses).map(([id, c]: [string, any]) => [
-        id,
-        {
+        id, {
           ...c,
           completedCards: arrayToRecord(c.completedCards ?? []),
           wrongCards: arrayToRecord(c.wrongCards ?? []),
         },
       ]),
     ),
+  }),
+  3: (data) => ({
+    ...data, version: 4,
+    global: {
+      ...data.global,
+      hasEverPlayed: (data.global?.totalXP ?? 0) > 0,
+    },
   }),
 };
 
@@ -669,18 +672,18 @@ interface ProgressStore extends PersistedData {
 
 const initialState: PersistedData = {
   version: CURRENT_VERSION,
-  global: {
-    totalXP: 0,
-    level: 1,
-  },
+  global: { totalXP: 0, level: 1, hasEverPlayed: false },
   courses: {},
 };
 
-// 提取可序列化数据，排除方法
 function pickData(s: ProgressStore): PersistedData {
   return {
     version: CURRENT_VERSION,
-    global: { totalXP: s.global.totalXP, level: s.global.level },
+    global: {
+      totalXP: s.global.totalXP,
+      level: s.global.level,
+      hasEverPlayed: s.global.hasEverPlayed,
+    },
     courses: s.courses,
   };
 }
@@ -706,6 +709,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
           ...s.global,
           totalXP: newTotalXP,
           level: calcLevel(newTotalXP),
+          hasEverPlayed: true,
         },
         courses: {
           ...s.courses,
@@ -727,6 +731,7 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
           ...s.global,
           totalXP: newTotalXP,
           level: calcLevel(newTotalXP),
+          hasEverPlayed: true,
         },
         courses: {
           ...s.courses,
@@ -825,7 +830,8 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
 
   resetCourse: (courseId) => {
     set((s) => {
-      const course = getOrCreateCourse(s.courses, courseId);
+      const course = s.courses[courseId];
+      if (!course) return s;
       return {
         global: {
           ...s.global,
@@ -834,7 +840,10 @@ export const useProgressStore = create<ProgressStore>()((set, get) => ({
         },
         courses: {
           ...s.courses,
-          [courseId]: { completedCards: {}, xp: 0, quizScores: {}, nodePositions: {}, wrongCards: {} },
+          [courseId]: {
+            completedCards: {}, xp: 0, quizScores: {},
+            nodePositions: {}, wrongCards: {},
+          },
         },
       };
     });
@@ -889,7 +898,9 @@ function saveIfDirty(data: PersistedData) {
 
 useProgressStore.subscribe(() => {
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => saveIfDirty(pickData(useProgressStore.getState())), 500);
+  saveTimer = setTimeout(
+    () => saveIfDirty(pickData(useProgressStore.getState())), 500
+  );
 });
 
 // App 进后台或退出时立即 flush
@@ -902,84 +913,111 @@ if (!_appStateRegistered) {
     }
   });
 }
-import { create } from 'zustand';
 
-export interface User {
-  id: string;
-  phone?: string;
-  name?: string;
-  avatar?: string;
-  displayId?: string;
+// ===== 文件: src/store/syncEngine.ts =====
+import { apiGet, apiPut } from '@/lib/api';
+import { useProgressStore } from '@/store/useProgressStore';
+import { calcLevel } from '@/lib/xp';
+import type { CourseProgress } from '@/store/useProgressStore';
+
+function mergeMax<T extends Record<string, number>>(
+  a: T | undefined, b: T | undefined
+): T {
+  const result: Record<string, number> = { ...(a ?? {}) };
+  for (const [key, val] of Object.entries(b ?? {})) {
+    result[key] = Math.max(result[key] ?? 0, val);
+  }
+  return result as T;
 }
 
-interface AuthStore {
-  user: User | null;
-  isLoggedIn: boolean;
-  isMounted: boolean;
-
-  initialize: () => Promise<void>;
-  loginByPhone: (phone: string) => Promise<{ error?: string }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ error?: string }>;
-  loginByWechat: () => Promise<{ error?: string }>;
-  logout: () => Promise<void>;
-  setDisplayId: (displayId: string) => void;
+function mergeWrongCards(
+  a: Record<string, true> | undefined,
+  b: Record<string, true> | undefined,
+): Record<string, true> {
+  return { ...(a ?? {}), ...(b ?? {}) };
 }
 
-export const useAuthStore = create<AuthStore>()((set) => ({
-  user: null,
-  isLoggedIn: false,
-  isMounted: false,
-
-  initialize: async () => {
-    // no-op: 真实实现会从持久化存储恢复 session
-    set({ isMounted: true });
-  },
-
-  loginByPhone: async () => {
-    // no-op: 真实实现会调用 supabase.auth.signInWithOtp
-    return { error: '登录功能即将上线' };
-  },
-
-  verifyOtp: async () => {
-    // no-op: 真实实现会调用 supabase.auth.verifyOtp
-    return { error: '登录功能即将上线' };
-  },
-
-  loginByWechat: async () => {
-    // no-op: 真实实现会调用 supabase.auth.signInWithOAuth
-    return { error: '登录功能即将上线' };
-  },
-
-  logout: async () => {
-    // no-op: 真实实现会调用 supabase.auth.signOut + 清空状态
-    set({ user: null, isLoggedIn: false });
-  },
-
-  setDisplayId: (displayId) => {
-    set((s) => ({
-      user: s.user ? { ...s.user, displayId } : null,
-    }));
-  },
-}));
-export async function uploadProgress(_userId: string): Promise<void> {
-  // no-op: 真实实现会将本地进度 upsert 到 Supabase
+export async function uploadProgress(userId: string): Promise<void> {
+  const local = useProgressStore.getState();
+  const data = {
+    version: local.version,
+    global: local.global,
+    courses: local.courses,
+  };
+  try {
+    await apiPut('/progress', { data, version: local.version });
+  } catch (e: any) {
+    console.warn('[syncEngine] upload failed:', e.message);
+  }
 }
 
-export async function syncOnLogin(_userId: string): Promise<void> {
-  // no-op: 真实实现会下载远程进度 → 合并 → 回写
+export async function syncOnLogin(userId: string): Promise<void> {
+  try {
+    const remote = await apiGet<any>('/progress');
+    const hasRemoteData =
+      remote && remote.data && Object.keys(remote.data).length > 0;
+    if (!hasRemoteData) {
+      await uploadProgress(userId);
+      return;
+    }
+    const remoteData = remote.data as {
+      global: { totalXP: number; level: number };
+      courses: Record<string, CourseProgress>;
+    };
+    const local = useProgressStore.getState();
+    const mergedCourses: Record<string, CourseProgress> = { ...local.courses };
+    for (const [cid, rp] of Object.entries(remoteData.courses ?? {})) {
+      const lp = mergedCourses[cid];
+      if (!lp) {
+        mergedCourses[cid] = rp as CourseProgress;
+        continue;
+      }
+      if (
+        Object.keys(lp.completedCards ?? {}).length === 0 &&
+        (lp.xp ?? 0) === 0 &&
+        local.global.hasEverPlayed !== false
+      ) {
+        continue;
+      }
+      mergedCourses[cid] = {
+        completedCards: {
+          ...(lp.completedCards ?? {}),
+          ...(rp.completedCards as any ?? {}),
+        },
+        wrongCards: mergeWrongCards(
+          lp.wrongCards as any, (rp as any).wrongCards
+        ),
+        xp: Math.max(lp.xp ?? 0, (rp as any).xp ?? 0),
+        quizScores: mergeMax(lp.quizScores, (rp as any).quizScores),
+        nodePositions: mergeMax(
+          lp.nodePositions, (rp as any).nodePositions
+        ),
+      } as CourseProgress;
+    }
+    const totalXP = Object.values(mergedCourses).reduce(
+      (sum, c) => sum + (c.xp ?? 0), 0
+    );
+    useProgressStore.setState({
+      global: {
+        totalXP, level: calcLevel(totalXP), hasEverPlayed: true,
+      },
+      courses: mergedCourses,
+    });
+    await uploadProgress(userId);
+  } catch (e: any) {
+    console.warn('[syncEngine] sync failed:', e.message);
+  }
 }
 
-export async function manualSync(_userId: string): Promise<{ lastSyncedAt: Date | null }> {
-  // no-op: 真实实现会执行同步并返回时间
-  return { lastSyncedAt: null };
-}
+// ===== 文件: src/navigation/AppNavigator.tsx =====
 import React, { useMemo } from 'react';
 import { useTheme, useColors } from '@/theme';
 import { Colors, DarkColors } from '@/theme/colors';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import {
+  NavigationContainer, DefaultTheme, DarkTheme,
+} from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
 import ErrorBoundary from '@/components/shared/ErrorBoundary';
 import AnimatedTabIcon from '@/components/shared/AnimatedTabIcon';
 import HomeScreen from '@/screens/HomeScreen';
@@ -990,6 +1028,8 @@ import QuizScreen from '@/screens/QuizScreen';
 import ProgressScreen from '@/screens/ProgressScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 import LoginScreen from '@/screens/LoginScreen';
+import RegisterScreen from '@/screens/RegisterScreen';
+import AccountScreen from '@/screens/AccountScreen';
 import WrongCardsScreen from '@/screens/WrongCardsScreen';
 import DataScreen from '@/screens/DataScreen';
 
@@ -1000,6 +1040,8 @@ export type RootStackParamList = {
   Node: { courseId: string; nodeId: string };
   Quiz: { courseId: string; nodeId: string };
   Login: undefined;
+  Register: undefined;
+  Account: undefined;
   WrongCards: { courseId?: string; moduleId?: string } | undefined;
   Data: undefined;
 };
@@ -1009,7 +1051,6 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 function MainTabs() {
   const C = useColors();
-
   return (
     <Tab.Navigator
       screenOptions={{
@@ -1026,32 +1067,32 @@ function MainTabs() {
       }}
     >
       <Tab.Screen
-        name="Learn"
-        component={HomeScreen}
+        name="Learn" component={HomeScreen}
         options={{
           tabBarLabel: '学习',
           tabBarIcon: ({ focused, color }) => (
-            <AnimatedTabIcon focused={focused} color={color} name="school" size={26} />
+            <AnimatedTabIcon focused={focused} color={color}
+              name="school" size={26} />
           ),
         }}
       />
       <Tab.Screen
-        name="Progress"
-        component={ProgressScreen}
+        name="Progress" component={ProgressScreen}
         options={{
           tabBarLabel: '进度',
           tabBarIcon: ({ focused, color }) => (
-            <AnimatedTabIcon focused={focused} color={color} name="trophy" size={26} />
+            <AnimatedTabIcon focused={focused} color={color}
+              name="trophy" size={26} />
           ),
         }}
       />
       <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
+        name="Settings" component={SettingsScreen}
         options={{
           tabBarLabel: '设置',
           tabBarIcon: ({ focused, color }) => (
-            <AnimatedTabIcon focused={focused} color={color} name="cog" size={26} />
+            <AnimatedTabIcon focused={focused} color={color}
+              name="cog" size={26} />
           ),
         }}
       />
@@ -1061,24 +1102,18 @@ function MainTabs() {
 
 export default function AppNavigator() {
   const { isDark } = useTheme();
-
   const C = isDark ? DarkColors : Colors;
-
   const navigationTheme = useMemo(() => {
     const base = isDark ? DarkTheme : DefaultTheme;
     return {
       ...base,
       colors: {
         ...base.colors,
-        background: C.bg,
-        card: C.bg,
-        border: C.border,
+        background: C.bg, card: C.bg, border: C.border,
       },
     };
   }, [isDark, C]);
-
   const screenBg = C.bg;
-
   return (
     <ErrorBoundary>
       <NavigationContainer theme={navigationTheme}>
@@ -1094,6 +1129,8 @@ export default function AppNavigator() {
           <RootStack.Screen name="Node" component={NodeScreen} />
           <RootStack.Screen name="Quiz" component={QuizScreen} />
           <RootStack.Screen name="Login" component={LoginScreen} />
+          <RootStack.Screen name="Register" component={RegisterScreen} />
+          <RootStack.Screen name="Account" component={AccountScreen} />
           <RootStack.Screen name="WrongCards" component={WrongCardsScreen} />
           <RootStack.Screen name="Data" component={DataScreen} />
         </RootStack.Navigator>
@@ -1101,6 +1138,70 @@ export default function AppNavigator() {
     </ErrorBoundary>
   );
 }
+
+// ===== 文件: src/components/cards/renderCard.tsx =====
+import React from 'react';
+import ConceptCard from './ConceptCard';
+import CodeCard from './CodeCard';
+import PracticeCard, { type PracticeState } from './PracticeCard';
+import { getAnimScenario, getAnimComponent } from '@/data/animations';
+import type { Card } from '@/types';
+
+interface RenderCardProps {
+  card: Card;
+  animStep: number;
+  onPracticeComplete: (correct: boolean) => void;
+  onPracticeNext: () => void;
+  isLast: boolean;
+  practiceState?: PracticeState;
+  onPracticeStateChange?: (state: PracticeState) => void;
+}
+
+export default function renderCard({
+  card, animStep, onPracticeComplete, onPracticeNext,
+  isLast, practiceState, onPracticeStateChange,
+}: RenderCardProps): React.ReactElement | null {
+  switch (card.cardType) {
+    case 'concept':
+      return <ConceptCard key={card.id} content={card.content} />;
+    case 'code':
+      return <CodeCard key={card.id} content={card.content} />;
+    case 'animation': {
+      const scenario = getAnimScenario(card.content.animationId);
+      if (!scenario) {
+        console.warn(
+          `[renderCard] 动画场景未注册: animationId="${card.content.animationId}"`
+        );
+        return null;
+      }
+      const AnimComponent = getAnimComponent(card.content.animationId);
+      if (!AnimComponent) {
+        console.warn(
+          `[renderCard] 动画组件未注册: animationId="${card.content.animationId}"`
+        );
+        return null;
+      }
+      return React.createElement(AnimComponent, {
+        key: card.id, scenario, step: animStep,
+      });
+    }
+    case 'practice':
+      return (
+        <PracticeCard
+          key={card.id} content={card.content}
+          onComplete={onPracticeComplete} onNext={onPracticeNext}
+          isLast={isLast} savedState={practiceState}
+          onStateChange={onPracticeStateChange}
+        />
+      );
+    default: {
+      const _exhaustive: never = card;
+      return null;
+    }
+  }
+}
+
+// ===== 文件: src/screens/HomeScreen.tsx =====
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import type { DimensionValue } from 'react-native';
 import { Colors, useColors, FontSize, FontFamily, Radius, Spacing } from '@/theme';
@@ -1160,7 +1261,6 @@ export default function HomeScreen() {
         {courses.map((c) => {
           const progress = coursesProgress[c.id];
           const { total, done, pct } = countNodeCards(c.nodes, progress?.completedCards ?? {});
-
           return (
             <TouchableOpacity
               key={c.id}
@@ -1179,7 +1279,7 @@ export default function HomeScreen() {
                 <Text style={[styles.title, { color: C.text }]}>{c.title}</Text>
                 <Text style={[styles.meta, { color: C.textMuted }]}>
                   {c.moduleCount > 0
-                    ? `${c.moduleCount} 个模块 · ${total} 张卡片`
+                    ? `${c.moduleCount} 个模块 ・ ${total} 张卡片`
                     : '暂无内容'}
                 </Text>
                 {total > 0 && (
@@ -1201,96 +1301,45 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bgTertiary,
-  },
+  container: { flex: 1, backgroundColor: Colors.bgTertiary },
   heading: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 28,
-    fontWeight: '800',
-    color: Colors.text,
-    paddingHorizontal: Spacing.lg,
+    fontFamily: FontFamily.sansBold, fontSize: 28, fontWeight: '800',
+    color: Colors.text, paddingHorizontal: Spacing.lg,
   },
   subtitle: {
-    fontSize: FontSize.base,
-    color: Colors.textMuted,
-    marginTop: 4,
+    fontSize: FontSize.base, color: Colors.textMuted, marginTop: 4,
     paddingHorizontal: Spacing.lg,
   },
-  list: {
-    marginTop: 20,
-    paddingHorizontal: Spacing.lg,
-  },
+  list: { marginTop: 20, paddingHorizontal: Spacing.lg },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.bg,
-    borderRadius: Radius.lg,
-    marginBottom: 10,
-    borderLeftWidth: 4,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.bg, borderRadius: Radius.lg,
+    marginBottom: 10, borderLeftWidth: 4,
   },
   iconBox: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: Spacing.lg,
-    marginVertical: Spacing.lg,
+    width: 48, height: 48, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+    marginLeft: Spacing.lg, marginVertical: Spacing.lg,
   },
-  iconText: {
-    color: Colors.textInverse,
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  info: {
-    flex: 1,
-    marginLeft: 14,
-    marginRight: 8,
-  },
+  iconText: { color: Colors.textInverse, fontSize: 22, fontWeight: '800' },
+  info: { flex: 1, marginLeft: 14, marginRight: 8 },
   title: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 17,
-    fontWeight: '700',
+    fontFamily: FontFamily.sansBold, fontSize: 17, fontWeight: '700',
     color: Colors.text,
   },
-  meta: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginTop: 3,
-  },
-  progressRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
+  meta: { fontSize: 13, color: Colors.textMuted, marginTop: 3 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   miniBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: Colors.progressBarBg,
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginRight: 10,
+    flex: 1, height: 4, backgroundColor: Colors.progressBarBg,
+    borderRadius: 2, overflow: 'hidden', marginRight: 10,
   },
-  miniBarFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  pct: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textMuted,
-    width: 36,
-    textAlign: 'right',
-  },
-  arrow: {
-    fontSize: 22,
-    color: Colors.arrow,
-    fontWeight: '300',
-    marginRight: Spacing.md,
-  },
+  miniBarFill: { height: '100%', borderRadius: 2 },
+  pct: { fontSize: 12, fontWeight: '600', color: Colors.textMuted, width: 36, textAlign: 'right' },
+  arrow: { fontSize: 22, color: Colors.arrow, fontWeight: '300', marginRight: Spacing.md },
 });
+
+// ===== 文件: src/screens/CourseScreen.tsx =====
+// ===== 文件: src/screens/CourseScreen.tsx =====
 import { useMemo, useLayoutEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import { Colors, useColors } from '@/theme';
@@ -1345,20 +1394,17 @@ export default function CourseScreen({ route, navigation }: Props) {
         themeColor={themeColor}
         variant="default"
       />
-
       <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 32 }]}>
         {modules.map(({ moduleId, module: moduleName, nodes, note }) => {
           const { total, done } = countNodeCards(nodes, completedCards);
           const isDone = total > 0 && done === total;
           const isStarted = done > 0 && !isDone;
-
           const subtitle =
             total === 0
               ? '敬请期待'
               : isDone
-                ? `已完成 ${total} 张卡片`
-                : `${done}/${total} 张卡片 · ${nodes.length} 个节点`;
-
+                ? '已完成 ' + total + ' 张卡片'
+                : done + '/' + total + ' 张卡片 · ' + nodes.length + ' 个节点';
           return (
             <ListItem
               key={moduleId}
@@ -1371,7 +1417,6 @@ export default function CourseScreen({ route, navigation }: Props) {
             />
           );
         })}
-
         {modules.length === 0 && (
           <Text style={[styles.empty, { color: C.textMuted }]}>暂无课程内容</Text>
         )}
@@ -1381,142 +1426,118 @@ export default function CourseScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  empty: {
-    textAlign: 'center',
-    color: Colors.textMuted,
-    marginTop: 60,
-    fontSize: 15,
-  },
+  container: { flex: 1, backgroundColor: Colors.bg },
+  listContent: { padding: 16, paddingBottom: 40 },
+  empty: { textAlign: 'center', color: Colors.textMuted, marginTop: 60, fontSize: 15 },
 });
-import { useMemo, useLayoutEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import { Colors, useColors } from '@/theme';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '@/navigation/AppNavigator';
-import ScreenHeader from '@/components/shared/ScreenHeader';
-import { useProgressStore } from '@/store/useProgressStore';
-import { countCards } from '@/lib/courseProgress';
-import ListItem from '@/components/shared/ListItem';
-import { useCourse } from '@/lib/useCourses';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Module'>;
+// ===== 文件: src/store/authStore.ts =====
+import { create } from 'zustand';
+import { loadTokens, setTokens, clearTokens, apiGet, apiPost, getRefreshToken } from '@/lib/api';
+import { syncOnLogin } from '@/store/syncEngine';
 
-export default function ModuleScreen({ route, navigation }: Props) {
-  const { courseId, moduleId } = route.params;
-  const C = useColors();
-  const coursesProgress = useProgressStore((s) => s.courses);
-  const course = useCourse(courseId);
-  const themeColor = course?.color ?? Colors.primary;
-
-  useLayoutEffect(() => {
-    navigation.setOptions({ contentStyle: { backgroundColor: C.bg } });
-  }, [navigation, C.bg]);
-
-  const completedCards = useMemo(() => {
-    return coursesProgress[courseId]?.completedCards ?? {};
-  }, [coursesProgress, courseId]);
-
-  const nodes = useMemo(() => {
-    return (course?.nodes ?? []).filter((n) => n.moduleId === moduleId);
-  }, [course, moduleId]);
-
-  const moduleName = nodes[0]?.module ?? '未知模块';
-
-  return (
-    <View style={[styles.container, { backgroundColor: C.bg }]}>
-      <ScreenHeader
-        onBack={() => navigation.goBack()}
-        title={moduleName}
-        backLabel="模块"
-        themeColor={themeColor}
-        variant="default"
-      />
-
-      <ScrollView contentContainerStyle={[styles.listContent, { paddingTop: 36 }]}>
-        {nodes.map((node) => {
-          const { total, done } = countCards(node.cards, completedCards);
-          const isDone = total > 0 && done === total;
-          const isStarted = done > 0 && !isDone;
-
-          if (total === 0) {
-            return (
-              <View key={node.id} style={[styles.nodeCardEmpty, { backgroundColor: C.bgTertiary }]}>
-                <Text style={[styles.nodeTitleEmpty, { color: C.textMuted }]}>{node.title}</Text>
-                <Text style={[styles.comingSoon, { color: C.textPlaceholder }]}>敬请期待</Text>
-              </View>
-            );
-          }
-
-          const subtitle = isDone
-            ? `已完成 ${total} 张卡片`
-            : `${done}/${total} 张卡片 · ${node.type === 'quiz' ? '测验' : '学习'}`;
-
-          return (
-            <ListItem
-              key={node.id}
-              title={node.title}
-              subtitle={subtitle}
-              status={isDone ? 'done' : isStarted ? 'started' : 'pending'}
-              themeColor={themeColor}
-              onPress={() => {
-                if (node.type === 'quiz') {
-                  navigation.navigate('Quiz', { courseId, nodeId: node.id });
-                } else {
-                  navigation.navigate('Node', { courseId, nodeId: node.id });
-                }
-              }}
-            />
-          );
-        })}
-
-        {nodes.length === 0 && (
-          <Text style={[styles.empty, { color: C.textMuted }]}>暂无内容</Text>
-        )}
-      </ScrollView>
-    </View>
-  );
+interface AuthStore {
+  isLoggedIn: boolean;
+  user: { id: string; displayId: string; phone: string } | null;
+  tokenChecked: boolean;
+  restoreSession: () => Promise<void>;
+  login: (phone: string, password: string) => Promise<void>;
+  register: (phone: string, password: string, displayId?: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bg,
+export const useAuthStore = create<AuthStore>()((set, get) => ({
+  isLoggedIn: false,
+  user: null,
+  tokenChecked: false,
+
+  restoreSession: async () => {
+    const tokens = await loadTokens();
+    if (!tokens) {
+      set({ tokenChecked: true });
+      return;
+    }
+    try {
+      const user = await apiGet<{ id: string; displayId: string; phone: string }>('/user/me');
+      set({ isLoggedIn: true, user, tokenChecked: true });
+      await syncOnLogin(user.id);
+    } catch {
+      await clearTokens();
+      set({ tokenChecked: true });
+    }
   },
-  listContent: {
-    padding: 16,
-    paddingBottom: 40,
+
+  login: async (phone, password) => {
+    const data = await apiPost<{ accessToken: string; refreshToken: string; user: any }>(
+      '/auth/login', { phone, password }
+    );
+    setTokens(data.accessToken, data.refreshToken);
+    set({ isLoggedIn: true, user: data.user });
+    await syncOnLogin(data.user.id);
   },
-  nodeCardEmpty: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.bgTertiary,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    opacity: 0.5,
+
+  register: async (phone, password, displayId) => {
+    const data = await apiPost<{ accessToken: string; refreshToken: string; user: any }>(
+      '/auth/register', { phone, password, displayId }
+    );
+    setTokens(data.accessToken, data.refreshToken);
+    set({ isLoggedIn: true, user: data.user });
   },
-  nodeTitleEmpty: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textMuted,
+
+  logout: async () => {
+    const token = getRefreshToken();
+    if (token) {
+      try { await apiPost('/auth/logout', { refreshToken: token }); } catch {}
+    }
+    await clearTokens();
+    set({ isLoggedIn: false, user: null });
   },
-  comingSoon: {
-    fontSize: 12,
-    color: Colors.textPlaceholder,
-  },
-  empty: {
-    textAlign: 'center',
-    color: Colors.textMuted,
-    marginTop: 60,
-    fontSize: 15,
-  },
-});
+}));
+
+// ===== 文件: src/hooks/useAutoSync.ts (前后端同步桥梁) =====
+import { useEffect, useRef } from 'react';
+import { useProgressStore } from '@/store/useProgressStore';
+import { useAuthStore } from '@/store/authStore';
+import { uploadProgress } from '@/store/syncEngine';
+
+export function useAutoSync() {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const unsub = useProgressStore.subscribe(() => {
+      const uid = useAuthStore.getState().user?.id;
+      if (!uid) return;
+
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        uploadProgress(uid).catch(() => {});
+      }, 3000);
+    });
+
+    return () => {
+      unsub();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+}
+
+// ===== 文件: src/lib/courseProgress.ts =====
+import type { PathNode } from '@/types';
+
+export interface CourseStats {
+  total: number;
+  done: number;
+  pct: number;
+}
+
+export function countNodeCards(nodes: PathNode[], completedCards: Record<string, true>): CourseStats {
+  let total = 0;
+  let done = 0;
+  for (const node of nodes) {
+    for (const card of node.cards) {
+      total++;
+      if (card.id in completedCards) done++;
+    }
+  }
+  return { total, done, pct: total === 0 ? 0 : Math.round((done / total) * 100) };
+}

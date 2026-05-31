@@ -1,0 +1,1485 @@
+// ===== 文件: backend/src/main/java/com/codecard/config/SecurityConfig.java =====
+package com.codecard.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+import java.util.Map;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final TraceIdFilter traceIdFilter;
+    private final JwtAuthFilter jwtAuthFilter;
+    private final ObjectMapper objectMapper;
+    private final List<String> allowedOrigins;
+
+    public SecurityConfig(TraceIdFilter traceIdFilter, JwtAuthFilter jwtAuthFilter,
+                          ObjectMapper objectMapper,
+                          @Value("${cors.allowed-origins:#{null}}") List<String> allowedOrigins) {
+        this.traceIdFilter = traceIdFilter;
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.objectMapper = objectMapper;
+        this.allowedOrigins = allowedOrigins;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    objectMapper.writeValue(response.getOutputStream(),
+                            Map.of("error", "authentication required"));
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    objectMapper.writeValue(response.getOutputStream(),
+                            Map.of("error", "access denied", "traceId",
+                                    MDC.get("traceId") != null ? MDC.get("traceId") : "?"));
+                })
+            )
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/send-otp",
+                    "/api/v1/auth/verify-otp",
+                    "/api/v1/auth/refresh",
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/api-docs/**",
+                    "/v3/api-docs/**"
+                ).permitAll()
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(traceIdFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            config.setAllowedOrigins(allowedOrigins);
+        }
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/config/JwtService.java =====
+package com.codecard.config;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.time.Instant;
+import java.util.Date;
+import java.util.UUID;
+
+@Service
+public class JwtService {
+
+    private final SecretKey key;
+    private final long accessExpirationMs;
+    private final long refreshExpirationMs;
+
+    public JwtService(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-expiration-ms}") long accessExpirationMs,
+            @Value("${jwt.refresh-expiration-ms}") long refreshExpirationMs) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET is not configured. Generate one with: openssl rand -base64 64");
+        }
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        this.accessExpirationMs = accessExpirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
+    }
+
+    public String generateAccessToken(UUID userId) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(userId.toString())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(accessExpirationMs)))
+                .claim("type", "access")
+                .signWith(key)
+                .compact();
+    }
+
+    public String generateRefreshToken(UUID userId) {
+        Instant now = Instant.now();
+        String jid = UUID.randomUUID().toString();
+        return Jwts.builder()
+                .subject(userId.toString())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(refreshExpirationMs)))
+                .id(jid)
+                .claim("type", "refresh")
+                .signWith(key)
+                .compact();
+    }
+
+    public Claims parseToken(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public UUID extractUserId(String token) {
+        return UUID.fromString(parseToken(token).getSubject());
+    }
+
+    public String extractUserIdStr(Claims claims) {
+        return claims.getSubject();
+    }
+
+    public String extractUserIdStr(String token) {
+        return parseToken(token).getSubject();
+    }
+
+    public String extractJid(String token) {
+        return parseToken(token).getId();
+    }
+
+    public String extractType(Claims claims) {
+        return claims.get("type", String.class);
+    }
+
+    public String extractType(String token) {
+        return parseToken(token).get("type", String.class);
+    }
+
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            parseToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/config/JwtAuthFilter.java =====
+package com.codecard.config;
+
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.Collections;
+
+@Component
+public class JwtAuthFilter extends OncePerRequestFilter {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
+    private final JwtService jwtService;
+
+    public JwtAuthFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ") || header.length() < 10) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String token = header.substring(7);
+        Claims claims;
+        try {
+            claims = jwtService.parseToken(token);
+        } catch (Exception e) {
+            log.warn("JWT parsing failed: {}", e.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 拒绝 refresh token 当作 access token 使用
+        if ("refresh".equals(jwtService.extractType(claims))) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String userId = jwtService.extractUserIdStr(claims);
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        filterChain.doFilter(request, response);
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/auth/AuthService.java =====
+package com.codecard.auth;
+
+import com.codecard.auth.dto.*;
+import com.codecard.config.JwtService;
+import com.codecard.user.User;
+import com.codecard.user.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+import java.util.regex.Pattern;
+
+@Service
+public class AuthService {
+
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$");
+
+    private final UserRepository userRepo;
+    private final RefreshTokenRepository refreshTokenRepo;
+    private final OtpService otpService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    public AuthService(UserRepository userRepo, RefreshTokenRepository refreshTokenRepo,
+                       OtpService otpService, PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.userRepo = userRepo;
+        this.refreshTokenRepo = refreshTokenRepo;
+        this.otpService = otpService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+    }
+
+    @Transactional
+    public AuthResponse register(RegisterRequest req) {
+        if (req.getEmail() == null && req.getPhone() == null) {
+            throw new AuthException("email or phone is required");
+        }
+        if (req.getEmail() != null && userRepo.existsByEmail(req.getEmail())) {
+            throw new AuthException("email already registered");
+        }
+        if (req.getPhone() != null && userRepo.existsByPhone(req.getPhone())) {
+            throw new AuthException("phone already registered");
+        }
+
+        User user = new User();
+        user.setEmail(req.getEmail());
+        user.setPhone(req.getPhone());
+        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        userRepo.save(user);
+
+        return buildAuthResponse(user, true);
+    }
+
+    @Transactional
+    public AuthResponse login(LoginRequest req) {
+        User user;
+        if (req.getEmail() != null) {
+            user = userRepo.findByEmail(req.getEmail())
+                    .orElseThrow(() -> new AuthException("invalid credentials"));
+        } else {
+            user = userRepo.findByPhone(req.getPhone())
+                    .orElseThrow(() -> new AuthException("invalid credentials"));
+        }
+
+        // 检查账户是否被锁定
+        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(Instant.now())) {
+            throw new AuthException("account temporarily locked, try again later");
+        }
+
+        if (user.getPasswordHash() == null
+                || !passwordEncoder.matches(req.getPassword(), user.getPasswordHash())) {
+            user.setLoginFailures(user.getLoginFailures() + 1);
+            if (user.getLoginFailures() >= 5) {
+                user.setLockedUntil(Instant.now().plus(15, ChronoUnit.MINUTES));
+            }
+            userRepo.save(user);
+            throw new AuthException("invalid credentials");
+        }
+
+        // 登录成功，重置失败计数
+        user.setLoginFailures(0);
+        user.setLockedUntil(null);
+        userRepo.save(user);
+
+        return buildAuthResponse(user, false);
+    }
+
+    public void sendOtp(OtpSendRequest req) {
+        otpService.sendCode(req.getTarget(), req.getPurpose());
+    }
+
+    @Transactional
+    public AuthResponse verifyOtp(OtpVerifyRequest req) {
+        if (!otpService.verifyCode(req.getTarget(), req.getCode(), req.getPurpose())) {
+            throw new AuthException("invalid or expired code");
+        }
+
+        User user;
+        boolean isEmail = isEmail(req.getTarget());
+        if (isEmail) {
+            user = userRepo.findByEmail(req.getTarget()).orElse(null);
+        } else {
+            user = userRepo.findByPhone(req.getTarget()).orElse(null);
+        }
+
+        boolean isNewUser = false;
+        if (user == null) {
+            user = new User();
+            if (isEmail) {
+                user.setEmail(req.getTarget());
+            } else {
+                user.setPhone(req.getTarget());
+            }
+            userRepo.save(user);
+            isNewUser = true;
+        }
+
+        return buildAuthResponse(user, isNewUser);
+    }
+
+    @Transactional
+    public void setPassword(UUID userId, String password) {
+        if (password == null || password.length() < 6) {
+            throw new AuthException("password must be at least 6 characters");
+        }
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new AuthException("user not found"));
+        user.setPasswordHash(passwordEncoder.encode(password));
+        userRepo.save(user);
+    }
+
+    @Transactional
+    public AuthResponse refresh(String refreshTokenStr) {
+        if (!jwtService.isTokenValid(refreshTokenStr)) {
+            throw new AuthException("invalid refresh token");
+        }
+        if (!"refresh".equals(jwtService.extractType(refreshTokenStr))) {
+            throw new AuthException("invalid refresh token");
+        }
+
+        String jid = jwtService.extractJid(refreshTokenStr);
+        RefreshToken saved = refreshTokenRepo.findByTokenJid(jid)
+                .orElseThrow(() -> new AuthException("token revoked"));
+
+        if (saved.getExpiresAt().isBefore(Instant.now())) {
+            refreshTokenRepo.delete(saved);
+            throw new AuthException("token expired");
+        }
+
+        // Rotation: delete old, issue new
+        refreshTokenRepo.delete(saved);
+
+        UUID userId = jwtService.extractUserId(refreshTokenStr);
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new AuthException("user not found"));
+
+        return buildAuthResponse(user, false);
+    }
+
+    public AuthResponse.UserProfile getProfile(UUID userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new AuthException("user not found"));
+        return toProfile(user);
+    }
+
+    @Transactional
+    public AuthResponse.UserProfile updateProfile(UUID userId, UpdateProfileRequest req) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new AuthException("user not found"));
+        if (req.getDisplayId() != null) {
+            user.setDisplayId(req.getDisplayId());
+        }
+        if (req.getAvatarUrl() != null) {
+            user.setAvatarUrl(req.getAvatarUrl());
+        }
+        userRepo.save(user);
+        return toProfile(user);
+    }
+
+    @Transactional
+    public void logout(UUID userId) {
+        refreshTokenRepo.deleteByUserId(userId);
+    }
+
+    private AuthResponse buildAuthResponse(User user, boolean isNewUser) {
+        refreshTokenRepo.deleteExpiredByUserId(user.getId(), Instant.now());
+
+        String accessToken = jwtService.generateAccessToken(user.getId());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+
+        RefreshToken rt = new RefreshToken();
+        rt.setUserId(user.getId());
+        rt.setTokenJid(jwtService.extractJid(refreshToken));
+        rt.setExpiresAt(Instant.now().plusMillis(jwtService.getRefreshExpirationMs()));
+        refreshTokenRepo.save(rt);
+
+        AuthResponse resp = new AuthResponse();
+        resp.setUser(toProfile(user));
+        resp.setAccessToken(accessToken);
+        resp.setRefreshToken(refreshToken);
+        resp.setIsNewUser(isNewUser);
+        return resp;
+    }
+
+    private boolean isEmail(String target) {
+        return EMAIL_PATTERN.matcher(target).matches();
+    }
+
+    private AuthResponse.UserProfile toProfile(User user) {
+        AuthResponse.UserProfile profile = new AuthResponse.UserProfile();
+        profile.setId(user.getId().toString());
+        profile.setEmail(user.getEmail());
+        profile.setPhone(user.getPhone());
+        profile.setDisplayId(user.getDisplayId());
+        profile.setAvatarUrl(user.getAvatarUrl());
+        return profile;
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/auth/AuthController.java =====
+package com.codecard.auth;
+
+import com.codecard.auth.dto.*;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+public class AuthController {
+
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest req) {
+        return ResponseEntity.ok(authService.register(req));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
+        return ResponseEntity.ok(authService.login(req));
+    }
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<Map<String, Object>> sendOtp(@Valid @RequestBody OtpSendRequest req) {
+        authService.sendOtp(req);
+        return ResponseEntity.ok(Map.of("ok", true));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody OtpVerifyRequest req) {
+        return ResponseEntity.ok(authService.verifyOtp(req));
+    }
+
+    @PostMapping("/set-password")
+    public ResponseEntity<Map<String, Object>> setPassword(
+            @AuthenticationPrincipal String userId,
+            @Valid @RequestBody SetPasswordRequest req) {
+        authService.setPassword(UUID.fromString(userId), req.getPassword());
+        return ResponseEntity.ok(Map.of("ok", true));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest req) {
+        return ResponseEntity.ok(authService.refresh(req.getRefreshToken()));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<AuthResponse.UserProfile> me(@AuthenticationPrincipal String userId) {
+        return ResponseEntity.ok(authService.getProfile(UUID.fromString(userId)));
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<AuthResponse.UserProfile> updateProfile(
+            @AuthenticationPrincipal String userId,
+            @Valid @RequestBody UpdateProfileRequest req) {
+        return ResponseEntity.ok(authService.updateProfile(UUID.fromString(userId), req));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, Object>> logout(@AuthenticationPrincipal String userId) {
+        authService.logout(UUID.fromString(userId));
+        return ResponseEntity.ok(Map.of("ok", true));
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/progress/ProgressController.java =====
+package com.codecard.progress;
+
+import com.codecard.progress.dto.ProgressSyncRequest;
+import com.codecard.progress.dto.ProgressSyncResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/progress")
+public class ProgressController {
+
+    private final ProgressService progressService;
+
+    public ProgressController(ProgressService progressService) {
+        this.progressService = progressService;
+    }
+
+    @GetMapping
+    public ResponseEntity<ProgressSyncResponse> getProgress(@AuthenticationPrincipal String userId) {
+        ProgressSyncResponse resp = progressService.getProgress(UUID.fromString(userId));
+        return ResponseEntity.ok(resp != null ? resp : emptyResponse());
+    }
+
+    @PutMapping
+    public ResponseEntity<ProgressSyncResponse> putProgress(
+            @AuthenticationPrincipal String userId,
+            @Valid @RequestBody ProgressSyncRequest req) {
+        return ResponseEntity.ok(progressService.upsertProgress(UUID.fromString(userId), req));
+    }
+
+    @PostMapping("/sync")
+    public ResponseEntity<ProgressSyncResponse> syncProgress(
+            @AuthenticationPrincipal String userId,
+            @Valid @RequestBody ProgressSyncRequest req) {
+        return ResponseEntity.ok(progressService.syncProgress(UUID.fromString(userId), req));
+    }
+
+    private ProgressSyncResponse emptyResponse() {
+        ProgressSyncResponse resp = new ProgressSyncResponse();
+        resp.setData(java.util.Map.of());
+        resp.setVersion(3);
+        resp.setMerged(false);
+        return resp;
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/progress/ProgressService.java =====
+package com.codecard.progress;
+
+import com.codecard.progress.dto.ProgressSyncRequest;
+import com.codecard.progress.dto.ProgressSyncResponse;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
+
+@Service
+public class ProgressService {
+
+    private final UserProgressRepository progressRepo;
+
+    public ProgressService(UserProgressRepository progressRepo) {
+        this.progressRepo = progressRepo;
+    }
+
+    public ProgressSyncResponse getProgress(UUID userId) {
+        return progressRepo.findById(userId)
+                .map(this::toResponse)
+                .orElse(null);
+    }
+
+    @Transactional
+    public ProgressSyncResponse upsertProgress(UUID userId, ProgressSyncRequest req) {
+        UserProgress progress = progressRepo.findById(userId).orElse(new UserProgress());
+        progress.setUserId(userId);
+        progress.setData(req.getData());
+        progress.setVersion(req.getVersion());
+        progress.setUpdatedAt(Instant.now());
+        progressRepo.save(progress);
+
+        return toResponse(progress);
+    }
+
+    @Transactional
+    public ProgressSyncResponse syncProgress(UUID userId, ProgressSyncRequest req) {
+        return progressRepo.findById(userId)
+                .map(remote -> {
+                    ProgressSyncResponse resp = toResponse(remote);
+                    resp.setMerged(true);
+                    return resp;
+                })
+                .orElseGet(() -> {
+                    ProgressSyncResponse resp = upsertProgress(userId, req);
+                    resp.setMerged(false);
+                    return resp;
+                });
+    }
+
+    private ProgressSyncResponse toResponse(UserProgress progress) {
+        ProgressSyncResponse resp = new ProgressSyncResponse();
+        Map<String, Object> data = progress.getData();
+        resp.setData(data != null ? data : Map.of());
+        resp.setVersion(progress.getVersion());
+        resp.setUpdatedAt(progress.getUpdatedAt());
+        resp.setMerged(false);
+        return resp;
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/config/GlobalExceptionHandler.java =====
+package com.codecard.config;
+
+import com.codecard.auth.AuthException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<Map<String, Object>> handleAuth(AuthException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        String msg = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("validation failed");
+        return ResponseEntity.badRequest().body(Map.of("error", msg));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnknown(Exception ex) {
+        log.error("Unhandled exception", ex);
+        String traceId = MDC.get("traceId") != null ? MDC.get("traceId") : "?";
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "internal server error", "traceId", traceId));
+    }
+}
+
+// ===== 文件: src/data/courses/cpp/03-oop/class-intro.ts =====
+import type { PathNode } from '@/types';
+
+export const classIntroNode: PathNode = {
+  id: 'cpp-03-class-intro',
+  courseId: 'cpp',
+  type: 'knowledge',
+  moduleId: 'oop',
+  module: '面向对象',
+  title: '类与对象',
+  cards: [
+    {
+      id: 'cpp-03-class-intro-c1',
+      cardType: 'concept',
+      content: {
+        title: '类 vs 对象——蓝图和产品',
+        body: [
+          '第 2 章里你学过 struct，它把姓名、年龄、分数打包成一个类型。',
+          '',
+          'C++ 里 class 和 struct 几乎一模一样：',
+          '  struct Student { string name; int score; };    // 默认 public',
+          '  class Student  { string name; int score; };    // 默认 private',
+          '',
+          '唯一的区别就是默认的访问权限，除此之外完全一样。',
+          '',
+          '两个核心概念：',
+          '  类（class） = 蓝图 — 定义了"学生有什么数据、能做什么操作"',
+          '  对象（object） = 实例 — Student s1; 是一个具体的"学生对象"',
+          '  类可以创建无数个对象，每个有自己的数据。',
+        ].join('\n'),
+      },
+    },
+    {
+      id: 'cpp-03-class-intro-c4',
+      cardType: 'concept',
+      content: {
+        title: 'const 成员函数——承诺"我只读不改"',
+        body: [
+          '在成员函数后面加 const，承诺这个函数不会修改任何成员变量：',
+          '',
+          '  void print() const {',
+          '    std::cout << name;   // 只读，没问题',
+          '    // score = 100;      // 编译错误！const 函数里不能改成员',
+          '  }',
+          '',
+          '规则很简单：不修改成员的函数加 const，修改成员的不加 const。',
+          '一个好习惯：能加 const 就加 const。const 写得多，bug 写得少。',
+        ].join('\n'),
+      },
+    },
+  ],
+};
+
+// ===== 文件: src/data/courses/cpp/03-oop/inheritance.ts =====
+import type { PathNode } from '@/types';
+
+export const inheritanceNode: PathNode = {
+  id: 'cpp-03-inheritance',
+  courseId: 'cpp',
+  type: 'knowledge',
+  moduleId: 'oop',
+  module: '面向对象',
+  title: '继承',
+  cards: [
+    {
+      id: 'cpp-03-inheritance-c2',
+      cardType: 'concept',
+      content: {
+        title: '继承语法 + 什么被继承',
+        body: [
+          '语法：class 派生类 : public 基类 { /* 只写自己新增的成员 */ };',
+          '',
+          '会被继承的：数据成员、普通成员函数',
+          '不会被继承的：构造函数、析构函数、operator=',
+          '',
+          'C++ 加了第三种权限 protected：',
+          '  权限       自己  派生类  外部',
+          '  public     ✓     ✓      ✓',
+          '  protected  ✓     ✓      ✗',
+          '  private    ✓     ✗      ✗',
+        ].join('\n'),
+      },
+    },
+  ],
+};
+
+// ===== 文件: src/data/animations/index.ts =====
+import type { ComponentType } from 'react';
+import type { AnimScenario } from '@/types';
+import { variableStorageScenario } from './scenarios/variableStorage';
+import { scopeLifecycleScenario } from './scenarios/scopeLifecycle';
+import { ifElseBranchScenario } from './scenarios/ifElseBranch';
+import { forLoopScenario } from './scenarios/forLoop';
+import { pointerIntroScenario } from './scenarios/pointerIntro';
+import { dynamicMemoryScenario } from './scenarios/dynamicMemory';
+import MemoryBox from '@/components/animations/MemoryBox';
+import ScopeCodePlayer from '@/components/animations/ScopeCodePlayer';
+import BranchPlayer from '@/components/animations/BranchPlayer';
+import LoopPlayer from '@/components/animations/LoopPlayer';
+import { shallowDeepCopyScenario } from './scenarios/shallowDeepCopy';
+import ShallowDeepCopyPlayer from '@/components/animations/ShallowDeepCopyPlayer';
+
+interface AnimationEntry {
+  scenario: AnimScenario;
+  Component: ComponentType<{ scenario: AnimScenario; step: number }>;
+}
+
+export const animationRegistry: Record<string, AnimationEntry> = {
+  'scope-lifecycle': { scenario: scopeLifecycleScenario, Component: ScopeCodePlayer as any },
+  'variable-storage': { scenario: variableStorageScenario, Component: MemoryBox as any },
+  'if-else-branch': { scenario: ifElseBranchScenario, Component: BranchPlayer as any },
+  'for-loop': { scenario: forLoopScenario, Component: LoopPlayer as any },
+  'pointer-intro': { scenario: pointerIntroScenario, Component: ScopeCodePlayer as any },
+  'dynamic-memory': { scenario: dynamicMemoryScenario, Component: ScopeCodePlayer as any },
+  'shallow-vs-deep-copy': { scenario: shallowDeepCopyScenario, Component: ShallowDeepCopyPlayer as any },
+};
+
+export function getAnimScenario(animId: string): AnimScenario | undefined {
+  return animationRegistry[animId]?.scenario;
+}
+
+export function getAnimComponent(animId: string): ComponentType<{ scenario: AnimScenario; step: number }> | null {
+  return animationRegistry[animId]?.Component ?? null;
+}
+// ===== 文件: backend/src/main/java/com/codecard/user/User.java =====
+package com.codecard.user;
+
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(unique = true)
+    private String email;
+
+    @Column(unique = true, length = 32)
+    private String phone;
+
+    @Column(name = "password_hash")
+    private String passwordHash;
+
+    @Column(name = "display_id", length = 64)
+    private String displayId;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Column(name = "login_failures")
+    private int loginFailures;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
+    @PrePersist
+    void onCreate() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
+    }
+
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+
+    public String getDisplayId() { return displayId; }
+    public void setDisplayId(String displayId) { this.displayId = displayId; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+
+    public int getLoginFailures() { return loginFailures; }
+    public void setLoginFailures(int loginFailures) { this.loginFailures = loginFailures; }
+
+    public Instant getLockedUntil() { return lockedUntil; }
+    public void setLockedUntil(Instant lockedUntil) { this.lockedUntil = lockedUntil; }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/auth/OtpService.java =====
+package com.codecard.auth;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.regex.Pattern;
+
+@Service
+public class OtpService {
+
+    private static final Logger log = LoggerFactory.getLogger(OtpService.class);
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$");
+
+    private final OtpCodeRepository otpRepo;
+    private final JavaMailSender mailSender;
+    private final SecureRandom random = new SecureRandom();
+
+    public OtpService(OtpCodeRepository otpRepo, JavaMailSender mailSender) {
+        this.otpRepo = otpRepo;
+        this.mailSender = mailSender;
+    }
+
+    @Transactional
+    public void sendCode(String target, String purpose) {
+        // Rate limit: same target+purpose cannot send another OTP within 60 seconds
+        otpRepo.findTopByTargetAndPurposeAndUsedFalseOrderByCreatedAtDesc(target, purpose)
+                .ifPresent(recent -> {
+                    if (recent.getCreatedAt().plusSeconds(60).isAfter(Instant.now())) {
+                        throw new AuthException("please wait before requesting another code");
+                    }
+                });
+
+        String code = String.format("%06d", random.nextInt(900_000) + 100_000);
+
+        if (EMAIL_PATTERN.matcher(target).matches()) {
+            sendEmail(target, code, purpose);
+        } else {
+            log.info("OTP for {}: {} (SMS not yet implemented)", target, code);
+        }
+
+        OtpCode otp = new OtpCode();
+        otp.setTarget(target);
+        otp.setCode(code);
+        otp.setPurpose(purpose);
+        otp.setExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES));
+        otp.setUsed(false);
+        otpRepo.save(otp);
+    }
+
+    @Transactional
+    public boolean verifyCode(String target, String code, String purpose) {
+        return otpRepo.findTopByTargetAndPurposeAndUsedFalseOrderByCreatedAtDesc(target, purpose)
+                .map(otp -> {
+                    if (otp.getExpiresAt().isBefore(Instant.now())) return false;
+                    if (!otp.getCode().equals(code)) return false;
+                    otp.setUsed(true);
+                    otpRepo.save(otp);
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    private void sendEmail(String to, String code, String purpose) {
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(to);
+            msg.setSubject("CodeCard — " + purposeLabel(purpose));
+            msg.setText("Your code is: " + code + "\n\nExpires in 10 minutes.");
+            mailSender.send(msg);
+        } catch (Exception e) {
+            log.warn("Failed to send OTP email to {}: {}", to, e.getMessage());
+            log.info("OTP code for {} ({}): {}", to, purpose, code);
+        }
+    }
+
+    private String purposeLabel(String purpose) {
+        return switch (purpose) {
+            case "register" -> "Registration Code";
+            case "reset" -> "Password Reset Code";
+            default -> "Login Code";
+        };
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/progress/UserProgress.java =====
+package com.codecard.progress;
+
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
+
+@Entity
+@Table(name = "user_progress")
+public class UserProgress {
+
+    @Id
+    private UUID userId;
+
+    @Column(columnDefinition = "jsonb")
+    private Map<String, Object> data;
+
+    private int version;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
+
+    public Map<String, Object> getData() { return data; }
+    public void setData(Map<String, Object> data) { this.data = data; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/auth/RefreshToken.java =====
+package com.codecard.auth;
+
+import jakarta.persistence.*;
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "refresh_tokens")
+public class RefreshToken {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+
+    @Column(name = "token_jid", nullable = false, unique = true)
+    private String tokenJid;
+
+    @Column(name = "expires_at", nullable = false)
+    private Instant expiresAt;
+
+    public UUID getId() { return id; }
+    public UUID getUserId() { return userId; }
+    public void setUserId(UUID userId) { this.userId = userId; }
+    public String getTokenJid() { return tokenJid; }
+    public void setTokenJid(String tokenJid) { this.tokenJid = tokenJid; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/config/TraceIdFilter.java =====
+package com.codecard.config;
+
+import jakarta.servlet.*;
+import org.slf4j.MDC;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.UUID;
+
+@Component
+public class TraceIdFilter implements Filter {
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        try {
+            MDC.put("traceId", UUID.randomUUID().toString().substring(0, 8));
+            chain.doFilter(request, response);
+        } finally {
+            MDC.clear();
+        }
+    }
+}
+
+// ===== 文件: backend/src/main/java/com/codecard/CodeCardApplication.java =====
+package com.codecard;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class CodeCardApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(CodeCardApplication.class, args);
+    }
+}
+
+// ===== 文件: backend/src/main/resources/schema.sql =====
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE,
+    phone VARCHAR(32) UNIQUE,
+    password_hash VARCHAR(255),
+    display_id VARCHAR(64),
+    avatar_url VARCHAR(512),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    login_failures INT NOT NULL DEFAULT 0,
+    locked_until TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id),
+    token_jid VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS otp_codes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    target VARCHAR(255) NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    purpose VARCHAR(50) NOT NULL DEFAULT 'login',
+    used BOOLEAN NOT NULL DEFAULT false,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS user_progress (
+    user_id UUID PRIMARY KEY REFERENCES users(id),
+    data JSONB NOT NULL DEFAULT '{}'::jsonb,
+    version INT NOT NULL DEFAULT 3,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+// ===== 文件: src/data/courses/cpp/03-oop/polymorphism.ts =====
+import type { PathNode } from '@/types';
+
+export const polymorphismNode: PathNode = {
+  id: 'cpp-03-polymorphism',
+  courseId: 'cpp',
+  type: 'knowledge',
+  moduleId: 'oop',
+  module: '面向对象',
+  title: '多态',
+  cards: [
+    {
+      id: 'cpp-03-polymorphism-c1',
+      cardType: 'concept',
+      content: {
+        title: '静态绑定 vs 动态绑定',
+        body: [
+          'Person* p = new Student("张三", 20, "001");',
+          'p->intro();  // 调的是谁的 intro()？',
+          '',
+          '不加 virtual → Person::intro()（静态绑定，看指针类型）',
+          '加 virtual → Student::intro()（动态绑定，看实际类型）',
+          '',
+          'virtual 函数 = 运行时根据对象实际类型决定调哪个。',
+        ].join('\n'),
+      },
+    },
+    {
+      id: 'cpp-03-polymorphism-c4',
+      cardType: 'code',
+      content: {
+        title: '多态实战——统一管理不同对象',
+        code: [
+          '#include <iostream>',
+          '#include <vector>',
+          '',
+          'class Person {',
+          'public:',
+          '  virtual void intro() const {',
+          '    std::cout << "I am a person" << std::endl;',
+          '  }',
+          '  virtual ~Person() {}  // 虚析构',
+          '};',
+          '',
+          'class Student : public Person {',
+          'public:',
+          '  void intro() const override {',
+          '    std::cout << "I am a student" << std::endl;',
+          '  }',
+          '};',
+          '',
+          'class Teacher : public Person {',
+          'public:',
+          '  void intro() const override {',
+          '    std::cout << "I am a teacher" << std::endl;',
+          '  }',
+          '};',
+          '',
+          'int main() {',
+          '  std::vector<Person*> people;',
+          '  people.push_back(new Person());',
+          '  people.push_back(new Student());',
+          '  people.push_back(new Teacher());',
+          '',
+          '  for (auto p : people) {',
+          '    p->intro();  // 各调各的！',
+          '  }',
+          '',
+          '  for (auto p : people) delete p;',
+          '  return 0;',
+          '}',
+        ].join('\n'),
+        language: 'cpp',
+        highlights: [5, 6, 8, 13, 14, 19, 20, 27, 28, 29],
+      },
+    },
+  ],
+};
+
+// ===== 文件: src/data/courses/cpp/03-oop/operator-overload.ts =====
+import type { PathNode } from '@/types';
+
+export const operatorOverloadNode: PathNode = {
+  id: 'cpp-03-operator-overload',
+  courseId: 'cpp',
+  type: 'knowledge',
+  moduleId: 'oop',
+  module: '面向对象',
+  title: '运算符重载',
+  cards: [
+    {
+      id: 'cpp-03-operator-overload-c2',
+      cardType: 'concept',
+      content: {
+        title: '== 怎么实现？为什么 << 需要朋友帮忙？',
+        body: [
+          '需求一：比较两个 IntArray 是否内容相同 → a == b → a.operator==(b)',
+          '成员函数就可以，不需要 friend。',
+          '',
+          '需求二：用 cout 打印 IntArray → cout << arr',
+          '左操作数是 cout（ostream），不是 IntArray。ostream 是标准库的类。',
+          '',
+          '解决：写成外部函数 ostream& operator<<(ostream&, const IntArray&)',
+          '  cout << arr → operator<<(cout, arr)',
+          '',
+          '新问题：外部函数看不到 IntArray 的 private 成员。',
+          '这就是 3.6 友元的实战场景——一行 friend 授权外部函数访问。',
+        ].join('\n'),
+      },
+    },
+  ],
+};
+
+// ===== 文件: src/data/courses/cpp/04-streams/stream-basics.ts =====
+import type { PathNode } from '@/types';
+
+export const streamBasicsNode: PathNode = {
+  id: 'cpp-04-stream-basics',
+  courseId: 'cpp',
+  type: 'knowledge',
+  moduleId: 'streams',
+  module: '流与文件',
+  title: '流是什么',
+  cards: [
+    {
+      id: 'cpp-04-stream-basics-c1',
+      cardType: 'concept',
+      content: {
+        title: '从 cin 和 cout 认识"流"',
+        body: [
+          '翻回基础模块——你每天都在用：cin >> x;  cout << x;',
+          '',
+          'cin 和 cout，在 C++ 里就叫"流"（stream）。',
+          '什么是流？一句话：程序和数据之间的通道。',
+          '',
+          '  cin  — 数据从键盘流向程序',
+          '  cout — 数据从程序流向屏幕',
+          '',
+          '  cerr — 无缓冲区，错误信息立刻输出',
+        ].join('\n'),
+      },
+    },
+    {
+      id: 'cpp-04-stream-basics-c4',
+      cardType: 'code',
+      content: {
+        title: 'cout 和 cerr 对比',
+        code: [
+          '#include <iostream>',
+          '',
+          'int main() {',
+          '  std::cout << "1. Normal" << std::endl;',
+          '  std::cerr << "2. Error" << std::endl;',
+          '  std::cout << "3. Normal again" << std::endl;',
+          '  std::cerr << "4. Error again" << std::endl;',
+          '  return 0;',
+          '}',
+          '',
+          '// Output order may be: 1, 2, 4, 3',
+          '// cerr outputs immediately, cout is buffered',
+        ].join('\n'),
+        language: 'cpp',
+        highlights: [3, 4, 5, 6],
+      },
+    },
+  ],
+};
+// ===== 文件: backend/.../auth/dto/AuthResponse.java (前后端认证契约) =====
+package com.codecard.auth.dto;
+
+public class AuthResponse {
+
+    private UserProfile user;
+    private String accessToken;
+    private String refreshToken;
+    private Boolean isNewUser;
+
+    public static class UserProfile {
+        private String id;
+        private String email;
+        private String phone;
+        private String displayId;
+        private String avatarUrl;
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
+
+        public String getDisplayId() { return displayId; }
+        public void setDisplayId(String displayId) { this.displayId = displayId; }
+
+        public String getAvatarUrl() { return avatarUrl; }
+        public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    }
+
+    public UserProfile getUser() { return user; }
+    public void setUser(UserProfile user) { this.user = user; }
+
+    public String getAccessToken() { return accessToken; }
+    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+
+    public String getRefreshToken() { return refreshToken; }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+
+    public Boolean getIsNewUser() { return isNewUser; }
+    public void setIsNewUser(Boolean isNewUser) { this.isNewUser = isNewUser; }
+}
+
+// ===== 文件: backend/.../progress/dto/ProgressSyncRequest.java (进度同步请求) =====
+package com.codecard.progress.dto;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+import java.util.Map;
+
+public class ProgressSyncRequest {
+
+    @NotNull(message = "data is required")
+    private Map<String, Object> data;
+
+    @Positive(message = "version must be positive")
+    private int version;
+
+    public Map<String, Object> getData() { return data; }
+    public void setData(Map<String, Object> data) { this.data = data; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
+}
+
+// ===== 文件: backend/.../progress/dto/ProgressSyncResponse.java (进度同步响应) =====
+package com.codecard.progress.dto;
+
+import java.time.Instant;
+import java.util.Map;
+
+public class ProgressSyncResponse {
+
+    private Map<String, Object> data;
+    private int version;
+    private Instant updatedAt;
+    private boolean merged;
+
+    public Map<String, Object> getData() { return data; }
+    public void setData(Map<String, Object> data) { this.data = data; }
+
+    public int getVersion() { return version; }
+    public void setVersion(int version) { this.version = version; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    public boolean isMerged() { return merged; }
+    public void setMerged(boolean merged) { this.merged = merged; }
+}
+
+// ===== 文件: backend/.../auth/dto/LoginRequest.java =====
+package com.codecard.auth.dto;
+
+import jakarta.validation.constraints.Size;
+
+public class LoginRequest {
+
+    private String email;
+    private String phone;
+
+    @Size(min = 6, message = "password must be at least 6 characters")
+    private String password;
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+}
+
+// ===== 文件: backend/.../auth/dto/RegisterRequest.java =====
+package com.codecard.auth.dto;
+
+import jakarta.validation.constraints.Size;
+
+public class RegisterRequest {
+
+    private String email;
+    private String phone;
+
+    @Size(min = 6, message = "password must be at least 6 characters")
+    private String password;
+
+    private String displayId;
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getDisplayId() { return displayId; }
+    public void setDisplayId(String displayId) { this.displayId = displayId; }
+}
