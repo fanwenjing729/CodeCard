@@ -1,6 +1,6 @@
 # File placement
 
-所有项目文件必须放在 `G:\CodeCard\` 下。禁止写入 C 盘。
+前端文件放在 `G:\CodeCard\` 下，后端文件放在 `G:\CodeCardBackend\` 下。禁止写入 C 盘。
 
 # Docs placement
 
@@ -32,8 +32,8 @@ This document IS the source of truth. Do NOT read source files unless listed bel
 | Data migration / store structure change | `useProgressStore.ts` + `docs/frontend/store-invariants.md` | Other store files, screens |
 | Future architecture / scaling change | `docs/backend/scaling.md` — do NOT read source | All source files |
 | Add payment / permissions / IAP | `docs/backend/scaling.md` (付费与权限系统) — do NOT read source | All source files |
-| Modify backend auth/progress | `backend/src/main/java/com/codecard/` 对应包 — 只读目标 Service | 其他 Service |
-| Modify backend security/JWT | `backend/src/main/java/com/codecard/config/SecurityConfig.java` | 其他 config |
+| Modify backend auth/progress | `G:\CodeCardBackend\src\main\java\com\codecard\` 对应包 — 只读目标 Service | 其他 Service |
+| Modify backend security/JWT | `G:\CodeCardBackend\src\main\java\com\codecard\config\SecurityConfig.java` | 其他 config |
 | Add backend endpoint | AGENTS.md + 现有 Controller 模板 — 不要读其他 Controller | 其他 Controller |
 
 # Project Architecture
@@ -81,8 +81,12 @@ src/
 └── data/
     ├── courses/index.ts       ← 课程注册入口
     └── animations/index.ts    ← 动画注册入口
+```
 
-backend/
+后端代码在 `G:\CodeCardBackend\`，独立仓库：
+
+```
+G:\CodeCardBackend\
 ├── src/main/java/com/codecard/
 │   ├── auth/                  ← 认证 Controller + Service
 │   ├── config/                ← SecurityConfig, JwtService, Filter
