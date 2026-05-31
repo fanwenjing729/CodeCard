@@ -4,6 +4,14 @@
 
 ---
 
+### #3 进度同步版本冲突（2026-05-31）
+
+`ProgressService.syncProgress()` 加版本比较：客户端版本 > 服务端 → 覆盖保存；客户端版本 < 服务端 → 返回服务端数据 + merged=true。
+
+**改动**：`ProgressService.java`（~10 行），`ProgressIntegrationTest.java`（调整测试用例）。
+
+---
+
 ## ✅ 已修复
 
 ### #2 登录/注册限流（2026-05-31）
@@ -29,28 +37,6 @@ RateLimitFilter 已实现，Bucket4j 令牌桶算法，IP+path 粒度限流。
 ---
 
 ## 📋 方案已设计
-
-### #3 进度同步版本冲突
-
-**问题**：`ProgressService.syncProgress()` 不看客户端传的 `version`，直接返回服务端数据。多设备场景可能丢离线进度。
-
-**修复**：改 `ProgressService.syncProgress`，加版本比较（1 个文件 ~10 行）：
-
-```java
-if (req.getVersion() > remote.getVersion()) {
-    // 客户端赢 — 覆盖保存
-    remote.setData(req.getData());
-    remote.setVersion(req.getVersion());
-    progressRepo.save(remote);
-    resp.setMerged(false);
-} else {
-    // 服务端赢 — 返回服务端数据
-    resp.setMerged(true);
-}
-```
-
-**时机**：多设备用户出现 / 用户量 > 500。
-**详细方案**：`../backend/backend-improvements.md`（第三章）
 
 ---
 
