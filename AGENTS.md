@@ -7,7 +7,7 @@
 | 目录 | 放什么 |
 |------|--------|
 | `docs/frontend/` | 前端（动画、UI、课程、Store） |
-| `docs/backend/` | 后端（Spring Boot、数据库、认证） |
+| `docs/backend/` → 已移至 `G:\CodeCardBackend\docs\` | 后端文档已迁移到后端仓库 |
 | `docs/project/` | 项目（规划、入门指南）；用户说"写给我的"放这里 |
 
 # Expo version
@@ -27,11 +27,11 @@ This document IS the source of truth. Do NOT read source files unless listed bel
 | Fix card rendering bug | The specific card component + `renderCard.tsx` | Other components |
 | Modify SettingsScreen UI | This doc + `SettingsScreen.tsx` | Other screens |
 | Modify ProgressScreen | `ProgressScreen.tsx` only | Other screens |
-| Add login / cloud sync / avatar | `docs/backend/auth-sync.md` — do NOT read source | All source files |
+| Add login / cloud sync / avatar | `G:\CodeCardBackend\docs\auth-sync.md` — do NOT read source | All source files |
 | Theme / color / style change | `theme.ts` + `docs/frontend/AAAAui-reference.md` — do NOT read components | Component source files |
 | Data migration / store structure change | `useProgressStore.ts` + `docs/frontend/store-invariants.md` | Other store files, screens |
-| Future architecture / scaling change | `docs/backend/scaling.md` — do NOT read source | All source files |
-| Add payment / permissions / IAP | `docs/backend/scaling.md` (付费与权限系统) — do NOT read source | All source files |
+| Future architecture / scaling change | `G:\CodeCardBackend\docs\scaling.md` — do NOT read source | All source files |
+| Add payment / permissions / IAP | `G:\CodeCardBackend\docs\scaling.md` (付费与权限系统) — do NOT read source | All source files |
 | Modify backend auth/progress | `G:\CodeCardBackend\src\main\java\com\codecard\` 对应包 — 只读目标 Service | 其他 Service |
 | Modify backend security/JWT | `G:\CodeCardBackend\src\main\java\com\codecard\config\SecurityConfig.java` | 其他 config |
 | Add backend endpoint | AGENTS.md + 现有 Controller 模板 — 不要读其他 Controller | 其他 Controller |

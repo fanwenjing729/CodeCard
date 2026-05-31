@@ -29,7 +29,7 @@
 
 ---
 
-## docs/backend/ — 后端
+## 后端文档 —— 已移至 `G:\CodeCardBackend\docs\`
 
 | 文件 | 作用 | 什么时候看 |
 |------|------|-----------|
@@ -69,5 +69,5 @@
 3. **写新课程内容** → `docs/frontend/content-writing-guide.md` → `docs/frontend/课程-design.md`（C++: `cpp-course-design.md` / 数据结构: `ds-course-design.md`）
 4. **改 UI** → `AGENTS.md` + `docs/frontend/AAAAui-reference.md`
 5. **改 store** → `docs/frontend/store-invariants.md`
-6. **跑后端** → `docs/backend/backend-architecture.md` → `docs/backend/database-101.md` → `docs/project/swagger-guide.md`
+6. **跑后端** → 见 `G:\CodeCardBackend\docs\`（`backend-architecture.md` → `database-101.md` → `swagger-guide.md`）
 7. **规划长期改进** → `docs/project/architecture-guide.md` → `docs/project/future-features.md`

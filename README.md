@@ -80,8 +80,8 @@ src/
 | 文档 | 内容 |
 |------|------|
 | [AGENTS.md](./AGENTS.md) | AI 开发指南（架构、数据模型、代码规范） |
-| [docs/auth-sync.md](./docs/backend/auth-sync.md) | 认证同步实现进度、测试覆盖、配置步骤 |
-| [docs/backend-architecture.md](./docs/backend/backend-architecture.md) | 后端完整文档（快速开始 + 架构设计） |
+| [auth-sync.md](G:\CodeCardBackend\docs\auth-sync.md) | 认证同步实现进度、测试覆盖、配置步骤 |
+| [backend-architecture.md](G:\CodeCardBackend\docs\backend-architecture.md) | 后端完整文档（快速开始 + 架构设计） |
 
 ## 许可证
 

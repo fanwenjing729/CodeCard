@@ -25,7 +25,7 @@
 | 位置 | `backend/.../progress/ProgressService.java:28-38`（`upsertProgress`） |
 | 现象 | 后登录设备的 `PUT` 可覆盖先离线积累的全量快照 |
 | 原因 | 不比较请求 `version` 与库中 `version`，直接 `setData` + `save` |
-| 建议方向 | 见 `docs/backend/backend-improvements.md` 第三章；或客户端改用 `POST /sync` 并统一服务端策略 |
+| 建议方向 | 见 `G:\CodeCardBackend\docs\backend-improvements.md` 第三章；或客户端改用 `POST /sync` 并统一服务端策略 |
 
 ### C-03 登录合并与自动上传竞态
 
@@ -45,7 +45,7 @@
 |----|------|
 | 位置 | `RateLimitProperties.java` 已定义，`RateLimitFilter.java` 不存在 |
 | 风险 | 暴力破解、刷 OTP |
-| 建议方向 | 实现 `RateLimitFilter`，设计见 `docs/backend/backend-rate-limit-design.md` |
+| 建议方向 | 实现 `RateLimitFilter`，设计见 `G:\CodeCardBackend\docs\backend-rate-limit-design.md` |
 
 ---
 
